@@ -47,6 +47,9 @@ Still to deepen:
 
 ## Current Entry Points
 
+- `temper onboard existing --cwd <repo>`
+- `temper onboard existing --cwd <repo> --write`
+- `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
 - `temper init --cwd <repo>`
@@ -64,3 +67,21 @@ For a fresh install into another repo, install Temper as a dev dependency from G
 - `bunx temper ...`
 
 The generated Claude/Codex assistant files are written against that package-manager invocation, not a machine-local checkout path.
+
+## Existing Project Onboarding
+
+`temper onboard existing` is the front door for bringing Temper into an established repo.
+
+It does three things before writing anything:
+
+- maps the project model: family, stack, source-of-truth, environments, workflows, git history
+- audits the workflow: local vs beta vs prod posture, operator habits, token-efficiency waste, and trust gaps
+- recommends execution policy: which hooks are safe by default, which should stay explicit, and how `ship lite/full` should evolve
+
+With `--write`, it installs:
+
+- `temper.config.json`
+- `.temper/reports/onboarding.md`
+- `.temper/reports/onboarding.json`
+- `.temper/reports/adoption.md`
+- Claude/Codex assistant surfaces

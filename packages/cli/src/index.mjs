@@ -9,6 +9,7 @@ import {
   createConfigFromAnalysis,
   renderAdoptionReport
 } from "./lib/project-analysis.mjs";
+import { buildExistingProjectOnboarding } from "./lib/onboarding.mjs";
 import {
   CONFIG_FILENAME,
   findConfig,
@@ -17,7 +18,7 @@ import {
   writeProjectFile
 } from "./lib/project-config.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
-import { printHeader, printList } from "./lib/output.mjs";
+import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 
 const capabilityCommands = new Set([
   "init",
@@ -64,6 +65,10 @@ export async function main(argv) {
     return runAssistant(rest);
   }
 
+  if (command === "onboard") {
+    return runOnboard(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -72,17 +77,17 @@ export async function main(argv) {
 }
 
 function showHelp() {
-  printHeader("Temper");
-  console.log("Doctrine-driven CLI scaffold");
+  printTemperBanner("Project onboarding and operating system for AI-assisted game teams");
   console.log("");
   console.log("Commands:");
   printList([
+    "onboard existing [--cwd ...] [--write] [--assistant claude,codex]",
     "doctor",
     "derive",
     "query <terms>",
     "coach [--json] [--intent ...] [--hat ...] [--capability ...] [--cwd ...] [--no-repo]",
     "assistant <install|show>",
-    "init [--cwd ...] [--family ...] [--stack ...]",
+    "init [--cwd ...] [--family ...] [--stack ...] [--existing]",
     "adopt [--cwd ...] [--write] [--assistant claude,codex]",
     "ship [lite|full]",
     "hotfix",
@@ -261,6 +266,10 @@ function runCapability(command, rest) {
 }
 
 function runInit(rest) {
+  if (rest.includes("--existing") || rest[0] === "existing") {
+    return runOnboard(["existing", ...rest.filter((item, index) => item !== "--existing" && !(index === 0 && item === "existing"))]);
+  }
+
   const args = parseCommonArgs(rest);
   const analysis = analyzeProject({ cwd: args.cwd });
   const config = createConfigFromAnalysis(analysis, {
@@ -287,6 +296,76 @@ function runInit(rest) {
   console.log("");
   console.log("Generated:");
   printList([relativize(analysis.root, configPath), ...written]);
+}
+
+function runOnboard(rest) {
+  const [subcommand = "existing", ...subRest] = rest;
+  if (subcommand !== "existing") {
+    throw new Error("Usage: temper onboard existing [--cwd ...] [--write] [--assistant claude,codex]");
+  }
+
+  const args = parseCommonArgs(subRest);
+  const result = buildExistingProjectOnboarding({
+    cwd: args.cwd,
+    family: args.family,
+    stack: args.stack,
+    name: args.name
+  });
+
+  if (args.json) {
+    console.log(
+      JSON.stringify(
+        {
+          analysis: result.analysis,
+          config: result.config,
+          onboarding: result.onboarding,
+          report: result.report
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  if (args.write) {
+    const configPath = writeProjectConfig(result.analysis.root, result.config, {
+      force: args.force
+    });
+    const onboardingPath = writeProjectFile(result.analysis.root, ".temper/reports/onboarding.md", result.report);
+    const onboardingJsonPath = writeProjectFile(
+      result.analysis.root,
+      ".temper/reports/onboarding.json",
+      JSON.stringify(result.onboarding, null, 2) + "\n"
+    );
+    const adoptionPath = writeProjectFile(result.analysis.root, ".temper/reports/adoption.md", result.adoptionReport);
+    const written = installAssistantAdapters({
+      projectRoot: result.analysis.root,
+      config: result.config,
+      analysis: result.analysis,
+      assistants: args.assistants
+    });
+
+    printTemperBanner("Existing project onboarding complete");
+    console.log("");
+    console.log(`Root: ${result.analysis.root}`);
+    console.log(`Config: ${configPath}`);
+    console.log(`Onboarding Report: ${onboardingPath}`);
+    console.log(`Adoption Report: ${adoptionPath}`);
+    console.log("");
+    console.log("Generated:");
+    printList([
+      relativize(result.analysis.root, configPath),
+      relativize(result.analysis.root, onboardingPath),
+      relativize(result.analysis.root, onboardingJsonPath),
+      relativize(result.analysis.root, adoptionPath),
+      ...written
+    ]);
+    return;
+  }
+
+  process.stdout.write(result.report);
+  console.log("Run with --write to create temper.config.json, onboarding reports, and assistant files.");
 }
 
 function runAdopt(rest) {
