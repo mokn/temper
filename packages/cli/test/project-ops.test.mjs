@@ -169,6 +169,54 @@ test("temper inspect summarizes installed surfaces and recent runs", async (t) =
   assert.ok(report.runs.latest.some((item) => item.command === "adopt"));
 });
 
+test("temper session set updates the managed board and records a run artifact", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  initGitRepo(repoDir, "feature/session-pass", "fixture");
+
+  const preview = execFileSync(
+    "node",
+    [CLI_PATH, "session", "set", "--cwd", repoDir, "--status", "active", "--next", "Run manual smoke.", "--handoff", "HANDOFF_session-pass.md"],
+    { encoding: "utf8" }
+  );
+
+  assert.match(preview, /## Session Preview/);
+  assert.equal(fs.existsSync(path.join(repoDir, ".temper/workflow/session.json")), false);
+
+  execFileSync(
+    "node",
+    [
+      CLI_PATH,
+      "session",
+      "set",
+      "--cwd",
+      repoDir,
+      "--status",
+      "active",
+      "--next",
+      "Run manual smoke.",
+      "--handoff",
+      "HANDOFF_session-pass.md",
+      "--write"
+    ],
+    { stdio: "ignore" }
+  );
+
+  const sessionState = JSON.parse(fs.readFileSync(path.join(repoDir, ".temper/workflow/session.json"), "utf8"));
+  const sessionDoc = fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8");
+  const runs = JSON.parse(
+    execFileSync("node", [CLI_PATH, "runs", "ls", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(sessionState.entries[0].workstream, "session-pass");
+  assert.equal(sessionState.entries[0].next, "Run manual smoke.");
+  assert.equal(sessionState.entries[0].handoff, "HANDOFF_session-pass.md");
+  assert.match(sessionDoc, /HANDOFF_session-pass\.md/);
+  assert.ok(runs.some((item) => item.command === "session" && item.action === "write"));
+});
+
 function createFixtureRepo(t) {
   const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "temper-adopt-"));
   t.after(() => fs.rmSync(repoDir, { recursive: true, force: true }));

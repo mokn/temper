@@ -58,6 +58,8 @@ Still to deepen:
 - `temper inspect --cwd <repo>`
 - `temper runs ls --cwd <repo>`
 - `temper runs show <id> --cwd <repo>`
+- `temper session show --cwd <repo>`
+- `temper session set --cwd <repo> --next "<next step>" --status active --write`
 - `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
@@ -172,6 +174,11 @@ The intended split is:
 
 - `SESSION.md` is the short active board
 - `HANDOFF_<slug>.md` is the restart document with enough detail to resume cold
+
+For the live board itself, use `temper session` instead of hand-editing the managed block:
+
+- `temper session show --cwd <repo>`
+- `temper session set --cwd <repo> --workstream economy-pass --status active --next "Run beta smoke." --handoff HANDOFF_economy-pass.md --write`
 
 ## Inspecting Harness State
 

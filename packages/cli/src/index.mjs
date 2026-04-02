@@ -20,10 +20,14 @@ import {
   runExistingProjectOnboardingRehearsal
 } from "./lib/onboarding.mjs";
 import {
+  applySessionPlan,
   applyHandoffPlan,
+  buildSessionPlan,
   buildHandoffPlan,
   materializeContinuityInstall,
-  renderHandoffPreview
+  readSessionState,
+  renderHandoffPreview,
+  renderSessionPreview
 } from "./lib/continuity.mjs";
 import { buildInspectReport } from "./lib/inspect.mjs";
 import {
@@ -87,6 +91,10 @@ export async function main(argv) {
     return runRuns(rest);
   }
 
+  if (command === "session") {
+    return runSession(rest);
+  }
+
   if (command === "assistant") {
     return runAssistant(rest);
   }
@@ -123,6 +131,7 @@ function showHelp() {
     "coach [--json] [--intent ...] [--hat ...] [--capability ...] [--cwd ...] [--no-repo]",
     "inspect [--cwd ...] [--json]",
     "runs [ls|show <id>] [--cwd ...] [--json]",
+    "session [show|set] [--cwd ...] [--workstream ...] [--status ...] [--next ...] [--handoff ...] [--write]",
     "assistant <install|show>",
     "init [--cwd ...] [--family ...] [--stack ...] [--existing]",
     "adopt [--cwd ...] [--write] [--assistant claude,codex]",
@@ -317,6 +326,76 @@ function runRuns(rest) {
         `${item.run_id} | ${item.command} ${item.action} | ${item.summary?.status || "unknown"} | ${item.repo?.branch || "unknown"}`
     )
   );
+}
+
+function runSession(rest) {
+  const [subcommand = "show", ...subRest] = rest;
+  if (subcommand !== "show" && subcommand !== "set") {
+    throw new Error("Usage: temper session [show|set] [--cwd ...] [--workstream ...] [--status ...] [--next ...] [--handoff ...] [--write]");
+  }
+
+  if (subcommand === "show") {
+    const args = parseCommonArgs(subRest);
+    const state = readSessionState({ cwd: args.cwd });
+
+    if (args.json) {
+      console.log(JSON.stringify(state, null, 2));
+      return;
+    }
+
+    printHeader("Temper Session");
+    console.log(`Root: ${state.projectRoot}`);
+    console.log("");
+    printList(
+      state.sessionState.entries.length > 0
+        ? state.sessionState.entries.map(
+            (entry) => `${entry.workstream} | ${entry.branch} | ${entry.status} | next: ${entry.next} | handoff: ${entry.handoff}`
+          )
+        : ["none"]
+    );
+    return;
+  }
+
+  const args = parseSessionArgs(subRest);
+  const plan = buildSessionPlan({
+    cwd: args.cwd,
+    workstream: args.workstream,
+    branch: args.branch,
+    status: args.status,
+    next: args.next,
+    handoff: args.handoff
+  });
+
+  if (args.json) {
+    const payload = args.write ? applySessionPlan(plan) : plan;
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  if (args.write) {
+    const result = applySessionPlan(plan);
+    const recorded = recordRunArtifact({
+      cwd: result.projectRoot,
+      command: "session",
+      action: "write",
+      payload: {
+        entry: result.entry,
+        sessionPath: relativize(result.projectRoot, result.sessionPath),
+        sessionStatePath: relativize(result.projectRoot, result.sessionStatePath)
+      }
+    });
+    printHeader("Temper Session");
+    console.log(`Root: ${result.projectRoot}`);
+    console.log(`Session: ${result.sessionPath}`);
+    console.log(`Run Artifact: ${recorded.relativePath}`);
+    return;
+  }
+
+  printHeader("Temper Session");
+  console.log(`Root: ${plan.projectRoot}`);
+  console.log("");
+  process.stdout.write(renderSessionPreview(plan));
+  console.log("Run with --write to record this session update.");
 }
 
 function runCapability(command, rest) {
@@ -983,6 +1062,44 @@ function parseHandoffArgs(args) {
         break;
       case "deploy-state":
         parsed.deployState = nextValue;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return parsed;
+}
+
+function parseSessionArgs(args) {
+  const parsed = parseCommonArgs(args);
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith("--")) {
+      continue;
+    }
+
+    const [key, inlineValue] = arg.slice(2).split("=", 2);
+    const nextValue =
+      inlineValue ?? (index + 1 < args.length && !args[index + 1].startsWith("--") ? args[++index] : "");
+
+    switch (key) {
+      case "workstream":
+      case "slug":
+        parsed.workstream = nextValue;
+        break;
+      case "branch":
+        parsed.branch = nextValue;
+        break;
+      case "status":
+        parsed.status = nextValue;
+        break;
+      case "next":
+        parsed.next = nextValue;
+        break;
+      case "handoff":
+        parsed.handoff = nextValue;
         break;
       default:
         break;

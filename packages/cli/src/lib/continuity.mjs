@@ -129,6 +129,39 @@ export function buildHandoffPlan(options = {}) {
   };
 }
 
+export function readSessionState(options = {}) {
+  const projectRoot = path.resolve(options.projectRoot ?? options.cwd ?? process.cwd());
+  return {
+    projectRoot,
+    sessionState: loadSessionState(path.join(projectRoot, ".temper", "workflow", "session.json"))
+  };
+}
+
+export function buildSessionPlan(options = {}) {
+  const projectRoot = path.resolve(options.projectRoot ?? options.cwd ?? process.cwd());
+  const repo = gatherRepoContext({ cwd: projectRoot });
+  const existingState = loadSessionState(path.join(projectRoot, ".temper", "workflow", "session.json"));
+  const workstream = sanitizeSlug(options.workstream || inferSlug(repo.branch || path.basename(projectRoot)));
+  const existingEntry = existingState.entries.find((item) => item.workstream === workstream || item.branch === (repo.branch || "unknown"));
+  const entry = {
+    workstream,
+    branch: options.branch?.trim() || existingEntry?.branch || repo.branch || "unknown",
+    status: options.status?.trim() || existingEntry?.status || (repo.isDirty ? "in_progress_dirty" : "active"),
+    next: options.next?.trim() || existingEntry?.next || "none",
+    handoff: options.handoff?.trim() || existingEntry?.handoff || "none",
+    updated_at: new Date().toISOString()
+  };
+  const sessionState = upsertSessionEntry(existingState, entry);
+  const sessionContent = renderSessionDocument(projectRoot, sessionState);
+
+  return {
+    projectRoot,
+    entry,
+    sessionState,
+    sessionContent
+  };
+}
+
 export function applyHandoffPlan(plan) {
   const projectRoot = path.resolve(plan.projectRoot);
   const handoffAbsolutePath = writeProjectFile(projectRoot, plan.handoffPath, plan.handoffContent);
@@ -147,6 +180,23 @@ export function applyHandoffPlan(plan) {
   };
 }
 
+export function applySessionPlan(plan) {
+  const projectRoot = path.resolve(plan.projectRoot);
+  const sessionStatePath = writeProjectFile(
+    projectRoot,
+    ".temper/workflow/session.json",
+    JSON.stringify(plan.sessionState, null, 2) + "\n"
+  );
+  const sessionPath = writeProjectFile(projectRoot, "SESSION.md", plan.sessionContent);
+
+  return {
+    projectRoot,
+    sessionStatePath,
+    sessionPath,
+    entry: plan.entry
+  };
+}
+
 export function renderHandoffPreview(plan) {
   const lines = [
     "## Handoff Preview",
@@ -162,6 +212,24 @@ export function renderHandoffPreview(plan) {
     ]),
     "",
     plan.handoffContent.trim()
+  ];
+
+  return lines.join("\n") + "\n";
+}
+
+export function renderSessionPreview(plan) {
+  const lines = [
+    "## Session Preview",
+    `- workstream: ${plan.entry.workstream}`,
+    `- branch: ${plan.entry.branch}`,
+    "",
+    "## Session Update",
+    ...asBulletLines([
+      `status: ${plan.entry.status}`,
+      `next: ${plan.entry.next}`,
+      `handoff: ${plan.entry.handoff}`,
+      "SESSION.md and .temper/workflow/session.json will be updated"
+    ])
   ];
 
   return lines.join("\n") + "\n";

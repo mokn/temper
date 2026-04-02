@@ -155,6 +155,9 @@ function summarizeRun(payload, options) {
   if (payload?.handoffPath) {
     summary.handoff_path = payload.handoffPath;
   }
+  if (payload?.entry?.workstream) {
+    summary.workstream = payload.entry.workstream;
+  }
   if (payload?.configPath) {
     summary.config_path = payload.configPath;
   }
@@ -170,7 +173,7 @@ function inferStatus(payload, options) {
     return payload.execution.ok === true ? "ok" : "failed";
   }
 
-  if (options.command === "handoff") {
+  if (options.command === "handoff" || options.command === "session") {
     return options.action === "write" ? "written" : options.action;
   }
   if (options.command === "onboard" || options.command === "adopt" || options.command === "init") {
