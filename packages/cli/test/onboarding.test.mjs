@@ -38,7 +38,35 @@ test("onboard existing --write materializes reports, config, and assistant surfa
   assert.ok(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")));
 });
 
-function createOnboardingFixtureRepo(t) {
+test("onboard existing --rehearse replays a fresh install in a disposable lab", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t, {
+    seedTemperInstall: true
+  });
+  const rehearsalRoot = path.join(os.tmpdir(), `temper-rehearsal-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const sourceAgentsBefore = fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8");
+  const sourceConfigBefore = fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8");
+
+  t.after(() => fs.rmSync(rehearsalRoot, { recursive: true, force: true }));
+
+  execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--rehearse", "--out", rehearsalRoot], {
+    stdio: "ignore"
+  });
+
+  assert.equal(fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8"), sourceAgentsBefore);
+  assert.equal(fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8"), sourceConfigBefore);
+  assert.ok(fs.existsSync(path.join(rehearsalRoot, "temper.config.json")));
+  assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/reports/rehearsal.json")));
+  assert.ok(!fs.existsSync(path.join(rehearsalRoot, ".temper/stale.txt")));
+
+  const rehearsalAgents = fs.readFileSync(path.join(rehearsalRoot, "AGENTS.md"), "utf8");
+  const rehearsalShip = fs.readFileSync(path.join(rehearsalRoot, ".claude/commands/temper-ship.md"), "utf8");
+  assert.match(rehearsalAgents, /pnpm exec temper/);
+  assert.ok(!rehearsalAgents.includes("pnpm exec old-temper"));
+  assert.match(rehearsalShip, /pnpm exec temper/);
+  assert.ok(!rehearsalShip.includes("old install"));
+});
+
+function createOnboardingFixtureRepo(t, options = {}) {
   const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "temper-onboard-"));
   t.after(() => fs.rmSync(repoDir, { recursive: true, force: true }));
 
@@ -116,6 +144,17 @@ function createOnboardingFixtureRepo(t) {
     ) + "\n"
   );
   write(repoDir, "packages/client/src/ui/onboarding.tsx", "export const onboarding = true;\n");
+
+  if (options.seedTemperInstall) {
+    write(repoDir, "temper.config.json", "{\n  \"mode\": \"stale\"\n}\n");
+    write(repoDir, ".temper/stale.txt", "stale runtime\n");
+    write(repoDir, ".claude/commands/temper-ship.md", "old install\n");
+    write(
+      repoDir,
+      "AGENTS.md",
+      "# Agents\n\n<!-- TEMPER_RUNTIME:BEGIN -->\n## Temper\n\n- Run `pnpm exec old-temper ship lite --cwd .`\n<!-- TEMPER_RUNTIME:END -->\n"
+    );
+  }
 
   execFileSync("git", ["init", "-b", "dev", repoDir], { stdio: "ignore" });
   execFileSync("git", ["-C", repoDir, "config", "user.email", "temper@example.com"], { stdio: "ignore" });

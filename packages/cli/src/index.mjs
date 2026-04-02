@@ -9,7 +9,11 @@ import {
   createConfigFromAnalysis,
   renderAdoptionReport
 } from "./lib/project-analysis.mjs";
-import { buildExistingProjectOnboarding } from "./lib/onboarding.mjs";
+import {
+  buildExistingProjectOnboarding,
+  materializeOnboardingInstall,
+  runExistingProjectOnboardingRehearsal
+} from "./lib/onboarding.mjs";
 import {
   CONFIG_FILENAME,
   findConfig,
@@ -81,7 +85,7 @@ function showHelp() {
   console.log("");
   console.log("Commands:");
   printList([
-    "onboard existing [--cwd ...] [--write] [--assistant claude,codex]",
+    "onboard existing [--cwd ...] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]",
     "doctor",
     "derive",
     "query <terms>",
@@ -301,10 +305,73 @@ function runInit(rest) {
 function runOnboard(rest) {
   const [subcommand = "existing", ...subRest] = rest;
   if (subcommand !== "existing") {
-    throw new Error("Usage: temper onboard existing [--cwd ...] [--write] [--assistant claude,codex]");
+    throw new Error(
+      "Usage: temper onboard existing [--cwd ...] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]"
+    );
   }
 
   const args = parseCommonArgs(subRest);
+  if (args.rehearse) {
+    const rehearsal = runExistingProjectOnboardingRehearsal({
+      cwd: args.cwd,
+      family: args.family,
+      stack: args.stack,
+      name: args.name,
+      assistants: args.assistants,
+      lab: args.lab,
+      out: args.out
+    });
+
+    if (args.json) {
+      console.log(
+        JSON.stringify(
+          {
+            source_root: rehearsal.sourceRoot,
+            rehearsal_root: rehearsal.rehearsalRoot,
+            reset: rehearsal.reset,
+            generated: {
+              config: rehearsal.generated.configPath,
+              onboarding_report: rehearsal.generated.onboardingPath,
+              onboarding_json: rehearsal.generated.onboardingJsonPath,
+              adoption_report: rehearsal.generated.adoptionPath,
+              rehearsal_report: rehearsal.generated.rehearsalPath,
+              assistant_files: rehearsal.generated.written
+            },
+            analysis: rehearsal.result.analysis,
+            config: rehearsal.result.config,
+            onboarding: rehearsal.result.onboarding,
+            report: rehearsal.result.report
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
+    printTemperBanner("First-run onboarding rehearsal complete");
+    console.log("");
+    console.log(`Source: ${rehearsal.sourceRoot}`);
+    console.log(`Rehearsal: ${rehearsal.rehearsalRoot}`);
+    console.log(`Onboarding Report: ${rehearsal.generated.onboardingPath}`);
+    console.log(`Adoption Report: ${rehearsal.generated.adoptionPath}`);
+    console.log(`Replay Manifest: ${rehearsal.generated.rehearsalPath}`);
+    console.log("");
+    console.log("Reset:");
+    printList(rehearsal.reset.length > 0 ? rehearsal.reset : ["no prior Temper install artifacts found"]);
+    console.log("");
+    console.log("Generated:");
+    printList([
+      relativize(rehearsal.rehearsalRoot, rehearsal.generated.configPath),
+      relativize(rehearsal.rehearsalRoot, rehearsal.generated.onboardingPath),
+      relativize(rehearsal.rehearsalRoot, rehearsal.generated.onboardingJsonPath),
+      relativize(rehearsal.rehearsalRoot, rehearsal.generated.adoptionPath),
+      relativize(rehearsal.rehearsalRoot, rehearsal.generated.rehearsalPath),
+      ...rehearsal.generated.written
+    ]);
+    return;
+  }
+
   const result = buildExistingProjectOnboarding({
     cwd: args.cwd,
     family: args.family,
@@ -329,37 +396,26 @@ function runOnboard(rest) {
   }
 
   if (args.write) {
-    const configPath = writeProjectConfig(result.analysis.root, result.config, {
+    const generated = materializeOnboardingInstall({
+      result,
+      assistants: args.assistants,
       force: args.force
-    });
-    const onboardingPath = writeProjectFile(result.analysis.root, ".temper/reports/onboarding.md", result.report);
-    const onboardingJsonPath = writeProjectFile(
-      result.analysis.root,
-      ".temper/reports/onboarding.json",
-      JSON.stringify(result.onboarding, null, 2) + "\n"
-    );
-    const adoptionPath = writeProjectFile(result.analysis.root, ".temper/reports/adoption.md", result.adoptionReport);
-    const written = installAssistantAdapters({
-      projectRoot: result.analysis.root,
-      config: result.config,
-      analysis: result.analysis,
-      assistants: args.assistants
     });
 
     printTemperBanner("Existing project onboarding complete");
     console.log("");
     console.log(`Root: ${result.analysis.root}`);
-    console.log(`Config: ${configPath}`);
-    console.log(`Onboarding Report: ${onboardingPath}`);
-    console.log(`Adoption Report: ${adoptionPath}`);
+    console.log(`Config: ${generated.configPath}`);
+    console.log(`Onboarding Report: ${generated.onboardingPath}`);
+    console.log(`Adoption Report: ${generated.adoptionPath}`);
     console.log("");
     console.log("Generated:");
     printList([
-      relativize(result.analysis.root, configPath),
-      relativize(result.analysis.root, onboardingPath),
-      relativize(result.analysis.root, onboardingJsonPath),
-      relativize(result.analysis.root, adoptionPath),
-      ...written
+      relativize(result.analysis.root, generated.configPath),
+      relativize(result.analysis.root, generated.onboardingPath),
+      relativize(result.analysis.root, generated.onboardingJsonPath),
+      relativize(result.analysis.root, generated.adoptionPath),
+      ...generated.written
     ]);
     return;
   }
@@ -517,7 +573,8 @@ function parseCommonArgs(args) {
     assistants: ["claude", "codex"],
     force: false,
     write: false,
-    json: false
+    json: false,
+    rehearse: false
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -558,6 +615,15 @@ function parseCommonArgs(args) {
         break;
       case "json":
         parsed.json = true;
+        break;
+      case "rehearse":
+        parsed.rehearse = true;
+        break;
+      case "lab":
+        parsed.lab = nextValue;
+        break;
+      case "out":
+        parsed.out = path.resolve(nextValue || parsed.cwd);
         break;
       default:
         break;

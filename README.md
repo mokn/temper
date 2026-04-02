@@ -49,6 +49,7 @@ Still to deepen:
 
 - `temper onboard existing --cwd <repo>`
 - `temper onboard existing --cwd <repo> --write`
+- `temper onboard existing --cwd <repo> --rehearse`
 - `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
@@ -85,3 +86,5 @@ With `--write`, it installs:
 - `.temper/reports/onboarding.json`
 - `.temper/reports/adoption.md`
 - Claude/Codex assistant surfaces
+
+With `--rehearse`, Temper replays the full first-run install in a disposable lab instead of touching the source repo. This is the repeatable "fresh install from GitHub" path for tuning the first five minutes of the onboarding experience.

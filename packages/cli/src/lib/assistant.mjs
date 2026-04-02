@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { ensureTemperDir, rel, writeProjectFile } from "./project-config.mjs";
 
+export const TEMPER_RUNTIME_MARKER = "TEMPER_RUNTIME";
+
 export function installAssistantAdapters(options) {
   const projectRoot = path.resolve(options.projectRoot);
   const config = options.config;
@@ -181,7 +183,7 @@ function installWorkflowHooks(projectRoot, runtime) {
 
   for (const filePath of files) {
     const existing = fs.readFileSync(filePath, "utf8");
-    const next = upsertMarkedBlock(existing, "TEMPER_RUNTIME", renderWorkflowHookBlock(runtime));
+    const next = upsertMarkedBlock(existing, TEMPER_RUNTIME_MARKER, renderWorkflowHookBlock(runtime));
     if (next !== existing) {
       fs.writeFileSync(filePath, next);
       written.push(filePath);
@@ -203,7 +205,7 @@ Temper is installed as the operating layer for this repo.
 `;
 }
 
-function upsertMarkedBlock(content, marker, body) {
+export function upsertMarkedBlock(content, marker, body) {
   const start = `<!-- ${marker}:BEGIN -->`;
   const end = `<!-- ${marker}:END -->`;
   const block = `${start}\n${body.trimEnd()}\n${end}`;
@@ -215,6 +217,17 @@ function upsertMarkedBlock(content, marker, body) {
 
   const separator = content.endsWith("\n\n") ? "" : content.endsWith("\n") ? "\n" : "\n\n";
   return `${content}${separator}${block}\n`;
+}
+
+export function removeMarkedBlock(content, marker) {
+  const start = `<!-- ${marker}:BEGIN -->`;
+  const end = `<!-- ${marker}:END -->`;
+  const pattern = new RegExp(`\\n?${escapeRegExp(start)}[\\s\\S]*?${escapeRegExp(end)}\\n?`, "m");
+  if (!pattern.test(content)) {
+    return content;
+  }
+  const stripped = content.replace(pattern, "\n").replace(/\n{3,}/g, "\n\n");
+  return stripped.endsWith("\n") ? stripped : `${stripped}\n`;
 }
 
 function escapeRegExp(value) {

@@ -1,11 +1,18 @@
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import {
+  TEMPER_RUNTIME_MARKER,
+  installAssistantAdapters,
+  removeMarkedBlock
+} from "./assistant.mjs";
 import {
   analyzeProject,
   createConfigFromAnalysis,
   renderAdoptionReport
 } from "./project-analysis.mjs";
+import { CONFIG_FILENAME, writeProjectConfig, writeProjectFile } from "./project-config.mjs";
 import { TEMPER_SWORD_ART } from "./output.mjs";
 
 const SKIP_DIRS = new Set([
@@ -20,6 +27,8 @@ const SKIP_DIRS = new Set([
   "out",
   "tmp"
 ]);
+
+const REHEARSAL_SKIP_DIRS = new Set([...SKIP_DIRS, ".temper"]);
 
 export function buildExistingProjectOnboarding(options = {}) {
   const analysis = analyzeProject({ cwd: options.cwd });
@@ -89,6 +98,88 @@ export function buildExistingProjectOnboarding(options = {}) {
   };
 }
 
+export function materializeOnboardingInstall(options) {
+  const projectRoot = path.resolve(options.projectRoot ?? options.result.analysis.root);
+  const result = options.result;
+  const configPath = writeProjectConfig(projectRoot, result.config, {
+    force: options.force
+  });
+  const onboardingPath = writeProjectFile(projectRoot, ".temper/reports/onboarding.md", result.report);
+  const onboardingJsonPath = writeProjectFile(
+    projectRoot,
+    ".temper/reports/onboarding.json",
+    JSON.stringify(result.onboarding, null, 2) + "\n"
+  );
+  const adoptionPath = writeProjectFile(projectRoot, ".temper/reports/adoption.md", result.adoptionReport);
+  const written = installAssistantAdapters({
+    projectRoot,
+    config: result.config,
+    analysis: result.analysis,
+    assistants: options.assistants
+  });
+
+  return {
+    configPath,
+    onboardingPath,
+    onboardingJsonPath,
+    adoptionPath,
+    written
+  };
+}
+
+export function runExistingProjectOnboardingRehearsal(options = {}) {
+  const sourceRoot = path.resolve(options.cwd ?? process.cwd());
+  const rehearsalRoot = resolveRehearsalRoot(sourceRoot, options);
+
+  prepareRehearsalRoot(sourceRoot, rehearsalRoot);
+  const reset = stripExistingTemperInstall(rehearsalRoot);
+  const result = buildExistingProjectOnboarding({
+    cwd: rehearsalRoot,
+    family: options.family,
+    stack: options.stack,
+    name: options.name
+  });
+  const generated = materializeOnboardingInstall({
+    projectRoot: rehearsalRoot,
+    result,
+    assistants: options.assistants,
+    force: true
+  });
+  const rehearsalPath = writeProjectFile(
+    rehearsalRoot,
+    ".temper/reports/rehearsal.json",
+    JSON.stringify(
+      {
+        generated_at: new Date().toISOString(),
+        source_root: sourceRoot,
+        rehearsal_root: rehearsalRoot,
+        reset_paths: reset,
+        generated_paths: [
+          relativeTo(rehearsalRoot, generated.configPath),
+          relativeTo(rehearsalRoot, generated.onboardingPath),
+          relativeTo(rehearsalRoot, generated.onboardingJsonPath),
+          relativeTo(rehearsalRoot, generated.adoptionPath),
+          ...generated.written
+        ]
+      },
+      null,
+      2
+    ) + "\n"
+  );
+
+  return {
+    sourceRoot,
+    rehearsalRoot,
+    reset,
+    rehearsalPath,
+    result,
+    generated: {
+      ...generated,
+      rehearsalPath
+    }
+  };
+}
+
 export function renderOnboardingReport({ analysis, config, onboarding }) {
   const lines = [
     "# Temper Onboarding Report",
@@ -142,6 +233,111 @@ export function renderOnboardingReport({ analysis, config, onboarding }) {
   ];
 
   return lines.join("\n") + "\n";
+}
+
+function resolveRehearsalRoot(sourceRoot, options) {
+  if (options.out) {
+    return path.resolve(options.out);
+  }
+
+  const repoName = path.basename(sourceRoot).replace(/[^a-zA-Z0-9._-]+/g, "-").toLowerCase() || "project";
+  const labName = (options.lab || "first-run").replace(/[^a-zA-Z0-9._-]+/g, "-").toLowerCase() || "first-run";
+  return path.join(os.homedir(), ".temper", "labs", `${repoName}-${labName}`);
+}
+
+function prepareRehearsalRoot(sourceRoot, rehearsalRoot) {
+  if (rehearsalRoot === sourceRoot || rehearsalRoot.startsWith(`${sourceRoot}${path.sep}`)) {
+    throw new Error("Rehearsal output must live outside the source repo.");
+  }
+
+  fs.rmSync(rehearsalRoot, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(rehearsalRoot), { recursive: true });
+  execFileSync("git", ["clone", "--quiet", "--no-hardlinks", sourceRoot, rehearsalRoot], {
+    stdio: "ignore"
+  });
+  clearWorkingTree(rehearsalRoot);
+  copyWorkingTreeSnapshot(sourceRoot, rehearsalRoot);
+}
+
+function clearWorkingTree(rehearsalRoot) {
+  for (const entry of fs.readdirSync(rehearsalRoot)) {
+    if (entry === ".git") {
+      continue;
+    }
+    fs.rmSync(path.join(rehearsalRoot, entry), { recursive: true, force: true });
+  }
+}
+
+function copyWorkingTreeSnapshot(sourceRoot, rehearsalRoot) {
+  const entries = fs.readdirSync(sourceRoot);
+  for (const entry of entries) {
+    if (REHEARSAL_SKIP_DIRS.has(entry) || entry === ".git") {
+      continue;
+    }
+
+    const sourcePath = path.join(sourceRoot, entry);
+    const targetPath = path.join(rehearsalRoot, entry);
+    fs.cpSync(sourcePath, targetPath, {
+      recursive: true,
+      dereference: false,
+      filter: (candidate) => shouldCopyForRehearsal(sourceRoot, candidate)
+    });
+  }
+}
+
+function shouldCopyForRehearsal(sourceRoot, candidatePath) {
+  const relativePath = path.relative(sourceRoot, candidatePath);
+  if (!relativePath || relativePath.startsWith("..")) {
+    return true;
+  }
+
+  const segments = relativePath.split(path.sep);
+  return !segments.some((segment) => REHEARSAL_SKIP_DIRS.has(segment) || segment === ".git");
+}
+
+function stripExistingTemperInstall(projectRoot) {
+  const reset = [];
+  const configPath = path.join(projectRoot, CONFIG_FILENAME);
+  if (fs.existsSync(configPath)) {
+    fs.rmSync(configPath, { force: true });
+    reset.push(CONFIG_FILENAME);
+  }
+
+  const temperDir = path.join(projectRoot, ".temper");
+  if (fs.existsSync(temperDir)) {
+    fs.rmSync(temperDir, { recursive: true, force: true });
+    reset.push(".temper/");
+  }
+
+  const claudeCommandsDir = path.join(projectRoot, ".claude", "commands");
+  if (fs.existsSync(claudeCommandsDir)) {
+    for (const entry of fs.readdirSync(claudeCommandsDir)) {
+      if (!/^temper-.*\.md$/i.test(entry)) {
+        continue;
+      }
+      fs.rmSync(path.join(claudeCommandsDir, entry), { force: true });
+      reset.push(path.posix.join(".claude/commands", entry));
+    }
+  }
+
+  for (const relativePath of ["AGENTS.md", "CLAUDE.md"]) {
+    const filePath = path.join(projectRoot, relativePath);
+    if (!fs.existsSync(filePath)) {
+      continue;
+    }
+    const existing = fs.readFileSync(filePath, "utf8");
+    const next = removeMarkedBlock(existing, TEMPER_RUNTIME_MARKER);
+    if (next !== existing) {
+      fs.writeFileSync(filePath, next);
+      reset.push(relativePath);
+    }
+  }
+
+  return reset.sort();
+}
+
+function relativeTo(root, targetPath) {
+  return path.relative(root, targetPath).replace(/\\/g, "/") || ".";
 }
 
 function collectStrengths(analysis, workflows, history) {
