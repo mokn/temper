@@ -1,0 +1,28 @@
+{
+  "id": "capabilities/handoff",
+  "source": "capabilities/handoff.md",
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/handoff.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Preserve continuity across multiple sessions, contributors, and assistants."
+    },
+    {
+      "id": "capabilities/handoff.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- capture git state - summarize current work - record blockers and next steps - record deploy and environment state - update shared session surfaces"
+    },
+    {
+      "id": "capabilities/handoff.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "Can someone restart from here without relying on chat memory?"
+    }
+  ]
+}

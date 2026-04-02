@@ -1,0 +1,28 @@
+{
+  "id": "capabilities/verify",
+  "source": "capabilities/verify.md",
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/verify.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Read-only verification that intended game state matches actual project and environment state."
+    },
+    {
+      "id": "capabilities/verify.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- source-of-truth parity - environment sanity - data drift checks - deploy-state checks - generated artifact sanity"
+    },
+    {
+      "id": "capabilities/verify.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "Does reality still match the intended source of truth?"
+    }
+  ]
+}

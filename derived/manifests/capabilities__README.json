@@ -1,0 +1,14 @@
+{
+  "id": "capabilities/README",
+  "source": "capabilities/README.md",
+  "sectionCount": 1,
+  "sections": [
+    {
+      "id": "capabilities/README.01",
+      "title": "Capability Canon",
+      "level": 1,
+      "slug": "capability-canon",
+      "summary": "Capability docs define what each command means doctrinally. These are not shell help pages. They are the canonical operating manuals for each capability. Seeded capabilities in thi"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "id": "capabilities/review",
+  "source": "capabilities/review.md",
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/review.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Read-only review pipeline for AI-assisted game development."
+    },
+    {
+      "id": "capabilities/review.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- code quality review - game-quality review - security review - severity-ordered findings - specialist routing when needed"
+    },
+    {
+      "id": "capabilities/review.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What are the real blockers, warnings, and risks in this change?"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "id": "README",
+  "source": "README.md",
+  "sectionCount": 1,
+  "sections": [
+    {
+      "id": "README.01",
+      "title": "Canon",
+      "level": 1,
+      "slug": "canon",
+      "summary": "This directory stores deep doctrine, not runtime prompts. Rules: - long-form canonical docs live here - derived runtime artifacts do not - every canonical doc should eventually be "
+    }
+  ]
+}

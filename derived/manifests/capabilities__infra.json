@@ -1,0 +1,28 @@
+{
+  "id": "capabilities/infra",
+  "source": "capabilities/infra.md",
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/infra.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Operational review for environments, services, deploy pipelines, recovery, and system plumbing."
+    },
+    {
+      "id": "capabilities/infra.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- environment discipline - deploy plumbing - background services - indexers - relayers - telemetry pipelines - rollback and recovery - secrets and config hygiene"
+    },
+    {
+      "id": "capabilities/infra.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What can break in operation, and how fast can we recover when it does?"
+    }
+  ]
+}

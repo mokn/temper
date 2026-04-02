@@ -1,0 +1,28 @@
+{
+  "id": "capabilities/security",
+  "source": "capabilities/security.md",
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/security.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Security review for game projects, not just generic applications."
+    },
+    {
+      "id": "capabilities/security.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- auth and access control review - trust boundaries - state manipulation risks - exploit surfaces - economy abuse - griefing vectors - bot profitability - incident containment thin"
+    },
+    {
+      "id": "capabilities/security.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "How does this get abused by a smart attacker or a selfish player?"
+    }
+  ]
+}

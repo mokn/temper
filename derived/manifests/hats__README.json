@@ -1,0 +1,14 @@
+{
+  "id": "hats/README",
+  "source": "hats/README.md",
+  "sectionCount": 1,
+  "sections": [
+    {
+      "id": "hats/README.01",
+      "title": "Hat Canon",
+      "level": 1,
+      "slug": "hat-canon",
+      "summary": "Canonical hat docs belong here. Target set: - kaplan.md - miyamoto.md - meier.md - wright.md - carmack.md Each doc should contain: - context - principles - anti-patterns - examples"
+    }
+  ]
+}

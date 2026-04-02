@@ -1,0 +1,14 @@
+{
+  "id": "architecture/README",
+  "source": "architecture/README.md",
+  "sectionCount": 1,
+  "sections": [
+    {
+      "id": "architecture/README.01",
+      "title": "Architecture Canon",
+      "level": 1,
+      "slug": "architecture-canon",
+      "summary": "Canonical architecture docs belong here. Target coverage: - deterministic turn-based - data-driven progression RPG - real-time wave/systemic - real-time action - competitive server"
+    }
+  ]
+}
