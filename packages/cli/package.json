@@ -2,6 +2,8 @@
   "name": "temper-cli",
   "version": "0.1.0",
   "private": true,
+  "description": "Temper command-line interface",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "temper": "./bin/temper.mjs"

@@ -1,204 +1,153 @@
 # Temper
 
-Temper is a game-development operating system for AI-assisted teams.
+Temper is a repo-local operating system for AI-assisted game teams.
 
-This repo is in the first implementation phase:
+It installs a shared canon, continuity layer, run artifacts, and eval surfaces into an existing repository so Claude, Codex, and human operators are working from the same local contract instead of chat history and ad hoc prompts.
 
-- doctrine-first
-- local-first
-- command-surface first
-- retrieval-ready
+## Public Alpha
 
-The initial focus is:
+Temper is in an early public alpha.
 
-1. canonical doctrine storage
-2. canonical-to-derived conversion
-3. local retrieval for cheap-model synthesis
-4. assistant-facing capability surfaces
-5. repo adoption and workflow execution
+- GitHub install path first
+- local-first and human-readable
+- no hosted control plane yet
+- no telemetry is implemented in this repo yet
+- npm publish is not configured yet
 
-See:
+## What It Does
 
-- `docs/spec/TEMPER_FULL_DESIGN.md`
-- `docs/spec/TEMPER_DOCTRINE_MAP.md`
-- `docs/spec/TEMPER_HATS_V1.md`
-- `docs/spec/TEMPER_ARCHITECTURE_FAMILIES.md`
+- onboards an existing repo with a repo-local Temper contract
+- generates shared Claude/Codex assistant surfaces from the same canon
+- installs a short `SESSION.md` board plus structured handoff files
+- records machine-readable run artifacts under `.temper/runs/`
+- evaluates whether a repo can be resumed cold with `temper eval restart`
 
-## Current Status
+## Why It Exists
 
-- Kaplan canon imported
-- remaining top-five hats expanded into canon
-- architecture family canon seeded across eight families
-- repo scaffold created
-- capability surface scaffolded
-- derived-layer tooling scaffolded
-- local query/retrieval scaffolded
-- `coach` routing packet implemented
-- `init` and `adopt` project flows implemented
-- repo-aware `ship lite` / `ship full` execution implemented
-- assistant adapter file generation implemented
+Most agent workflows still depend on prompt state and session memory. Temper pushes the important operating state into the repo itself:
 
-Still to deepen:
+- canon in `.temper/assistants/`
+- continuity in `SESSION.md` and `HANDOFF_<slug>.md`
+- run history in `.temper/runs/`
+- onboarding and policy reports in `.temper/reports/`
 
-- source enrichment and sharper quote validation for Miyamoto, Meier, Wright, and Carmack
-- overlay canon for mobile/F2P, live-ops economy, procedural generation, and multiplayer authority
-- richer hotfix/review/verify execution
-- deeper assistant automation on top of the generated adapter files
+That makes the workflow cheaper to resume, easier to inspect, and easier to trust.
 
-## Current Entry Points
+## Quickstart
 
-- `temper onboard existing --cwd <repo>`
-- `temper onboard existing --cwd <repo> --preview`
-- `temper onboard existing --cwd <repo> --dry-run`
-- `temper onboard existing --cwd <repo> --write`
-- `temper onboard existing --cwd <repo> --rehearse`
-- `temper uninstall --cwd <repo> --preview`
-- `temper uninstall --cwd <repo> --write`
-- `temper handoff --cwd <repo> --slug <slug> --summary "<summary>" --next "<next step>"`
-- `temper inspect --cwd <repo>`
-- `temper runs ls --cwd <repo>`
-- `temper runs show <id> --cwd <repo>`
-- `temper session show --cwd <repo>`
-- `temper session set --cwd <repo> --next "<next step>" --status active --write`
-- `temper eval restart --cwd <repo>`
-- `temper init --existing --cwd <repo>` (alias)
-- `temper adopt --cwd <repo>`
-- `temper adopt --cwd <repo> --write`
-- `temper init --cwd <repo>`
-- `temper ship lite --cwd <repo> --intent "<summary>"`
-- `temper ship full --cwd <repo> --intent "<summary>"`
-- `temper assistant install --cwd <repo>`
+Install Temper from GitHub into a target repo:
 
-## GitHub Install Shape
+```bash
+pnpm add -D github:<owner>/temper#<sha>
+```
 
-For a fresh install into another repo, install Temper as a dev dependency from GitHub, then run it through that repo's package manager:
+Then from that target repo:
 
-- `pnpm exec temper ...`
+```bash
+pnpm exec temper onboard existing --cwd . --preview
+pnpm exec temper onboard existing --cwd . --write
+pnpm exec temper inspect --cwd .
+```
+
+Other package managers work too:
+
 - `npx temper ...`
 - `yarn temper ...`
 - `bunx temper ...`
 
-The generated Claude/Codex assistant files are written against that package-manager invocation, not a machine-local checkout path.
+## Core Commands
 
-Temper now also writes a shared assistant canon at:
+- `temper onboard existing --cwd <repo> --preview`
+  Inspect the exact install plan without writing files.
+- `temper onboard existing --cwd <repo> --write`
+  Install Temper into an existing repo.
+- `temper onboard existing --cwd <repo> --rehearse`
+  Replay onboarding in a disposable lab.
+- `temper inspect --cwd <repo>`
+  Show the installed canon, continuity, policy, and recent runs.
+- `temper session show --cwd <repo>`
+  Show the live managed session board.
+- `temper session set --cwd <repo> --next "<next step>" --status active --write`
+  Update the live session state.
+- `temper handoff --cwd <repo> --slug <slug> --summary "<summary>" --next "<next step>" --write`
+  Create a cold-restart artifact and update the session board.
+- `temper runs ls --cwd <repo>`
+  List recorded run artifacts.
+- `temper runs show latest --cwd <repo>`
+  Inspect a recorded run artifact.
+- `temper eval restart --cwd <repo>`
+  Check whether the current continuity surfaces are good enough to resume cold.
+- `temper uninstall --cwd <repo> --preview`
+  Preview what Temper would remove.
+- `temper uninstall --cwd <repo> --write`
+  Remove Temper-owned repo surfaces.
 
-- `.temper/assistants/shared-canon.json`
-- `.temper/assistants/shared-canon.md`
+## Trust Model
 
-Claude and Codex surfaces should parse that same repo-local canon and then adapt it to their own syntax instead of carrying separate duplicated doctrine.
+Temper is designed to be inspectable and reversible.
 
-Temper also writes a lightweight continuity spine:
+- preview and dry-run flows stay read-only
+- generated repo surfaces are plain text
+- run artifacts are local JSON files
+- uninstall removes Temper-owned surfaces
+- no telemetry is implemented in this repo yet
 
-- `SESSION.md`
-- `.temper/workflow/continuity.json`
-- `.temper/workflow/session.json`
-- `.temper/workflow/HANDOFF_TEMPLATE.md`
+## What Temper Writes
 
-The token strategy is:
-
-- keep `SESSION.md` short
-- put restart detail in `HANDOFF_<slug>.md`
-- have Claude and Codex read the same continuity canon before relying on chat history
-
-Temper now also records write/execution artifacts under:
-
-- `.temper/runs/<run-id>.json`
-
-This is the first harness-history layer:
-
-- write commands like `adopt`, `init`, `onboard --write`, and `handoff --write` record machine-readable artifacts
-- executed `ship` runs record the full ship report
-- read-only preview and dry-run flows stay read-only by default
-
-## Existing Project Onboarding
-
-`temper onboard existing` is the front door for bringing Temper into an established repo.
-
-It does three things before writing anything:
-
-- maps the project model: family, stack, source-of-truth, environments, workflows, git history
-- audits the workflow: local vs beta vs prod posture, operator habits, token-efficiency waste, and trust gaps
-- recommends execution policy: which hooks are safe by default, which should stay explicit, and how `ship lite/full` should evolve
-
-With `--preview` or `--dry-run`, Temper stays read-only and shows:
-
-- the exact files it would create or update
-- the operator habit changes it is trying to introduce
-- the manual rollback path if you decide not to keep the install
-
-With `--write`, it installs:
+On a normal install, Temper writes:
 
 - `temper.config.json`
+- `.temper/assistants/shared-canon.json`
+- `.temper/assistants/shared-canon.md`
+- `.temper/assistants/claude.md`
+- `.temper/assistants/codex.md`
 - `.temper/reports/onboarding.md`
 - `.temper/reports/onboarding.json`
 - `.temper/reports/adoption.md`
 - `.temper/workflow/continuity.json`
 - `.temper/workflow/session.json`
 - `.temper/workflow/HANDOFF_TEMPLATE.md`
-- `SESSION.md` Temper-managed continuity block
-- `.temper/assistants/shared-canon.json`
-- `.temper/assistants/shared-canon.md`
-- Claude/Codex assistant surfaces
+- `.temper/runs/<run-id>.json`
+- a Temper-managed block inside `SESSION.md`
+- Claude command surfaces under `.claude/commands/temper-*.md`
 
-Onboarded ship policy now defaults to the blessed local path and keeps live/prod checks explicit:
+## Continuity Model
 
-- `ship lite` and `ship full` run blessed steps by default
-- gated beta/live steps must be promoted explicitly with `temper ship <mode> --promote <step>`
-- prod-sensitive promoted steps also require `--confirm-prod`
-
-With `--rehearse`, Temper replays the full first-run install in a disposable lab instead of touching the source repo. This is the repeatable "fresh install from GitHub" path for tuning the first five minutes of the onboarding experience.
-
-## Uninstall / Reset
-
-`temper uninstall` previews or removes Temper-owned repo artifacts:
-
-- `temper uninstall --cwd <repo> --preview`
-- `temper uninstall --cwd <repo> --write`
-- `temper reset ...` works as an alias
-
-It only removes Temper-owned surfaces:
-
-- `temper.config.json`
-- `.temper/`
-- `.claude/commands/temper-*.md`
-- Temper runtime blocks inside `AGENTS.md` / `CLAUDE.md`
-- the Temper-managed session block inside `SESSION.md`
-
-## Session Continuity
-
-Use `temper handoff` to create the canonical restart artifact and keep `SESSION.md` current:
-
-- `temper handoff --cwd <repo> --slug economy-pass --summary "Wrapped the balance pass." --next "Run beta smoke."`
-- add `--write` to record `HANDOFF_economy-pass.md` and update the Temper-managed `SESSION.md` block
-
-The intended split is:
+Temper keeps the active board short and the restart artifact detailed.
 
 - `SESSION.md` is the short active board
-- `HANDOFF_<slug>.md` is the restart document with enough detail to resume cold
+- `HANDOFF_<slug>.md` is the detailed restart document
+- `.temper/workflow/session.json` is the machine-readable session state
 
-For the live board itself, use `temper session` instead of hand-editing the managed block:
+The current restart eval checks:
 
-- `temper session show --cwd <repo>`
-- `temper session set --cwd <repo> --workstream economy-pass --status active --next "Run beta smoke." --handoff HANDOFF_economy-pass.md --write`
-
-## Restart Eval
-
-Use `temper eval restart` to check whether a repo can be resumed cold from the continuity surfaces:
-
-- `temper eval restart --cwd <repo>`
-- `temper eval restart --cwd <repo> --json`
-
-The current eval checks:
-
-- whether `SESSION.md` has the Temper-managed session block
+- whether `SESSION.md` contains the Temper-managed session block
 - whether `.temper/workflow/session.json` has an active entry
 - whether the active entry points to a real handoff
-- whether that handoff includes restart-critical sections and numbered next steps
+- whether that handoff contains restart-critical sections and numbered next steps
 
-## Inspecting Harness State
+## Current Limits
 
-Use these to inspect the repo-local harness state without reading files by hand:
+- packaged for GitHub install, not npm publish
+- no hosted/team layer yet
+- restart eval is the only built-in eval today
+- review, hotfix, and broader benchmark flows still need deeper runtime work
 
-- `temper inspect --cwd <repo>`
-- `temper runs ls --cwd <repo>`
-- `temper runs show latest --cwd <repo>`
+## Development
+
+Run the test suite:
+
+```bash
+pnpm test
+```
+
+## Design Docs
+
+- `docs/spec/TEMPER_FULL_DESIGN.md`
+- `docs/spec/TEMPER_DOCTRINE_MAP.md`
+- `docs/spec/TEMPER_HATS_V1.md`
+- `docs/spec/TEMPER_ARCHITECTURE_FAMILIES.md`
+
+## License
+
+MIT. See [LICENSE](LICENSE).

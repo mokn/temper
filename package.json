@@ -2,6 +2,8 @@
   "name": "temper",
   "private": true,
   "version": "0.1.0",
+  "description": "Repo-local operating system for AI-assisted game teams",
+  "license": "MIT",
   "type": "module",
   "bin": {
     "temper": "./packages/cli/bin/temper.mjs"
