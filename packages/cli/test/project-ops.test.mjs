@@ -170,6 +170,23 @@ test("temper inspect summarizes installed surfaces and recent runs", async (t) =
   assert.ok(report.runs.latest.some((item) => item.command === "adopt"));
 });
 
+test("temper inspect falls back to SESSION.md outside git repos", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  execFileSync("node", [CLI_PATH, "adopt", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  const report = JSON.parse(
+    execFileSync("node", [CLI_PATH, "inspect", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(report.continuity.session_file.present, true);
+  assert.equal(report.continuity.session_file.path, "SESSION.md");
+});
+
 test("temper session set updates the managed board and records a run artifact", async (t) => {
   const repoDir = createFixtureRepo(t);
 

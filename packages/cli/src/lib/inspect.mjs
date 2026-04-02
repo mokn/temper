@@ -9,6 +9,7 @@ export function buildInspectReport(options = {}) {
   const config = loadProjectConfig({ cwd: projectRoot, required: false });
   const repo = gatherRepoContext({ cwd: projectRoot });
   const recentRuns = listRunArtifacts({ cwd: projectRoot, limit: 5 });
+  const sessionPath = repo.workflowFiles?.session || path.join(projectRoot, "SESSION.md");
 
   return {
     schema_version: 1,
@@ -46,8 +47,8 @@ export function buildInspectReport(options = {}) {
     },
     continuity: {
       session_file: {
-        present: Boolean(repo.workflowFiles?.session && fs.existsSync(repo.workflowFiles.session)),
-        path: repo.workflowFiles?.session ? rel(projectRoot, repo.workflowFiles.session) : "SESSION.md"
+        present: fs.existsSync(sessionPath),
+        path: rel(projectRoot, sessionPath)
       },
       workflow_files: {
         continuity_json: inspectFile(projectRoot, ".temper/workflow/continuity.json"),
