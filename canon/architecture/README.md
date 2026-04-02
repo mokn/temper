@@ -46,7 +46,7 @@ Current seeded structure:
 - `overlays/mud-onchain-live-service.md`
 
 These docs are the canon the CLI should retrieve from.
-The design scaffold in `docs/spec/TEMPER_ARCHITECTURE_FAMILIES.md` remains the product-level overview.
+This canon is the product-level overview the CLI should retrieve from.
 
 Each architecture doc should answer four questions:
 

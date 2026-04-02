@@ -141,13 +141,6 @@ Run the test suite:
 pnpm test
 ```
 
-## Design Docs
-
-- `docs/spec/TEMPER_FULL_DESIGN.md`
-- `docs/spec/TEMPER_DOCTRINE_MAP.md`
-- `docs/spec/TEMPER_HATS_V1.md`
-- `docs/spec/TEMPER_ARCHITECTURE_FAMILIES.md`
-
 ## License
 
 MIT. See [LICENSE](LICENSE).
