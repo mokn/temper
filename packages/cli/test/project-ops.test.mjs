@@ -110,6 +110,84 @@ test("runShip executes configured steps from generated config", async (t) => {
   assert.ok(report.patch_notes.summary.some((line) => /Primary hat:/.test(line)));
 });
 
+test("runShip handles verbose build output without exhausting the child-process buffer", async (t) => {
+  const repoDir = createFixtureRepo(t);
+  const packageJsonPath = path.join(repoDir, "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+  packageJson.scripts.build = "node -e \"process.stdout.write(('verbose build line\\n').repeat(250000))\"";
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + "\n");
+
+  const analysis = analyzeProject({ cwd: repoDir });
+  const config = createConfigFromAnalysis(analysis);
+
+  writeProjectConfig(repoDir, config);
+  initGitRepo(repoDir, "dev", "fixture");
+
+  const report = runShip({
+    cwd: repoDir,
+    mode: "lite",
+    intent: "verbose build pass"
+  });
+
+  const buildStep = report.execution.steps.find((step) => step.id === "build");
+  assert.equal(report.execution.ok, true);
+  assert.equal(buildStep?.ok, true);
+  assert.match(buildStep?.stdout_excerpt || "", /verbose build line/);
+});
+
+test("runShip adds a bootstrap hint for failing pnpm commands in fresh worktrees", async (t) => {
+  const { worktreeDir } = createWorktreeFixtureRepo(t);
+
+  write(
+    worktreeDir,
+    "package.json",
+    JSON.stringify(
+      {
+        name: "temper-worktree-fixture",
+        private: true,
+        packageManager: "pnpm@10.6.0",
+        scripts: {
+          build: "pnpm --filter client run typecheck"
+        }
+      },
+      null,
+      2
+    ) + "\n"
+  );
+  write(
+    worktreeDir,
+    "packages/client/package.json",
+    JSON.stringify(
+      {
+        name: "client",
+        private: true,
+        scripts: {
+          typecheck: "tsc --noEmit"
+        }
+      },
+      null,
+      2
+    ) + "\n"
+  );
+
+  const analysis = analyzeProject({ cwd: worktreeDir });
+  const config = createConfigFromAnalysis(analysis);
+
+  writeProjectConfig(worktreeDir, config);
+
+  const report = runShip({
+    cwd: worktreeDir,
+    mode: "lite",
+    intent: "worktree bootstrap check"
+  });
+
+  const buildStep = report.execution.steps.find((step) => step.id === "build");
+  assert.equal(report.execution.ok, false);
+  assert.equal(buildStep?.ok, false);
+  assert.match(buildStep?.stderr_excerpt || "", /worktree looks unbootstrapped/i);
+  assert.match(buildStep?.stderr_excerpt || "", /pnpm install/i);
+});
+
 test("temper records write and ship runs, then lists and shows them", async (t) => {
   const repoDir = createFixtureRepo(t);
 

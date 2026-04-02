@@ -1,8 +1,11 @@
+import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { buildCoachPacket } from "./coach.mjs";
 import { loadProjectConfig, commandCwd, rel } from "./project-config.mjs";
 import { gatherRepoContext } from "./repo-context.mjs";
+
+const COMMAND_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
 
 export function runShip(options = {}) {
   const cwd = path.resolve(options.cwd ?? process.cwd());
@@ -39,7 +42,13 @@ export function runShip(options = {}) {
   const resurfacing = collectResurfacing(config, policy);
   warnings.push(...resurfacing.filter((item) => item.priority === "high").map((item) => item.message));
 
-  const execution = executeSteps(projectRoot, steps, options.dryRun === true);
+  const execution = executeSteps({
+    projectRoot,
+    steps,
+    dryRun: options.dryRun === true,
+    repo,
+    packageManager: config.package_manager
+  });
   const patchNotes = buildPatchNotes(projectRoot, repo, coach, execution);
 
   return {
@@ -191,7 +200,7 @@ function collectResurfacing(config, policy) {
   });
 }
 
-function executeSteps(projectRoot, steps, dryRun) {
+function executeSteps({ projectRoot, steps, dryRun, repo, packageManager }) {
   const results = [];
   let ok = true;
 
@@ -222,7 +231,11 @@ function executeSteps(projectRoot, steps, dryRun) {
     }
 
     const cwd = commandCwd(projectRoot, step.config);
-    const result = executeCommand(step.id, step.config.cmd, cwd);
+    const result = withWorktreeBootstrapHint(executeCommand(step.id, step.config.cmd, cwd), {
+      projectRoot,
+      repo,
+      packageManager
+    });
     results.push(result);
     if (!result.ok && step.id !== "release_notes") {
       ok = false;
@@ -242,7 +255,8 @@ function executeCommand(id, cmd, cwd) {
     const stdout = execFileSync(cmd[0], cmd.slice(1), {
       cwd,
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"]
+      stdio: ["ignore", "pipe", "pipe"],
+      maxBuffer: COMMAND_OUTPUT_MAX_BUFFER
     });
 
     return {
@@ -262,9 +276,57 @@ function executeCommand(id, cmd, cwd) {
       cmd,
       cwd,
       stdout_excerpt: excerpt(error.stdout),
-      stderr_excerpt: excerpt(error.stderr || error.message)
+      stderr_excerpt: excerpt(describeCommandFailure(error))
     };
   }
+}
+
+function describeCommandFailure(error) {
+  const stderr = String(error?.stderr ?? "").trim();
+
+  if (error?.code === "ENOBUFS") {
+    const limitMiB = Math.round(COMMAND_OUTPUT_MAX_BUFFER / (1024 * 1024));
+    const hint = `command output exceeded Temper's ${limitMiB} MiB capture limit`;
+    return stderr ? `${stderr}\n${hint}` : hint;
+  }
+
+  return stderr || error?.message || "";
+}
+
+function withWorktreeBootstrapHint(result, context) {
+  if (result.ok) {
+    return result;
+  }
+
+  const hint = inferWorktreeBootstrapHint(context, result.cmd);
+  if (!hint) {
+    return result;
+  }
+
+  return {
+    ...result,
+    stderr_excerpt: [result.stderr_excerpt, hint].filter(Boolean).join(" | ")
+  };
+}
+
+function inferWorktreeBootstrapHint({ projectRoot, repo, packageManager }, cmd) {
+  if (packageManager !== "pnpm" || !repo?.available) {
+    return "";
+  }
+  if (repo.sharedRoot === repo.gitRoot) {
+    return "";
+  }
+  if (!Array.isArray(cmd) || cmd[0] !== "pnpm") {
+    return "";
+  }
+  if (fs.existsSync(path.join(projectRoot, "node_modules"))) {
+    return "";
+  }
+
+  const sharedInstallPresent = repo.sharedRoot && fs.existsSync(path.join(repo.sharedRoot, "node_modules"));
+  return sharedInstallPresent
+    ? "worktree looks unbootstrapped: run `pnpm install` in this worktree before shipping; installs from the shared checkout do not carry over"
+    : "worktree looks unbootstrapped: run `pnpm install` in this worktree before shipping";
 }
 
 function buildPatchNotes(projectRoot, repo, coach, execution) {
