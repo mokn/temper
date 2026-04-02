@@ -41,10 +41,14 @@ test("onboard existing --write materializes reports, config, and assistant surfa
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/onboarding.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/onboarding.json")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/adoption.md")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/workflow/continuity.json")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/workflow/HANDOFF_TEMPLATE.md")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/workflow/session.json")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.json")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/codex.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")));
+  assert.match(fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8"), /TEMPER_SESSION:BEGIN/);
 });
 
 test("buildOnboardingInstallPreview enumerates file changes, habit changes, and rollback", async (t) => {
@@ -57,11 +61,15 @@ test("buildOnboardingInstallPreview enumerates file changes, habit changes, and 
 
   assert.ok(preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === "AGENTS.md" && item.action === "update"));
+  assert.ok(preview.file_changes.some((item) => item.path === "SESSION.md" && item.action === "update"));
+  assert.ok(preview.file_changes.some((item) => item.path === ".temper/workflow/continuity.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === ".temper/assistants/shared-canon.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === ".claude/commands/temper-ship.md" && item.action === "create"));
   assert.ok(preview.habit_changes.some((line) => line.includes("pnpm exec temper coach --cwd . --json")));
+  assert.ok(preview.habit_changes.some((line) => line.includes("handoff --cwd . --slug")));
   assert.ok(preview.habit_changes.some((line) => line.includes("shared-canon.json")));
   assert.ok(preview.rollback.some((line) => line.includes("temper.config.json")));
+  assert.ok(preview.rollback.some((line) => line.includes("SESSION.md")));
 });
 
 test("onboard existing --preview shows the write plan without mutating the repo", async (t) => {
@@ -137,6 +145,7 @@ test("onboard existing --rehearse replays a fresh install in a disposable lab", 
   assert.equal(fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8"), sourceConfigBefore);
   assert.ok(fs.existsSync(path.join(rehearsalRoot, "temper.config.json")));
   assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/reports/rehearsal.json")));
+  assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/workflow/continuity.json")));
   assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/assistants/shared-canon.json")));
   assert.ok(!fs.existsSync(path.join(rehearsalRoot, ".temper/stale.txt")));
 
@@ -148,6 +157,66 @@ test("onboard existing --rehearse replays a fresh install in a disposable lab", 
   assert.match(rehearsalShip, /pnpm exec temper/);
   assert.ok(!rehearsalShip.includes("old install"));
   assert.match(rehearsalCanon, /shared-canon/);
+  assert.match(fs.readFileSync(path.join(rehearsalRoot, "SESSION.md"), "utf8"), /TEMPER_SESSION:BEGIN/);
+});
+
+test("temper handoff --preview shows the session update and target handoff path without mutating the repo", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+
+  execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  const sessionBefore = fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8");
+  const output = execFileSync(
+    "node",
+    [CLI_PATH, "handoff", "--cwd", repoDir, "--slug", "alpha-pass", "--summary", "Wrapped the alpha pass.", "--next", "Run beta smoke."],
+    { encoding: "utf8" }
+  );
+
+  assert.match(output, /## Handoff Preview/);
+  assert.match(output, /HANDOFF_alpha-pass\.md/);
+  assert.match(output, /Run beta smoke\./);
+  assert.equal(fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8"), sessionBefore);
+  assert.equal(fs.existsSync(path.join(repoDir, "HANDOFF_alpha-pass.md")), false);
+});
+
+test("temper handoff --write creates the handoff and updates the managed session board", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+
+  execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  execFileSync(
+    "node",
+    [
+      CLI_PATH,
+      "handoff",
+      "--cwd",
+      repoDir,
+      "--slug",
+      "alpha-pass",
+      "--summary",
+      "Wrapped the alpha pass.",
+      "--next",
+      "Run beta smoke.",
+      "--next",
+      "Push after review.",
+      "--write"
+    ],
+    { stdio: "ignore" }
+  );
+
+  const handoff = fs.readFileSync(path.join(repoDir, "HANDOFF_alpha-pass.md"), "utf8");
+  const session = fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8");
+  const sessionState = JSON.parse(fs.readFileSync(path.join(repoDir, ".temper/workflow/session.json"), "utf8"));
+
+  assert.match(handoff, /Wrapped the alpha pass\./);
+  assert.match(handoff, /1\. Run beta smoke\./);
+  assert.match(session, /alpha-pass/);
+  assert.match(session, /HANDOFF_alpha-pass\.md/);
+  assert.equal(sessionState.entries[0].workstream, "alpha-pass");
 });
 
 test("temper uninstall --preview shows owned artifacts without mutating the repo", async (t) => {
@@ -181,7 +250,9 @@ test("temper uninstall --write removes Temper-owned files and hook blocks", asyn
   assert.equal(fs.existsSync(path.join(repoDir, ".temper")), false);
   assert.equal(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")), false);
   const agents = fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8");
+  const session = fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8");
   assert.ok(!agents.includes("TEMPER_RUNTIME:BEGIN"));
+  assert.ok(!session.includes("TEMPER_SESSION:BEGIN"));
 });
 
 function createOnboardingFixtureRepo(t, options = {}) {
@@ -266,11 +337,17 @@ function createOnboardingFixtureRepo(t, options = {}) {
   if (options.seedTemperInstall) {
     write(repoDir, "temper.config.json", "{\n  \"mode\": \"stale\"\n}\n");
     write(repoDir, ".temper/stale.txt", "stale runtime\n");
+    write(repoDir, ".temper/workflow/session.json", "{\n  \"entries\": []\n}\n");
     write(repoDir, ".claude/commands/temper-ship.md", "old install\n");
     write(
       repoDir,
       "AGENTS.md",
       "# Agents\n\n<!-- TEMPER_RUNTIME:BEGIN -->\n## Temper\n\n- Run `pnpm exec old-temper ship lite --cwd .`\n<!-- TEMPER_RUNTIME:END -->\n"
+    );
+    write(
+      repoDir,
+      "SESSION.md",
+      "# Session\n\n<!-- TEMPER_SESSION:BEGIN -->\n## Temper Session\n\n| Workstream | Branch | Status | Next | Handoff | Updated |\n|---|---|---|---|---|---|\n| stale | dev | active | none | none | 2026-04-02 |\n<!-- TEMPER_SESSION:END -->\n"
     );
   }
 

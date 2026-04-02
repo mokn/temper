@@ -10,6 +10,7 @@ export function buildAssistantContract(options) {
   };
   const executionPolicy = buildExecutionPolicySummary(config);
   const resurfacing = buildResurfacing(config, options.onboarding);
+  const continuity = buildContinuitySummary(runtime.command);
 
   return {
     schema_version: 1,
@@ -36,6 +37,7 @@ export function buildAssistantContract(options) {
     ],
     capabilities: buildCapabilities(runtime.command),
     execution_policy: executionPolicy,
+    continuity,
     workflow_memory: options.onboarding?.memory ?? config.onboarding?.memory ?? null,
     resurfacing
   };
@@ -66,6 +68,9 @@ export function renderSharedCanonMarkdown(contract) {
   lines.push("", "## Execution Policy");
   lines.push(...asBulletLines(renderExecutionPolicyLines(contract.execution_policy)));
 
+  lines.push("", "## Continuity");
+  lines.push(...asBulletLines(renderContinuityLines(contract.continuity)));
+
   if (contract.workflow_memory) {
     lines.push("", "## Workflow Memory");
     lines.push(...asBulletLines(renderWorkflowMemoryLines(contract.workflow_memory)));
@@ -92,6 +97,12 @@ Temper is installed for \`${contract.project.name}\`.
 
 ${contract.capabilities.map((item) => `- \`${item.command}\``).join("\n")}
 
+## Continuity
+
+- Session board: \`${contract.continuity.session_file}\`
+- Handoff pattern: \`${contract.continuity.handoff_pattern}\`
+- Preferred handoff command: \`${contract.continuity.handoff_command}\`
+
 If \`${contract.runtime.command}\` is unavailable, install Temper into this repo from GitHub first, then rerun the command from the repo root.
 
 ## Runtime Rule
@@ -112,6 +123,7 @@ Use Temper as the canonical operating layer for this repo.
 - stack: \`${contract.project.stack}\`
 - runtime: \`${contract.runtime.command}\`
 - shared canon: \`.temper/assistants/shared-canon.json\`
+- session board: \`${contract.continuity.session_file}\`
 
 ## Claude Workflow
 
@@ -122,6 +134,12 @@ Use Temper as the canonical operating layer for this repo.
 ## Capability Defaults
 
 ${contract.capabilities.map((item) => `- ${item.when}: \`${item.command}\``).join("\n")}
+
+## Continuity
+
+- read \`${contract.continuity.session_file}\` first
+- when leaving a workstream, run \`${contract.continuity.handoff_command}\`
+- prefer the relevant \`HANDOFF_<slug>.md\` over chat history for restart context
 
 ## Resurfacing
 
@@ -141,6 +159,7 @@ Temper is installed as the operating layer for this repo.
 - stack: \`${contract.project.stack}\`
 - runtime: \`${contract.runtime.command}\`
 - shared canon: \`.temper/assistants/shared-canon.json\`
+- session board: \`${contract.continuity.session_file}\`
 
 ## Codex Workflow
 
@@ -151,6 +170,12 @@ Temper is installed as the operating layer for this repo.
 ## Capability Defaults
 
 ${contract.capabilities.map((item) => `- ${item.when}: \`${item.command}\``).join("\n")}
+
+## Continuity
+
+- read \`${contract.continuity.session_file}\` before assuming current workstream state
+- use \`${contract.continuity.handoff_command}\` when handing off or pausing a branch
+- keep handoff detail in \`HANDOFF_<slug>.md\` and keep \`SESSION.md\` short
 
 ## Resurfacing
 
@@ -176,6 +201,7 @@ export function renderWorkflowHookBlock(contract) {
     `- Use \`${coach.command}\` before major design, balance, UX, infra, security, or release guidance.`,
     `- Use \`${shipLite.command}\` for narrow implementation confidence.`,
     `- Use \`${shipFull.command}\` for player-facing, infra, economy, security, or multi-system work.`,
+    `- Read \`${contract.continuity.session_file}\` first and use \`${contract.continuity.handoff_command}\` when leaving a workstream.`,
     `- Treat \`temper.config.json\`, \`.temper/assistants/shared-canon.json\`, and \`.temper/assistants/*.md\` as the local Temper operating contract.`
   ];
 
@@ -214,8 +240,27 @@ function buildCapabilities(runtimeCommand) {
       when: "incident response or rollback planning",
       command: `${runtimeCommand} hotfix --cwd . --json --env prod --intent "<incident summary>"`,
       result: "route the response through the hotfix doctrine surface"
+    },
+    {
+      id: "handoff",
+      when: "pausing or transferring a workstream",
+      command: `${runtimeCommand} handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"`,
+      result: "write a canonical restart artifact and update SESSION.md"
     }
   ];
+}
+
+function buildContinuitySummary(runtimeCommand) {
+  return {
+    session_file: "SESSION.md",
+    handoff_pattern: "HANDOFF_<slug>.md",
+    handoff_command: `${runtimeCommand} handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"`,
+    token_strategy: [
+      "Read SESSION.md first for the active board.",
+      "Read the relevant HANDOFF_<slug>.md for restart detail.",
+      "Keep the session board short and push detail into handoffs."
+    ]
+  };
 }
 
 function buildExecutionPolicySummary(config) {
@@ -324,6 +369,15 @@ function renderWorkflowMemoryLines(memory) {
     lines.push(`recent signals: ${memory.recent_signals.join("; ")}`);
   }
   return lines.length > 0 ? lines : ["no workflow memory captured yet"];
+}
+
+function renderContinuityLines(continuity) {
+  return [
+    `session file: ${continuity.session_file}`,
+    `handoff pattern: ${continuity.handoff_pattern}`,
+    `handoff command: ${continuity.handoff_command}`,
+    ...continuity.token_strategy
+  ];
 }
 
 function temperCommand(packageManager) {

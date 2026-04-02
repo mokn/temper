@@ -9,6 +9,11 @@ import {
   removeMarkedBlock
 } from "./assistant.mjs";
 import {
+  collectContinuityRemovalChanges,
+  materializeContinuityInstall,
+  planContinuityInstall
+} from "./continuity.mjs";
+import {
   analyzeProject,
   createConfigFromAnalysis,
   renderAdoptionReport
@@ -130,6 +135,12 @@ export function materializeOnboardingInstall(options) {
   const configPath = writeProjectConfig(projectRoot, result.config, {
     force: options.force
   });
+  const continuity = materializeContinuityInstall({
+    projectRoot,
+    config: result.config,
+    analysis: result.analysis,
+    onboarding: result.onboarding
+  });
   const onboardingPath = writeProjectFile(projectRoot, ".temper/reports/onboarding.md", result.report);
   const onboardingJsonPath = writeProjectFile(
     projectRoot,
@@ -150,6 +161,7 @@ export function materializeOnboardingInstall(options) {
     onboardingPath,
     onboardingJsonPath,
     adoptionPath,
+    continuity,
     written
   };
 }
@@ -157,6 +169,12 @@ export function materializeOnboardingInstall(options) {
 export function buildOnboardingInstallPreview(options) {
   const projectRoot = path.resolve(options.projectRoot ?? options.result.analysis.root);
   const result = options.result;
+  const continuityPlan = planContinuityInstall({
+    projectRoot,
+    config: result.config,
+    analysis: result.analysis,
+    onboarding: result.onboarding
+  });
   const assistantPlan = planAssistantAdapters({
     projectRoot,
     config: result.config,
@@ -169,6 +187,7 @@ export function buildOnboardingInstallPreview(options) {
     buildPreviewFilePlan(projectRoot, ".temper/reports/onboarding.md", result.report),
     buildPreviewFilePlan(projectRoot, ".temper/reports/onboarding.json", JSON.stringify(result.onboarding, null, 2) + "\n"),
     buildPreviewFilePlan(projectRoot, ".temper/reports/adoption.md", result.adoptionReport),
+    ...continuityPlan.files,
     ...assistantPlan.files
   ];
   const fileChanges = filePlans
@@ -242,6 +261,7 @@ export function runExistingProjectOnboardingRehearsal(options = {}) {
         reset_paths: reset,
         generated_paths: [
           relativeTo(rehearsalRoot, generated.configPath),
+          ...generated.continuity.written,
           relativeTo(rehearsalRoot, generated.onboardingPath),
           relativeTo(rehearsalRoot, generated.onboardingJsonPath),
           relativeTo(rehearsalRoot, generated.adoptionPath),
@@ -449,7 +469,7 @@ function shouldCopyForRehearsal(sourceRoot, candidatePath) {
 }
 
 function collectTemperInstallChanges(projectRoot) {
-  const changes = [];
+  const changes = [...collectContinuityRemovalChanges(projectRoot)];
   const configPath = path.join(projectRoot, CONFIG_FILENAME);
   if (fs.existsSync(configPath)) {
     changes.push({
@@ -1202,6 +1222,8 @@ function buildPreviewHabitChanges(runtimeCommand, executionPolicy) {
     `before major design or release guidance, run \`${runtimeCommand} coach --cwd . --json --intent "<user intent>"\``,
     `use \`${runtimeCommand} ship lite --cwd . --intent "<summary>"\` for narrow implementation confidence`,
     `use \`${runtimeCommand} ship full --cwd . --intent "<summary>"\` for player-facing, infra, economy, security, or multi-system work`,
+    `keep \`SESSION.md\` short and update it through Temper-managed continuity surfaces`,
+    `use \`${runtimeCommand} handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"\` when pausing or transferring work`,
     "treat `temper.config.json`, `.temper/assistants/shared-canon.json`, and `.temper/assistants/*.md` as the repo-local operating contract"
   ];
 
@@ -1237,6 +1259,9 @@ function buildPreviewRollback(fileChanges) {
   const workflowHooks = fileChanges.filter((item) => item.path === "AGENTS.md" || item.path === "CLAUDE.md");
   if (workflowHooks.length > 0) {
     rollback.push(`remove the Temper runtime block from ${workflowHooks.map((item) => item.path).join(" and ")}`);
+  }
+  if (fileChanges.some((item) => item.path === "SESSION.md")) {
+    rollback.push("remove the Temper session block from `SESSION.md`");
   }
 
   return rollback.length > 0 ? rollback : ["no manual rollback steps are needed beyond deleting generated Temper files."];

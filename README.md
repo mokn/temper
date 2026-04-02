@@ -54,6 +54,7 @@ Still to deepen:
 - `temper onboard existing --cwd <repo> --rehearse`
 - `temper uninstall --cwd <repo> --preview`
 - `temper uninstall --cwd <repo> --write`
+- `temper handoff --cwd <repo> --slug <slug> --summary "<summary>" --next "<next step>"`
 - `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
@@ -80,6 +81,19 @@ Temper now also writes a shared assistant canon at:
 
 Claude and Codex surfaces should parse that same repo-local canon and then adapt it to their own syntax instead of carrying separate duplicated doctrine.
 
+Temper also writes a lightweight continuity spine:
+
+- `SESSION.md`
+- `.temper/workflow/continuity.json`
+- `.temper/workflow/session.json`
+- `.temper/workflow/HANDOFF_TEMPLATE.md`
+
+The token strategy is:
+
+- keep `SESSION.md` short
+- put restart detail in `HANDOFF_<slug>.md`
+- have Claude and Codex read the same continuity canon before relying on chat history
+
 ## Existing Project Onboarding
 
 `temper onboard existing` is the front door for bringing Temper into an established repo.
@@ -102,6 +116,10 @@ With `--write`, it installs:
 - `.temper/reports/onboarding.md`
 - `.temper/reports/onboarding.json`
 - `.temper/reports/adoption.md`
+- `.temper/workflow/continuity.json`
+- `.temper/workflow/session.json`
+- `.temper/workflow/HANDOFF_TEMPLATE.md`
+- `SESSION.md` Temper-managed continuity block
 - `.temper/assistants/shared-canon.json`
 - `.temper/assistants/shared-canon.md`
 - Claude/Codex assistant surfaces
@@ -128,3 +146,16 @@ It only removes Temper-owned surfaces:
 - `.temper/`
 - `.claude/commands/temper-*.md`
 - Temper runtime blocks inside `AGENTS.md` / `CLAUDE.md`
+- the Temper-managed session block inside `SESSION.md`
+
+## Session Continuity
+
+Use `temper handoff` to create the canonical restart artifact and keep `SESSION.md` current:
+
+- `temper handoff --cwd <repo> --slug economy-pass --summary "Wrapped the balance pass." --next "Run beta smoke."`
+- add `--write` to record `HANDOFF_economy-pass.md` and update the Temper-managed `SESSION.md` block
+
+The intended split is:
+
+- `SESSION.md` is the short active board
+- `HANDOFF_<slug>.md` is the restart document with enough detail to resume cold

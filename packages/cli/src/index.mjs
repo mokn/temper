@@ -20,6 +20,12 @@ import {
   runExistingProjectOnboardingRehearsal
 } from "./lib/onboarding.mjs";
 import {
+  applyHandoffPlan,
+  buildHandoffPlan,
+  materializeContinuityInstall,
+  renderHandoffPreview
+} from "./lib/continuity.mjs";
+import {
   CONFIG_FILENAME,
   findConfig,
   loadProjectConfig,
@@ -82,6 +88,10 @@ export async function main(argv) {
     return runUninstall(rest);
   }
 
+  if (command === "handoff") {
+    return runHandoff(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -107,7 +117,7 @@ function showHelp() {
     "hotfix",
     "review",
     "verify",
-    "handoff",
+    "handoff [--cwd ...] [--slug ...] [--summary ...] [--next ...] [--write]",
     "security",
     "infra",
     "deploy",
@@ -301,6 +311,11 @@ function runInit(rest) {
     analysis,
     assistants: args.assistants
   });
+  const continuity = materializeContinuityInstall({
+    projectRoot: analysis.root,
+    config,
+    analysis
+  });
 
   printHeader("Temper Init");
   console.log(`Root: ${analysis.root}`);
@@ -309,7 +324,7 @@ function runInit(rest) {
   console.log(`Stack: ${config.stack.id}`);
   console.log("");
   console.log("Generated:");
-  printList([relativize(analysis.root, configPath), ...written]);
+  printList([relativize(analysis.root, configPath), ...continuity.written, ...written]);
 }
 
 function runOnboard(rest) {
@@ -346,6 +361,7 @@ function runOnboard(rest) {
             reset: rehearsal.reset,
             generated: {
               config: rehearsal.generated.configPath,
+              continuity: rehearsal.generated.continuity.written,
               onboarding_report: rehearsal.generated.onboardingPath,
               onboarding_json: rehearsal.generated.onboardingJsonPath,
               adoption_report: rehearsal.generated.adoptionPath,
@@ -378,6 +394,7 @@ function runOnboard(rest) {
     console.log("Generated:");
     printList([
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.configPath),
+      ...rehearsal.generated.continuity.written,
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.onboardingPath),
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.onboardingJsonPath),
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.adoptionPath),
@@ -444,6 +461,7 @@ function runOnboard(rest) {
     console.log("Generated:");
     printList([
       relativize(result.analysis.root, generated.configPath),
+      ...generated.continuity.written,
       relativize(result.analysis.root, generated.onboardingPath),
       relativize(result.analysis.root, generated.onboardingJsonPath),
       relativize(result.analysis.root, generated.adoptionPath),
@@ -489,6 +507,11 @@ function runAdopt(rest) {
       force: args.force
     });
     const reportPath = writeProjectFile(analysis.root, ".temper/reports/adoption.md", report);
+    const continuity = materializeContinuityInstall({
+      projectRoot: analysis.root,
+      config,
+      analysis
+    });
     const written = installAssistantAdapters({
       projectRoot: analysis.root,
       config,
@@ -502,7 +525,7 @@ function runAdopt(rest) {
     console.log(`Report: ${reportPath}`);
     console.log("");
     console.log("Generated:");
-    printList([relativize(analysis.root, configPath), relativize(analysis.root, reportPath), ...written]);
+    printList([relativize(analysis.root, configPath), relativize(analysis.root, reportPath), ...continuity.written, ...written]);
     return;
   }
 
@@ -544,6 +567,41 @@ function runUninstall(rest) {
   console.log("");
   process.stdout.write(renderTemperUninstallPreview(plan));
   console.log("Run with --write to remove these Temper artifacts.");
+}
+
+function runHandoff(rest) {
+  const args = parseHandoffArgs(rest);
+  const plan = buildHandoffPlan({
+    cwd: args.cwd,
+    slug: args.slug,
+    title: args.title,
+    summary: args.summary,
+    next: args.next,
+    notes: args.notes,
+    status: args.status,
+    deployState: args.deployState
+  });
+
+  if (args.json) {
+    const payload = args.write ? applyHandoffPlan(plan) : plan;
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  if (args.write) {
+    const result = applyHandoffPlan(plan);
+    printHeader("Temper Handoff");
+    console.log(`Root: ${result.projectRoot}`);
+    console.log(`Handoff: ${result.handoffPath}`);
+    console.log(`Session: ${result.sessionPath}`);
+    return;
+  }
+
+  printHeader("Temper Handoff");
+  console.log(`Root: ${plan.projectRoot}`);
+  console.log("");
+  process.stdout.write(renderHandoffPreview(plan));
+  console.log("Run with --write to record this handoff and update SESSION.md.");
 }
 
 function runAssistant(rest) {
@@ -694,6 +752,52 @@ function parseCommonArgs(args) {
         break;
       case "out":
         parsed.out = path.resolve(nextValue || parsed.cwd);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return parsed;
+}
+
+function parseHandoffArgs(args) {
+  const parsed = parseCommonArgs(args);
+  parsed.next = [];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith("--")) {
+      continue;
+    }
+
+    const [key, inlineValue] = arg.slice(2).split("=", 2);
+    const nextValue =
+      inlineValue ?? (index + 1 < args.length && !args[index + 1].startsWith("--") ? args[++index] : "");
+
+    switch (key) {
+      case "slug":
+        parsed.slug = nextValue;
+        break;
+      case "title":
+        parsed.title = nextValue;
+        break;
+      case "summary":
+        parsed.summary = nextValue;
+        break;
+      case "next":
+        if (nextValue) {
+          parsed.next.push(nextValue);
+        }
+        break;
+      case "notes":
+        parsed.notes = nextValue;
+        break;
+      case "status":
+        parsed.status = nextValue;
+        break;
+      case "deploy-state":
+        parsed.deployState = nextValue;
         break;
       default:
         break;
