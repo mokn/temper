@@ -1,0 +1,49 @@
+{
+  "id": "capabilities/coach",
+  "source": "capabilities/coach.md",
+  "metadata": {
+    "title": "Coach Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "coach",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "routing",
+      "retrieval",
+      "hats",
+      "mentor",
+      "json"
+    ]
+  },
+  "sectionCount": 4,
+  "sections": [
+    {
+      "id": "capabilities/coach.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Route current game-building context to the right hats, doctrine packs, and retrieval chunks so an assistant can give short, context-dependent feedback cheaply."
+    },
+    {
+      "id": "capabilities/coach.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- inspect user intent and lightweight repo context - infer the relevant hats, capabilities, and architecture family - retrieve the smallest doctrine slices that matter - return a s"
+    },
+    {
+      "id": "capabilities/coach.03",
+      "title": "Doctrine",
+      "level": 2,
+      "slug": "doctrine",
+      "summary": "`coach` is not the final voice. It is the context engine behind the voice. The operating rule is: - deep canon on disk - small retrieval packet at runtime - cheap model render by d"
+    },
+    {
+      "id": "capabilities/coach.04",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What is the smallest relevant doctrine packet that will make the assistant sound like a seasoned game team right now?"
+    }
+  ]
+}

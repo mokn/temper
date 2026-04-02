@@ -17,6 +17,7 @@ They are the canonical operating manuals for each capability.
 
 Seeded capabilities in this repo:
 
+- coach
 - ship
 - hotfix
 - review

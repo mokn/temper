@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { repoRoot, specRoot } from "./lib/paths.mjs";
 import { deriveCanonDocs, inspectDoctrine, searchDoctrine } from "./lib/doctrine.mjs";
+import { buildCoachPacket, parseCoachArgs } from "./lib/coach.mjs";
 import { printHeader, printList } from "./lib/output.mjs";
 
 const capabilityCommands = new Set([
@@ -41,6 +42,10 @@ export async function main(argv) {
     return runQuery(rest);
   }
 
+  if (command === "coach") {
+    return runCoach(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -57,6 +62,7 @@ function showHelp() {
     "doctor",
     "derive",
     "query <terms>",
+    "coach [--json] [--intent ...] [--hat ...] [--capability ...]",
     "init",
     "adopt",
     "ship [lite|full]",
@@ -114,6 +120,54 @@ function runQuery(rest) {
   for (const result of results) {
     console.log(`${result.score.toString().padStart(2, " ")}  ${result.doc} :: ${result.title}`);
     console.log(`    ${result.summary}`);
+  }
+}
+
+function runCoach(rest) {
+  const input = parseCoachArgs(rest);
+  if (!input.queryText && input.hats.length === 0 && input.capabilities.length === 0 && input.families.length === 0 && input.files.length === 0) {
+    throw new Error(
+      "Usage: temper coach [--json] --intent <text> [--hat <id>] [--capability <id>] [--family <id>] [--files <path1,path2>]"
+    );
+  }
+
+  const packet = buildCoachPacket(input);
+
+  if (input.json) {
+    console.log(JSON.stringify(packet, null, 2));
+    return;
+  }
+
+  printHeader("Temper Coach");
+  console.log(`Query: ${packet.query || "(selection only)"}`);
+
+  if (packet.selection.hats.length > 0) {
+    console.log("");
+    console.log("Hats:");
+    printList(
+      packet.selection.hats.map(
+        (hat) => `${hat.emoji ?? ""} ${hat.name} [${hat.id}] :: ${hat.reasons.join(", ")}`
+      )
+    );
+  }
+
+  if (packet.selection.capabilities.length > 0) {
+    console.log("");
+    console.log("Capabilities:");
+    printList(packet.selection.capabilities.map((item) => `${item.name} [${item.id}]`));
+  }
+
+  if (packet.selection.families.length > 0) {
+    console.log("");
+    console.log("Families:");
+    printList(packet.selection.families.map((item) => `${item.name} [${item.id}]`));
+  }
+
+  console.log("");
+  console.log("Doctrine Chunks:");
+  for (const chunk of packet.retrieval.chunks) {
+    console.log(`${chunk.score.toString().padStart(2, " ")}  ${chunk.doc} :: ${chunk.title}`);
+    console.log(`    ${chunk.summary}`);
   }
 }
 

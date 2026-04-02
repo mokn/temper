@@ -94,7 +94,7 @@ export function inspectDoctrine() {
 
 export function searchDoctrine(query, options = {}) {
   const terms = tokenize(query);
-  if (terms.length === 0) {
+  if (terms.length === 0 && !hasDocScope(options)) {
     return [];
   }
 
@@ -106,6 +106,9 @@ export function searchDoctrine(query, options = {}) {
     const markdown = fs.readFileSync(docPath, "utf8");
     const { metadata, sections } = parseMarkdownDocument(markdown);
     const docId = relativePath.replace(/\.md$/, "");
+    if (!matchesDocScope(docId, options)) {
+      continue;
+    }
     const metadataTerms = collectMetadataTerms(metadata);
 
     for (const [index, section] of sections.entries()) {
@@ -113,7 +116,8 @@ export function searchDoctrine(query, options = {}) {
         terms,
         section,
         docId,
-        metadataTerms
+        metadataTerms,
+        options
       });
 
       if (score <= 0) {
@@ -129,7 +133,8 @@ export function searchDoctrine(query, options = {}) {
         level: section.level,
         score,
         summary: summarizeContent(section.content),
-        metadata
+        metadata,
+        content: options.includeContent ? section.content : undefined
       });
     }
   }
@@ -165,6 +170,23 @@ function safeFileName(input) {
   return input.replace(/[\\/]/g, "__");
 }
 
+function hasDocScope(options) {
+  return Boolean(options.docIds?.length || options.docPrefixes?.length);
+}
+
+function matchesDocScope(docId, options) {
+  const { docIds = [], docPrefixes = [] } = options;
+  if (docIds.length === 0 && docPrefixes.length === 0) {
+    return true;
+  }
+
+  if (docIds.includes(docId)) {
+    return true;
+  }
+
+  return docPrefixes.some((prefix) => docId.startsWith(prefix));
+}
+
 function tokenize(input) {
   return input
     .toLowerCase()
@@ -187,12 +209,12 @@ function collectMetadataTerms(metadata) {
   return tokenize(values.join(" "));
 }
 
-function scoreSection({ terms, section, docId, metadataTerms }) {
+function scoreSection({ terms, section, docId, metadataTerms, options }) {
   const titleTerms = tokenize(section.title);
   const slugTerms = tokenize(section.slug);
   const docTerms = tokenize(docId);
   const body = section.content.toLowerCase();
-  let score = 0;
+  let score = baseDocBoost(docId, options);
 
   for (const term of terms) {
     let termScore = 0;
@@ -222,4 +244,18 @@ function scoreSection({ terms, section, docId, metadataTerms }) {
   }
 
   return score;
+}
+
+function baseDocBoost(docId, options) {
+  let boost = 0;
+
+  if (options.boostDocIds?.includes(docId)) {
+    boost += 3;
+  }
+
+  if (options.boostDocPrefixes?.some((prefix) => docId.startsWith(prefix))) {
+    boost += 2;
+  }
+
+  return boost;
 }
