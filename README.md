@@ -48,6 +48,8 @@ Still to deepen:
 ## Current Entry Points
 
 - `temper onboard existing --cwd <repo>`
+- `temper onboard existing --cwd <repo> --preview`
+- `temper onboard existing --cwd <repo> --dry-run`
 - `temper onboard existing --cwd <repo> --write`
 - `temper onboard existing --cwd <repo> --rehearse`
 - `temper init --existing --cwd <repo>` (alias)
@@ -78,6 +80,12 @@ It does three things before writing anything:
 - maps the project model: family, stack, source-of-truth, environments, workflows, git history
 - audits the workflow: local vs beta vs prod posture, operator habits, token-efficiency waste, and trust gaps
 - recommends execution policy: which hooks are safe by default, which should stay explicit, and how `ship lite/full` should evolve
+
+With `--preview` or `--dry-run`, Temper stays read-only and shows:
+
+- the exact files it would create or update
+- the operator habit changes it is trying to introduce
+- the manual rollback path if you decide not to keep the install
 
 With `--write`, it installs:
 

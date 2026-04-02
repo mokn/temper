@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import {
   TEMPER_RUNTIME_MARKER,
   installAssistantAdapters,
+  planAssistantAdapters,
   removeMarkedBlock
 } from "./assistant.mjs";
 import {
@@ -125,6 +126,64 @@ export function materializeOnboardingInstall(options) {
     adoptionPath,
     written
   };
+}
+
+export function buildOnboardingInstallPreview(options) {
+  const projectRoot = path.resolve(options.projectRoot ?? options.result.analysis.root);
+  const result = options.result;
+  const assistantPlan = planAssistantAdapters({
+    projectRoot,
+    config: result.config,
+    analysis: result.analysis,
+    assistants: options.assistants
+  });
+  const filePlans = [
+    buildPreviewFilePlan(projectRoot, CONFIG_FILENAME, JSON.stringify(result.config, null, 2) + "\n"),
+    buildPreviewFilePlan(projectRoot, ".temper/reports/onboarding.md", result.report),
+    buildPreviewFilePlan(projectRoot, ".temper/reports/onboarding.json", JSON.stringify(result.onboarding, null, 2) + "\n"),
+    buildPreviewFilePlan(projectRoot, ".temper/reports/adoption.md", result.adoptionReport),
+    ...assistantPlan.files
+  ];
+  const fileChanges = filePlans
+    .filter((item) => item.action !== "unchanged")
+    .map(({ relativePath, action }) => ({
+      path: relativePath,
+      action
+    }));
+  const unchangedFiles = filePlans.filter((item) => item.action === "unchanged").map((item) => item.relativePath);
+
+  return {
+    project_root: projectRoot,
+    runtime_command: assistantPlan.runtime.command,
+    file_changes: fileChanges,
+    unchanged_files: unchangedFiles,
+    habit_changes: buildPreviewHabitChanges(assistantPlan.runtime.command, result.onboarding.execution_policy),
+    rollback: buildPreviewRollback(fileChanges)
+  };
+}
+
+export function renderOnboardingPreview(preview) {
+  const lines = [
+    "## Preview",
+    "- no files are written in preview mode",
+    "- use `--write` to apply this plan or `--rehearse` to replay it in a disposable lab",
+    "",
+    "## What Will Change",
+    ...asBulletLines(
+      preview.file_changes.length > 0
+        ? preview.file_changes.map((item) => `${item.action}: ${item.path}`)
+        : ["none. the repo already matches the current Temper install plan."]
+    )
+  ];
+
+  if (preview.unchanged_files.length > 0) {
+    lines.push("", "## Already Matches", ...asBulletLines(preview.unchanged_files));
+  }
+
+  lines.push("", "## Habit Changes", ...asBulletLines(preview.habit_changes));
+  lines.push("", "## Rollback", ...asBulletLines(preview.rollback));
+
+  return lines.join("\n") + "\n";
 }
 
 export function runExistingProjectOnboardingRehearsal(options = {}) {
@@ -777,6 +836,65 @@ function buildHookNotes(mode, currentSteps, recommendedDefault, gatedLive, block
     notes.push(`These ${mode} steps should stay behind production confirmation.`);
   }
   return notes;
+}
+
+function buildPreviewFilePlan(projectRoot, relativePath, content) {
+  const filePath = path.join(projectRoot, relativePath);
+  return {
+    path: filePath,
+    relativePath,
+    action: classifyPreviewAction(filePath, content)
+  };
+}
+
+function classifyPreviewAction(filePath, content) {
+  if (!fs.existsSync(filePath)) {
+    return "create";
+  }
+  return fs.readFileSync(filePath, "utf8") === content ? "unchanged" : "update";
+}
+
+function buildPreviewHabitChanges(runtimeCommand, executionPolicy) {
+  const fullHooks = executionPolicy.hook_recommendations.full;
+  const habitChanges = [
+    `before major design or release guidance, run \`${runtimeCommand} coach --cwd . --json --intent "<user intent>"\``,
+    `use \`${runtimeCommand} ship lite --cwd . --intent "<summary>"\` for narrow implementation confidence`,
+    `use \`${runtimeCommand} ship full --cwd . --intent "<summary>"\` for player-facing, infra, economy, security, or multi-system work`,
+    "treat `temper.config.json` and `.temper/assistants/*.md` as the repo-local operating contract"
+  ];
+
+  if (fullHooks.recommended_default.length > 0) {
+    habitChanges.push(`default \`ship full\` stays local-first: ${fullHooks.recommended_default.join(", ")}`);
+  }
+  if (fullHooks.gated_live.length > 0) {
+    habitChanges.push(`keep beta/live verification explicit for now: ${fullHooks.gated_live.join(", ")}`);
+  }
+  if (fullHooks.blocked_prod.length > 0) {
+    habitChanges.push(`keep production-sensitive steps behind explicit confirmation: ${fullHooks.blocked_prod.join(", ")}`);
+  }
+
+  return habitChanges;
+}
+
+function buildPreviewRollback(fileChanges) {
+  if (fileChanges.length === 0) {
+    return ["nothing to roll back. preview mode does not write and the current install plan is already present."];
+  }
+
+  const rollback = [];
+  if (fileChanges.some((item) => item.path === CONFIG_FILENAME || item.path.startsWith(".temper/"))) {
+    rollback.push("delete `temper.config.json` and `.temper/`");
+  }
+  if (fileChanges.some((item) => item.path.startsWith(".claude/commands/temper-"))) {
+    rollback.push("delete `.claude/commands/temper-*.md`");
+  }
+
+  const workflowHooks = fileChanges.filter((item) => item.path === "AGENTS.md" || item.path === "CLAUDE.md");
+  if (workflowHooks.length > 0) {
+    rollback.push(`remove the Temper runtime block from ${workflowHooks.map((item) => item.path).join(" and ")}`);
+  }
+
+  return rollback.length > 0 ? rollback : ["no manual rollback steps are needed beyond deleting generated Temper files."];
 }
 
 function scanPackageDefinitions(root) {

@@ -1,38 +1,43 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ensureTemperDir, rel, writeProjectFile } from "./project-config.mjs";
+import { rel, writeProjectFile } from "./project-config.mjs";
 
 export const TEMPER_RUNTIME_MARKER = "TEMPER_RUNTIME";
 
 export function installAssistantAdapters(options) {
   const projectRoot = path.resolve(options.projectRoot);
+  const plan = planAssistantAdapters(options);
+  const written = [];
+
+  for (const file of plan.files) {
+    if (file.action === "unchanged") {
+      continue;
+    }
+    written.push(writeProjectFile(projectRoot, file.relativePath, file.content));
+  }
+
+  return written.map((filePath) => rel(projectRoot, filePath));
+}
+
+export function planAssistantAdapters(options) {
+  const projectRoot = path.resolve(options.projectRoot);
   const config = options.config;
   const analysis = options.analysis;
   const assistants = normalizeAssistants(options.assistants);
   const runtime = buildRuntime(config, analysis);
-  const written = [];
+  const files = [];
 
-  ensureTemperDir(projectRoot);
-
-  written.push(
-    writeProjectFile(
-      projectRoot,
-      ".temper/assistants/README.md",
-      renderAssistantReadme(projectRoot, config, analysis, runtime)
-    )
+  files.push(
+    planGeneratedFile(projectRoot, ".temper/assistants/README.md", renderAssistantReadme(projectRoot, config, analysis, runtime))
   );
 
   if (assistants.includes("claude")) {
-    written.push(
-      writeProjectFile(
-        projectRoot,
-        ".temper/assistants/claude.md",
-        renderClaudeGuide(projectRoot, config, analysis, runtime)
-      )
+    files.push(
+      planGeneratedFile(projectRoot, ".temper/assistants/claude.md", renderClaudeGuide(projectRoot, config, analysis, runtime))
     );
     for (const command of ["ship", "hotfix", "ux", "balance", "security", "infra", "coach"]) {
-      written.push(
-        writeProjectFile(
+      files.push(
+        planGeneratedFile(
           projectRoot,
           `.claude/commands/temper-${command}.md`,
           renderClaudeCommand(projectRoot, command, config, runtime)
@@ -42,18 +47,17 @@ export function installAssistantAdapters(options) {
   }
 
   if (assistants.includes("codex")) {
-    written.push(
-      writeProjectFile(
-        projectRoot,
-        ".temper/assistants/codex.md",
-        renderCodexGuide(projectRoot, config, analysis, runtime)
-      )
+    files.push(
+      planGeneratedFile(projectRoot, ".temper/assistants/codex.md", renderCodexGuide(projectRoot, config, analysis, runtime))
     );
   }
 
-  written.push(...installWorkflowHooks(projectRoot, runtime));
+  files.push(...planWorkflowHooks(projectRoot, runtime));
 
-  return written.map((filePath) => rel(projectRoot, filePath));
+  return {
+    runtime,
+    files
+  };
 }
 
 export function renderAssistantReadme(projectRoot, config, analysis, runtime) {
@@ -175,22 +179,19 @@ function temperCommand(packageManager) {
   }
 }
 
-function installWorkflowHooks(projectRoot, runtime) {
-  const written = [];
-  const files = ["AGENTS.md", "CLAUDE.md"]
+function planWorkflowHooks(projectRoot, runtime) {
+  const planned = [];
+  const hookTargets = ["AGENTS.md", "CLAUDE.md"]
     .map((relativePath) => path.join(projectRoot, relativePath))
     .filter((filePath) => fs.existsSync(filePath));
 
-  for (const filePath of files) {
+  for (const filePath of hookTargets) {
     const existing = fs.readFileSync(filePath, "utf8");
     const next = upsertMarkedBlock(existing, TEMPER_RUNTIME_MARKER, renderWorkflowHookBlock(runtime));
-    if (next !== existing) {
-      fs.writeFileSync(filePath, next);
-      written.push(filePath);
-    }
+    planned.push(planGeneratedFile(projectRoot, rel(projectRoot, filePath), next));
   }
 
-  return written;
+  return planned;
 }
 
 function renderWorkflowHookBlock(runtime) {
@@ -240,4 +241,21 @@ function normalizeAssistants(assistants) {
     return ["claude", "codex"];
   }
   return [...new Set(requested)];
+}
+
+function planGeneratedFile(projectRoot, relativePath, content) {
+  const filePath = path.join(projectRoot, relativePath);
+  return {
+    path: filePath,
+    relativePath,
+    action: classifyFileAction(filePath, content),
+    content
+  };
+}
+
+function classifyFileAction(filePath, content) {
+  if (!fs.existsSync(filePath)) {
+    return "create";
+  }
+  return fs.readFileSync(filePath, "utf8") === content ? "unchanged" : "update";
 }

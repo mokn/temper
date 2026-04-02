@@ -11,7 +11,9 @@ import {
 } from "./lib/project-analysis.mjs";
 import {
   buildExistingProjectOnboarding,
+  buildOnboardingInstallPreview,
   materializeOnboardingInstall,
+  renderOnboardingPreview,
   runExistingProjectOnboardingRehearsal
 } from "./lib/onboarding.mjs";
 import {
@@ -85,7 +87,7 @@ function showHelp() {
   console.log("");
   console.log("Commands:");
   printList([
-    "onboard existing [--cwd ...] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]",
+    "onboard existing [--cwd ...] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]",
     "doctor",
     "derive",
     "query <terms>",
@@ -306,11 +308,16 @@ function runOnboard(rest) {
   const [subcommand = "existing", ...subRest] = rest;
   if (subcommand !== "existing") {
     throw new Error(
-      "Usage: temper onboard existing [--cwd ...] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]"
+      "Usage: temper onboard existing [--cwd ...] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]"
     );
   }
 
   const args = parseCommonArgs(subRest);
+  const actionModes = [args.preview ? "preview" : null, args.write ? "write" : null, args.rehearse ? "rehearse" : null].filter(Boolean);
+  if (actionModes.length > 1) {
+    throw new Error("Choose one of --preview/--dry-run, --write, or --rehearse.");
+  }
+
   if (args.rehearse) {
     const rehearsal = runExistingProjectOnboardingRehearsal({
       cwd: args.cwd,
@@ -378,6 +385,10 @@ function runOnboard(rest) {
     stack: args.stack,
     name: args.name
   });
+  const preview = buildOnboardingInstallPreview({
+    result,
+    assistants: args.assistants
+  });
 
   if (args.json) {
     console.log(
@@ -386,12 +397,25 @@ function runOnboard(rest) {
           analysis: result.analysis,
           config: result.config,
           onboarding: result.onboarding,
-          report: result.report
+          report: result.report,
+          ...(args.preview ? { preview } : {})
         },
         null,
         2
       )
     );
+    return;
+  }
+
+  if (args.preview) {
+    printTemperBanner("Existing project onboarding preview");
+    console.log("");
+    console.log(`Root: ${result.analysis.root}`);
+    console.log("");
+    process.stdout.write(renderOnboardingPreview(preview));
+    console.log("");
+    process.stdout.write(result.report);
+    console.log("Run with --write to materialize this plan, or --rehearse to replay it in a disposable lab.");
     return;
   }
 
@@ -421,7 +445,9 @@ function runOnboard(rest) {
   }
 
   process.stdout.write(result.report);
-  console.log("Run with --write to create temper.config.json, onboarding reports, and assistant files.");
+  console.log(
+    "Run with --preview to inspect the exact install plan, --write to create temper.config.json and assistant files, or --rehearse to replay it in a disposable lab."
+  );
 }
 
 function runAdopt(rest) {
@@ -574,7 +600,8 @@ function parseCommonArgs(args) {
     force: false,
     write: false,
     json: false,
-    rehearse: false
+    rehearse: false,
+    preview: false
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -612,6 +639,10 @@ function parseCommonArgs(args) {
         break;
       case "write":
         parsed.write = true;
+        break;
+      case "preview":
+      case "dry-run":
+        parsed.preview = true;
         break;
       case "json":
         parsed.json = true;

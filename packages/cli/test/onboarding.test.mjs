@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { buildExistingProjectOnboarding } from "../src/lib/onboarding.mjs";
+import { buildExistingProjectOnboarding, buildOnboardingInstallPreview } from "../src/lib/onboarding.mjs";
 
 const CLI_PATH = "/Users/michaelorourke/temper-worktrees/ud-operator/packages/cli/bin/temper.mjs";
 
@@ -36,6 +36,47 @@ test("onboard existing --write materializes reports, config, and assistant surfa
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/adoption.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/codex.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")));
+});
+
+test("buildOnboardingInstallPreview enumerates file changes, habit changes, and rollback", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+  const result = buildExistingProjectOnboarding({ cwd: repoDir });
+  const preview = buildOnboardingInstallPreview({
+    result,
+    assistants: ["claude", "codex"]
+  });
+
+  assert.ok(preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
+  assert.ok(preview.file_changes.some((item) => item.path === "AGENTS.md" && item.action === "update"));
+  assert.ok(preview.file_changes.some((item) => item.path === ".claude/commands/temper-ship.md" && item.action === "create"));
+  assert.ok(preview.habit_changes.some((line) => line.includes("pnpm exec temper coach --cwd . --json")));
+  assert.ok(preview.rollback.some((line) => line.includes("temper.config.json")));
+});
+
+test("onboard existing --preview shows the write plan without mutating the repo", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+  const agentsBefore = fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8");
+  const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--preview"], {
+    encoding: "utf8"
+  });
+
+  assert.match(output, /## Preview/);
+  assert.match(output, /create: temper\.config\.json/);
+  assert.match(output, /update: AGENTS\.md/);
+  assert.equal(fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8"), agentsBefore);
+  assert.equal(fs.existsSync(path.join(repoDir, "temper.config.json")), false);
+});
+
+test("onboard existing --dry-run aliases preview in json mode", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+  const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--dry-run", "--json"], {
+    encoding: "utf8"
+  });
+  const parsed = JSON.parse(output);
+
+  assert.ok(parsed.preview);
+  assert.ok(parsed.preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
+  assert.ok(parsed.preview.file_changes.some((item) => item.path === "CLAUDE.md" && item.action === "update"));
 });
 
 test("onboard existing --rehearse replays a fresh install in a disposable lab", async (t) => {
