@@ -3,6 +3,5 @@ node_modules
 dist
 coverage
 *.log
-SESSION.md
 HANDOFF_*.md
 docs/
