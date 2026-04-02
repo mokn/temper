@@ -54,9 +54,25 @@ export function buildExistingProjectOnboarding(options = {}) {
     executionPolicy,
     efficiency
   });
+  const memory = buildWorkflowMemory({
+    analysis,
+    workflows,
+    history,
+    scriptAudit,
+    executionPolicy,
+    recommendations
+  });
+  const resurfacing = buildResurfacingSignals({
+    analysis,
+    executionPolicy,
+    scriptAudit,
+    recommendations,
+    memory
+  });
 
   const config = {
     ...baseConfig,
+    ship: applyExecutionPolicyToShip(baseConfig.ship, executionPolicy.lifecycle),
     execution_policy: executionPolicy,
     onboarding: {
       generated_at: new Date().toISOString(),
@@ -66,6 +82,13 @@ export function buildExistingProjectOnboarding(options = {}) {
         current_startup_tokens: efficiency.current_startup_tokens,
         projected_startup_tokens: efficiency.projected_startup_tokens
       },
+      memory,
+      resurfacing: resurfacing.map((item) => ({
+        id: item.id,
+        phase: item.phase,
+        priority: item.priority,
+        message: item.message
+      })),
       recommendations: recommendations.map((item) => ({
         id: item.id,
         priority: item.priority,
@@ -81,6 +104,8 @@ export function buildExistingProjectOnboarding(options = {}) {
     workflows,
     strengths,
     efficiency,
+    memory,
+    resurfacing,
     script_audit: scriptAudit,
     execution_policy: executionPolicy,
     recommendations
@@ -116,6 +141,7 @@ export function materializeOnboardingInstall(options) {
     projectRoot,
     config: result.config,
     analysis: result.analysis,
+    onboarding: result.onboarding,
     assistants: options.assistants
   });
 
@@ -135,6 +161,7 @@ export function buildOnboardingInstallPreview(options) {
     projectRoot,
     config: result.config,
     analysis: result.analysis,
+    onboarding: result.onboarding,
     assistants: options.assistants
   });
   const filePlans = [
@@ -191,7 +218,7 @@ export function runExistingProjectOnboardingRehearsal(options = {}) {
   const rehearsalRoot = resolveRehearsalRoot(sourceRoot, options);
 
   prepareRehearsalRoot(sourceRoot, rehearsalRoot);
-  const reset = stripExistingTemperInstall(rehearsalRoot);
+  const reset = applyTemperUninstall({ cwd: rehearsalRoot }).applied;
   const result = buildExistingProjectOnboarding({
     cwd: rehearsalRoot,
     family: options.family,
@@ -239,6 +266,64 @@ export function runExistingProjectOnboardingRehearsal(options = {}) {
   };
 }
 
+export function planTemperUninstall(options = {}) {
+  const projectRoot = path.resolve(options.cwd ?? process.cwd());
+  const changes = collectTemperInstallChanges(projectRoot);
+
+  return {
+    projectRoot,
+    changes: changes.map(({ path: relativePath, action }) => ({
+      path: relativePath,
+      action
+    }))
+  };
+}
+
+export function applyTemperUninstall(options = {}) {
+  const projectRoot = path.resolve(options.cwd ?? process.cwd());
+  const changes = collectTemperInstallChanges(projectRoot);
+  const applied = [];
+
+  for (const change of changes) {
+    const targetPath = path.join(projectRoot, change.path);
+    if (change.action === "delete_file") {
+      fs.rmSync(targetPath, { force: true });
+      applied.push(change.path);
+      continue;
+    }
+    if (change.action === "delete_dir") {
+      fs.rmSync(targetPath, { recursive: true, force: true });
+      applied.push(change.path);
+      continue;
+    }
+    if (change.action === "update_file") {
+      fs.writeFileSync(targetPath, change.content);
+      applied.push(change.path);
+    }
+  }
+
+  return {
+    projectRoot,
+    applied
+  };
+}
+
+export function renderTemperUninstallPreview(plan) {
+  const lines = [
+    "## Uninstall Preview",
+    "- no files are changed until you add `--write`",
+    "",
+    "## What Will Be Removed",
+    ...asBulletLines(
+      plan.changes.length > 0
+        ? plan.changes.map((item) => `${formatUninstallAction(item.action)}: ${item.path}`)
+        : ["no Temper install artifacts were found."]
+    )
+  ];
+
+  return lines.join("\n") + "\n";
+}
+
 export function renderOnboardingReport({ analysis, config, onboarding }) {
   const lines = [
     "# Temper Onboarding Report",
@@ -274,6 +359,9 @@ export function renderOnboardingReport({ analysis, config, onboarding }) {
       `player impact: ${onboarding.lifecycle.player_impact}`
     ]),
     "",
+    "## Workflow Memory",
+    ...asBulletLines(renderWorkflowMemoryLines(onboarding.memory)),
+    "",
     "## Token Efficiency",
     ...asBulletLines([
       `score: ${onboarding.efficiency.score}/100`,
@@ -284,8 +372,14 @@ export function renderOnboardingReport({ analysis, config, onboarding }) {
     "## Execution Policy",
     ...asBulletLines(renderExecutionPolicyLines(onboarding.execution_policy)),
     "",
+    "## Policy Lifecycle",
+    ...asBulletLines(renderPolicyLifecycleLines(onboarding.execution_policy.lifecycle)),
+    "",
     "## Recommended Hook Shape",
     ...asBulletLines(renderHookLines(onboarding.execution_policy.hook_recommendations)),
+    "",
+    "## Resurfacing",
+    ...asBulletLines(onboarding.resurfacing.map((item) => `[${item.priority}] ${item.message}`)),
     "",
     "## Recommendations",
     ...renderRecommendationLines(onboarding.recommendations)
@@ -354,18 +448,22 @@ function shouldCopyForRehearsal(sourceRoot, candidatePath) {
   return !segments.some((segment) => REHEARSAL_SKIP_DIRS.has(segment) || segment === ".git");
 }
 
-function stripExistingTemperInstall(projectRoot) {
-  const reset = [];
+function collectTemperInstallChanges(projectRoot) {
+  const changes = [];
   const configPath = path.join(projectRoot, CONFIG_FILENAME);
   if (fs.existsSync(configPath)) {
-    fs.rmSync(configPath, { force: true });
-    reset.push(CONFIG_FILENAME);
+    changes.push({
+      path: CONFIG_FILENAME,
+      action: "delete_file"
+    });
   }
 
   const temperDir = path.join(projectRoot, ".temper");
   if (fs.existsSync(temperDir)) {
-    fs.rmSync(temperDir, { recursive: true, force: true });
-    reset.push(".temper/");
+    changes.push({
+      path: ".temper/",
+      action: "delete_dir"
+    });
   }
 
   const claudeCommandsDir = path.join(projectRoot, ".claude", "commands");
@@ -374,8 +472,10 @@ function stripExistingTemperInstall(projectRoot) {
       if (!/^temper-.*\.md$/i.test(entry)) {
         continue;
       }
-      fs.rmSync(path.join(claudeCommandsDir, entry), { force: true });
-      reset.push(path.posix.join(".claude/commands", entry));
+      changes.push({
+        path: path.posix.join(".claude/commands", entry),
+        action: "delete_file"
+      });
     }
   }
 
@@ -387,12 +487,27 @@ function stripExistingTemperInstall(projectRoot) {
     const existing = fs.readFileSync(filePath, "utf8");
     const next = removeMarkedBlock(existing, TEMPER_RUNTIME_MARKER);
     if (next !== existing) {
-      fs.writeFileSync(filePath, next);
-      reset.push(relativePath);
+      changes.push({
+        path: relativePath,
+        action: "update_file",
+        content: next
+      });
     }
   }
 
-  return reset.sort();
+  return changes.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+function formatUninstallAction(action) {
+  switch (action) {
+    case "delete_dir":
+    case "delete_file":
+      return "delete";
+    case "update_file":
+      return "update";
+    default:
+      return action;
+  }
 }
 
 function relativeTo(root, targetPath) {
@@ -570,9 +685,13 @@ function buildExecutionPolicy(config, packageCatalog) {
     commands[id] = classifyCommand(id, commandConfig, packageCatalog);
   }
 
+  const hookRecommendations = buildHookRecommendations(config, commands);
+  const lifecycle = buildPolicyLifecycle(hookRecommendations, commands);
+
   return {
     commands,
-    hook_recommendations: buildHookRecommendations(config, commands)
+    hook_recommendations: hookRecommendations,
+    lifecycle
   };
 }
 
@@ -640,6 +759,37 @@ function buildHookRecommendations(config, commands) {
     };
   }
   return output;
+}
+
+function buildPolicyLifecycle(hookRecommendations, commands) {
+  const ship_modes = {};
+  for (const mode of ["lite", "full"]) {
+    const hook = hookRecommendations[mode];
+    const discovered_steps = hook.current_steps;
+    const blessed_steps = hook.recommended_default;
+    const gated_steps = dedupe([...hook.gated_live, ...hook.blocked_prod]);
+    const recommended_steps = dedupe([...blessed_steps, ...gated_steps]);
+    const prod_confirmation_steps = hook.blocked_prod;
+
+    ship_modes[mode] = {
+      discovered_steps,
+      recommended_steps,
+      blessed_steps,
+      gated_steps,
+      prod_confirmation_steps,
+      notes: buildLifecycleNotes(mode, { discovered_steps, blessed_steps, gated_steps, prod_confirmation_steps }, commands)
+    };
+  }
+
+  return {
+    stages: ["discovered", "recommended", "blessed", "gated"],
+    promote_command: "temper ship <lite|full> --promote <step>",
+    confirmation_rules: [
+      "Live-stateful steps start gated and require explicit `--promote <step>` to run.",
+      "Production-sensitive steps require both `--promote <step>` and `--confirm-prod`."
+    ],
+    ship_modes
+  };
 }
 
 function buildEfficiencyReport(analysis, workflows, executionPolicy, scriptAudit) {
@@ -804,6 +954,53 @@ function renderHookLines(hooks) {
   ];
 }
 
+function renderPolicyLifecycleLines(lifecycle) {
+  if (!lifecycle) {
+    return ["none"];
+  }
+
+  const lines = [
+    `stages: ${lifecycle.stages.join(" -> ")}`,
+    `promotion command: ${lifecycle.promote_command}`
+  ];
+
+  for (const mode of ["lite", "full"]) {
+    const policy = lifecycle.ship_modes?.[mode];
+    if (!policy) {
+      continue;
+    }
+    lines.push(`${mode} discovered: ${policy.discovered_steps.join(", ") || "none"}`);
+    lines.push(`${mode} blessed default: ${policy.blessed_steps.join(", ") || "none"}`);
+    lines.push(`${mode} gated: ${policy.gated_steps.join(", ") || "none"}`);
+    if (policy.prod_confirmation_steps.length > 0) {
+      lines.push(`${mode} prod confirmation: ${policy.prod_confirmation_steps.join(", ")}`);
+    }
+  }
+
+  return [...lines, ...(lifecycle.confirmation_rules ?? [])];
+}
+
+function renderWorkflowMemoryLines(memory) {
+  if (!memory) {
+    return ["none"];
+  }
+
+  const lines = [];
+  if (memory.release_pattern) {
+    lines.push(`release pattern: ${memory.release_pattern}`);
+  }
+  if (memory.continuity_pattern) {
+    lines.push(`continuity pattern: ${memory.continuity_pattern}`);
+  }
+  if (memory.recurring_failure_modes?.length > 0) {
+    lines.push(...memory.recurring_failure_modes.map((item) => `recurring failure mode: ${item}`));
+  }
+  if (memory.recent_signals?.length > 0) {
+    lines.push(...memory.recent_signals.map((item) => `recent signal: ${item}`));
+  }
+  return lines.length > 0 ? lines : ["none"];
+}
+
 function renderRecommendationLines(recommendations) {
   if (recommendations.length === 0) {
     return ["- none right now. The repo already has a strong operating shape."];
@@ -838,6 +1035,150 @@ function buildHookNotes(mode, currentSteps, recommendedDefault, gatedLive, block
   return notes;
 }
 
+function buildLifecycleNotes(mode, lifecycleMode, commands) {
+  const notes = [];
+  if (lifecycleMode.blessed_steps.length > 0) {
+    notes.push(`${mode} blessed default stays local-first: ${lifecycleMode.blessed_steps.join(", ")}`);
+  }
+  if (lifecycleMode.gated_steps.length > 0) {
+    notes.push(`${mode} gated steps require explicit promotion: ${lifecycleMode.gated_steps.join(", ")}`);
+  }
+  if (lifecycleMode.prod_confirmation_steps.length > 0) {
+    notes.push(`${mode} prod-sensitive steps also require --confirm-prod: ${lifecycleMode.prod_confirmation_steps.join(", ")}`);
+  }
+  if (lifecycleMode.discovered_steps.length === 0) {
+    notes.push(`${mode} has no discovered steps yet.`);
+  }
+  for (const stepId of lifecycleMode.gated_steps) {
+    const reasons = commands[stepId]?.reasons ?? [];
+    if (reasons.length > 0) {
+      notes.push(`${stepId}: ${reasons[0]}`);
+    }
+  }
+  return notes;
+}
+
+function applyExecutionPolicyToShip(shipConfig, lifecycle) {
+  const next = {};
+  for (const mode of ["lite", "full"]) {
+    const lifecycleMode = lifecycle?.ship_modes?.[mode];
+    const fallback = shipConfig?.[mode] ?? { steps: [] };
+    next[mode] = {
+      steps: lifecycleMode?.blessed_steps ?? fallback.steps ?? [],
+      gated_steps: lifecycleMode?.gated_steps ?? [],
+      discovered_steps: lifecycleMode?.discovered_steps ?? dedupe([...(fallback.steps ?? []), ...(fallback.gated_steps ?? [])])
+    };
+  }
+  return next;
+}
+
+function buildWorkflowMemory({ analysis, workflows, history, scriptAudit, executionPolicy, recommendations }) {
+  const releaseSignals = [];
+  if (analysis.environments.some((item) => item.id === "beta")) {
+    releaseSignals.push("beta environment is modeled");
+  }
+  if (analysis.environments.some((item) => item.id === "prod")) {
+    releaseSignals.push("prod environment is modeled");
+  }
+  if (workflows.count > 0) {
+    releaseSignals.push(`${workflows.count} GitHub workflow file${workflows.count === 1 ? "" : "s"} detected`);
+  }
+
+  const continuitySignals = [];
+  if (analysis.surfaces.workflow.session) {
+    continuitySignals.push("repo-native session tracking exists");
+  }
+  if (analysis.surfaces.workflow.handoffs.length > 0) {
+    continuitySignals.push(`${analysis.surfaces.workflow.handoffs.length} handoff surface${analysis.surfaces.workflow.handoffs.length === 1 ? "" : "s"} detected`);
+  }
+  if (analysis.repo.sharedRoot && analysis.repo.sharedRoot !== analysis.root) {
+    continuitySignals.push("worktree-aware workflow is already in use");
+  }
+
+  const recurringFailureModes = [];
+  for (const issue of scriptAudit.issues) {
+    recurringFailureModes.push(issue.message);
+  }
+  const fullLifecycle = executionPolicy.lifecycle?.ship_modes?.full;
+  if ((fullLifecycle?.gated_steps?.length ?? 0) > 0) {
+    recurringFailureModes.push(`deep verification has shared-state steps that should stay promoted, not default: ${fullLifecycle.gated_steps.join(", ")}`);
+  }
+  if (!analysis.surfaces.workflow.agents) {
+    recurringFailureModes.push("assistant startup context is missing, so workflow rediscovery cost will keep recurring");
+  }
+
+  return {
+    release_pattern: releaseSignals.join("; ") || "release discipline is mostly implicit today",
+    continuity_pattern: continuitySignals.join("; ") || "session continuity is still light",
+    recurring_failure_modes: dedupe(recurringFailureModes).slice(0, 6),
+    recent_signals: summarizeRecentSignals(history, recommendations)
+  };
+}
+
+function summarizeRecentSignals(history, recommendations) {
+  const signals = [];
+  if ((history.commit_count ?? 0) > 0) {
+    signals.push(`${history.commit_count} local commits available for pattern inference`);
+  }
+  const recentTypes = Object.entries(history.conventional_counts)
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, 3)
+    .map(([id, count]) => `${id}:${count}`);
+  if (recentTypes.length > 0) {
+    signals.push(`recent commit mix ${recentTypes.join(", ")}`);
+  }
+  if (recommendations.length > 0) {
+    signals.push(`top recommendations ${recommendations.slice(0, 2).map((item) => item.id).join(", ")}`);
+  }
+  return signals;
+}
+
+function buildResurfacingSignals({ analysis, executionPolicy, scriptAudit, recommendations, memory }) {
+  const signals = [];
+  const fullLifecycle = executionPolicy.lifecycle?.ship_modes?.full;
+  if ((fullLifecycle?.gated_steps?.length ?? 0) > 0) {
+    signals.push({
+      id: "promote-gated-full-steps",
+      phase: "ship",
+      priority: "high",
+      message: `Keep full-flow live verification explicit. Promote only when needed: ${fullLifecycle.gated_steps.join(", ")}.`
+    });
+  }
+  if (scriptAudit.issues.some((item) => item.id === "root-test-is-lint")) {
+    signals.push({
+      id: "root-test-is-lint",
+      phase: "ship",
+      priority: "high",
+      message: "Do not read root `test` as real release confidence until the repo splits lint from verification."
+    });
+  }
+  if (!analysis.surfaces.workflow.agents || !analysis.surfaces.workflow.session || analysis.surfaces.workflow.handoffs.length === 0) {
+    signals.push({
+      id: "keep-workflow-context-current",
+      phase: "session",
+      priority: "medium",
+      message: "Keep AGENTS, SESSION, and handoff surfaces current so restart cost does not creep back in."
+    });
+  }
+  if (recommendations.some((item) => item.id === "surface-strengths-over-time")) {
+    signals.push({
+      id: "preserve-working-habits",
+      phase: "always",
+      priority: "medium",
+      message: "Use Temper to keep the repo's good habits explicit instead of letting them drift back into chat."
+    });
+  }
+  if ((memory.recurring_failure_modes?.length ?? 0) > 0) {
+    signals.push({
+      id: "watch-recurring-failure-modes",
+      phase: "always",
+      priority: "medium",
+      message: `Recurring failure modes to keep visible: ${memory.recurring_failure_modes.slice(0, 2).join("; ")}`
+    });
+  }
+  return signals;
+}
+
 function buildPreviewFilePlan(projectRoot, relativePath, content) {
   const filePath = path.join(projectRoot, relativePath);
   return {
@@ -856,11 +1197,12 @@ function classifyPreviewAction(filePath, content) {
 
 function buildPreviewHabitChanges(runtimeCommand, executionPolicy) {
   const fullHooks = executionPolicy.hook_recommendations.full;
+  const fullLifecycle = executionPolicy.lifecycle?.ship_modes?.full;
   const habitChanges = [
     `before major design or release guidance, run \`${runtimeCommand} coach --cwd . --json --intent "<user intent>"\``,
     `use \`${runtimeCommand} ship lite --cwd . --intent "<summary>"\` for narrow implementation confidence`,
     `use \`${runtimeCommand} ship full --cwd . --intent "<summary>"\` for player-facing, infra, economy, security, or multi-system work`,
-    "treat `temper.config.json` and `.temper/assistants/*.md` as the repo-local operating contract"
+    "treat `temper.config.json`, `.temper/assistants/shared-canon.json`, and `.temper/assistants/*.md` as the repo-local operating contract"
   ];
 
   if (fullHooks.recommended_default.length > 0) {
@@ -871,6 +1213,9 @@ function buildPreviewHabitChanges(runtimeCommand, executionPolicy) {
   }
   if (fullHooks.blocked_prod.length > 0) {
     habitChanges.push(`keep production-sensitive steps behind explicit confirmation: ${fullHooks.blocked_prod.join(", ")}`);
+  }
+  if ((fullLifecycle?.gated_steps?.length ?? 0) > 0) {
+    habitChanges.push(`promote gated full-flow steps deliberately with \`${runtimeCommand} ship full --cwd . --promote <step>\``);
   }
 
   return habitChanges;

@@ -327,11 +327,13 @@ export function parseCoachArgs(args) {
     json: false,
     repo: true,
     dryRun: false,
+    confirmProd: false,
     limit: 8,
     hats: [],
     capabilities: [],
     families: [],
-    files: []
+    files: [],
+    promote: []
   };
   const positional = [];
 
@@ -355,6 +357,10 @@ export function parseCoachArgs(args) {
     }
     if (key === "dry-run") {
       flags.dryRun = true;
+      continue;
+    }
+    if (key === "confirm-prod") {
+      flags.confirmProd = true;
       continue;
     }
 
@@ -398,6 +404,10 @@ export function parseCoachArgs(args) {
       case "file":
       case "files":
         flags.files.push(...splitList(nextValue));
+        break;
+      case "promote":
+      case "promotes":
+        flags.promote.push(...splitList(nextValue));
         break;
       case "limit":
         flags.limit = Number.parseInt(nextValue, 10) || flags.limit;

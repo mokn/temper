@@ -5,6 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { buildExistingProjectOnboarding, buildOnboardingInstallPreview } from "../src/lib/onboarding.mjs";
+import { runShip } from "../src/lib/ship.mjs";
 
 const CLI_PATH = "/Users/michaelorourke/temper-worktrees/ud-operator/packages/cli/bin/temper.mjs";
 
@@ -16,8 +17,12 @@ test("buildExistingProjectOnboarding classifies lifecycle, efficiency, and hook 
   assert.equal(result.onboarding.lifecycle.id, "live");
   assert.equal(result.onboarding.execution_policy.commands.smoke.risk, "live_stateful");
   assert.ok(result.onboarding.execution_policy.hook_recommendations.full.gated_live.includes("smoke"));
+  assert.ok(result.onboarding.execution_policy.lifecycle.ship_modes.full.gated_steps.includes("smoke"));
+  assert.ok(result.onboarding.memory.recurring_failure_modes.some((item) => /root `test`/i.test(item)));
+  assert.ok(result.onboarding.resurfacing.some((item) => item.id === "promote-gated-full-steps"));
   assert.ok(result.onboarding.recommendations.some((item) => item.id === "split-root-test-from-lint"));
   assert.match(result.report, /Token Efficiency/);
+  assert.match(result.report, /Policy Lifecycle/);
   assert.match(result.report, /Recommended Hook Shape/);
 });
 
@@ -31,9 +36,13 @@ test("onboard existing --write materializes reports, config, and assistant surfa
   const config = JSON.parse(fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8"));
   assert.equal(config.mode, "onboarded");
   assert.equal(config.execution_policy.commands.smoke.risk, "live_stateful");
+  assert.ok(config.ship.full.gated_steps.includes("smoke"));
+  assert.equal(config.ship.full.steps.includes("smoke"), false);
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/onboarding.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/onboarding.json")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/reports/adoption.md")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.json")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/codex.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")));
 });
@@ -48,8 +57,10 @@ test("buildOnboardingInstallPreview enumerates file changes, habit changes, and 
 
   assert.ok(preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === "AGENTS.md" && item.action === "update"));
+  assert.ok(preview.file_changes.some((item) => item.path === ".temper/assistants/shared-canon.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === ".claude/commands/temper-ship.md" && item.action === "create"));
   assert.ok(preview.habit_changes.some((line) => line.includes("pnpm exec temper coach --cwd . --json")));
+  assert.ok(preview.habit_changes.some((line) => line.includes("shared-canon.json")));
   assert.ok(preview.rollback.some((line) => line.includes("temper.config.json")));
 });
 
@@ -76,7 +87,36 @@ test("onboard existing --dry-run aliases preview in json mode", async (t) => {
 
   assert.ok(parsed.preview);
   assert.ok(parsed.preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
+  assert.ok(parsed.preview.file_changes.some((item) => item.path === ".temper/assistants/shared-canon.md" && item.action === "create"));
   assert.ok(parsed.preview.file_changes.some((item) => item.path === "CLAUDE.md" && item.action === "update"));
+});
+
+test("runShip respects onboarded blessed defaults and gated promotion", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+
+  execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  const defaultReport = runShip({
+    cwd: repoDir,
+    mode: "full",
+    intent: "release confidence pass",
+    dryRun: true
+  });
+  assert.ok(defaultReport.plan.gated_steps.includes("smoke"));
+  assert.equal(defaultReport.plan.steps.some((step) => step.id === "smoke"), false);
+  assert.ok(defaultReport.resurfacing.some((item) => item.id === "promote-gated-full-steps"));
+
+  const promotedReport = runShip({
+    cwd: repoDir,
+    mode: "full",
+    intent: "release confidence pass",
+    dryRun: true,
+    promote: ["smoke"]
+  });
+  assert.ok(promotedReport.plan.steps.some((step) => step.id === "smoke"));
+  assert.ok(promotedReport.warnings.some((line) => line.includes("promoted gated steps")));
 });
 
 test("onboard existing --rehearse replays a fresh install in a disposable lab", async (t) => {
@@ -97,14 +137,51 @@ test("onboard existing --rehearse replays a fresh install in a disposable lab", 
   assert.equal(fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8"), sourceConfigBefore);
   assert.ok(fs.existsSync(path.join(rehearsalRoot, "temper.config.json")));
   assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/reports/rehearsal.json")));
+  assert.ok(fs.existsSync(path.join(rehearsalRoot, ".temper/assistants/shared-canon.json")));
   assert.ok(!fs.existsSync(path.join(rehearsalRoot, ".temper/stale.txt")));
 
   const rehearsalAgents = fs.readFileSync(path.join(rehearsalRoot, "AGENTS.md"), "utf8");
   const rehearsalShip = fs.readFileSync(path.join(rehearsalRoot, ".claude/commands/temper-ship.md"), "utf8");
+  const rehearsalCanon = fs.readFileSync(path.join(rehearsalRoot, ".temper/assistants/shared-canon.json"), "utf8");
   assert.match(rehearsalAgents, /pnpm exec temper/);
   assert.ok(!rehearsalAgents.includes("pnpm exec old-temper"));
   assert.match(rehearsalShip, /pnpm exec temper/);
   assert.ok(!rehearsalShip.includes("old install"));
+  assert.match(rehearsalCanon, /shared-canon/);
+});
+
+test("temper uninstall --preview shows owned artifacts without mutating the repo", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t, {
+    seedTemperInstall: true
+  });
+  const agentsBefore = fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8");
+
+  const output = execFileSync("node", [CLI_PATH, "uninstall", "--cwd", repoDir, "--preview"], {
+    encoding: "utf8"
+  });
+
+  assert.match(output, /## Uninstall Preview/);
+  assert.match(output, /delete: temper\.config\.json/);
+  assert.match(output, /delete: \.temper\//);
+  assert.match(output, /update: AGENTS\.md/);
+  assert.equal(fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8"), agentsBefore);
+  assert.ok(fs.existsSync(path.join(repoDir, "temper.config.json")));
+});
+
+test("temper uninstall --write removes Temper-owned files and hook blocks", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t, {
+    seedTemperInstall: true
+  });
+
+  execFileSync("node", [CLI_PATH, "reset", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  assert.equal(fs.existsSync(path.join(repoDir, "temper.config.json")), false);
+  assert.equal(fs.existsSync(path.join(repoDir, ".temper")), false);
+  assert.equal(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")), false);
+  const agents = fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8");
+  assert.ok(!agents.includes("TEMPER_RUNTIME:BEGIN"));
 });
 
 function createOnboardingFixtureRepo(t, options = {}) {

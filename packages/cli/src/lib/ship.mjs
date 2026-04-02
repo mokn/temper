@@ -19,7 +19,8 @@ export function runShip(options = {}) {
   };
   const coach = buildCoachPacket(input);
   const environment = inferEnvironment(config, repo.branch, options.env);
-  const steps = (config.ship?.[mode]?.steps ?? []).map((stepId) => ({
+  const policy = resolveShipPolicy(config, mode, options);
+  const steps = policy.selected_steps.map((stepId) => ({
     id: stepId,
     config: config.commands?.[stepId] ?? null
   }));
@@ -31,6 +32,12 @@ export function runShip(options = {}) {
   if (environment.id === "prod" && repo.available && repo.isDirty) {
     warnings.push("production-targeted flow from dirty worktree");
   }
+  if (policy.promoted_steps.length > 0) {
+    warnings.push(`running promoted gated steps: ${policy.promoted_steps.join(", ")}`);
+  }
+
+  const resurfacing = collectResurfacing(config, policy);
+  warnings.push(...resurfacing.filter((item) => item.priority === "high").map((item) => item.message));
 
   const execution = executeSteps(projectRoot, steps, options.dryRun === true);
   const patchNotes = buildPatchNotes(projectRoot, repo, coach, execution);
@@ -52,14 +59,20 @@ export function runShip(options = {}) {
       render: coach.render
     },
     plan: {
+      blessed_steps: policy.blessed_steps,
+      gated_steps: policy.gated_steps,
+      promoted_steps: policy.promoted_steps,
+      discovered_steps: policy.discovered_steps,
       steps: steps.map((step) => ({
         id: step.id,
         cmd: step.config?.cmd ?? null,
         cwd: step.config ? commandCwd(projectRoot, step.config) : null
       }))
     },
+    policy,
     execution,
     patch_notes: patchNotes,
+    resurfacing,
     warnings
   };
 }
@@ -80,6 +93,12 @@ export function printShipReport(report) {
       console.log(`- ${warning}`);
     }
   }
+
+  console.log("");
+  console.log("Policy:");
+  console.log(`- blessed default: ${report.plan.blessed_steps.join(", ") || "none"}`);
+  console.log(`- gated available: ${report.plan.gated_steps.join(", ") || "none"}`);
+  console.log(`- promoted this run: ${report.plan.promoted_steps.join(", ") || "none"}`);
 
   console.log("");
   console.log("Execution:");
@@ -115,6 +134,61 @@ export function printShipReport(report) {
     console.log("Release Notes Command:");
     console.log(report.patch_notes.release_notes_output);
   }
+
+  if (report.resurfacing.length > 0) {
+    console.log("");
+    console.log("Temper Reminders:");
+    for (const item of report.resurfacing) {
+      console.log(`- [${item.priority}] ${item.message}`);
+    }
+  }
+}
+
+function resolveShipPolicy(config, mode, options) {
+  const shipMode = config.ship?.[mode] ?? { steps: [] };
+  const lifecycleMode = config.execution_policy?.lifecycle?.ship_modes?.[mode] ?? {};
+  const blessed_steps = shipMode.steps ?? [];
+  const gated_steps = shipMode.gated_steps ?? lifecycleMode.gated_steps ?? [];
+  const discovered_steps = shipMode.discovered_steps ?? lifecycleMode.discovered_steps ?? dedupe([...blessed_steps, ...gated_steps]);
+  const prod_confirmation_steps = lifecycleMode.prod_confirmation_steps ?? [];
+  const promoted_steps = dedupe(options.promote ?? []);
+
+  const invalidPromotions = promoted_steps.filter((stepId) => !gated_steps.includes(stepId));
+  if (invalidPromotions.length > 0) {
+    throw new Error(`Cannot promote unknown or non-gated step(s): ${invalidPromotions.join(", ")}`);
+  }
+
+  const prodPromotions = promoted_steps.filter((stepId) => prod_confirmation_steps.includes(stepId));
+  if (prodPromotions.length > 0 && options.confirmProd !== true) {
+    throw new Error(`Promoting prod-sensitive step(s) requires --confirm-prod: ${prodPromotions.join(", ")}`);
+  }
+
+  return {
+    mode,
+    discovered_steps,
+    blessed_steps,
+    gated_steps,
+    promoted_steps,
+    prod_confirmation_steps,
+    selected_steps: discovered_steps.filter((stepId) => blessed_steps.includes(stepId) || promoted_steps.includes(stepId)),
+    promote_command: config.execution_policy?.lifecycle?.promote_command ?? "temper ship <lite|full> --promote <step>"
+  };
+}
+
+function collectResurfacing(config, policy) {
+  const signals = config.onboarding?.resurfacing ?? [];
+  return signals.filter((item) => {
+    if (item.phase === "always") {
+      return true;
+    }
+    if (item.phase === "ship") {
+      return true;
+    }
+    if (item.phase === "session") {
+      return policy.promoted_steps.length > 0;
+    }
+    return false;
+  });
 }
 
 function executeSteps(projectRoot, steps, dryRun) {

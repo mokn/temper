@@ -63,15 +63,20 @@ test("assistant install writes guides and Claude commands", async (t) => {
 
   assert.ok(written.includes(".temper/assistants/claude.md"));
   assert.ok(written.includes(".temper/assistants/codex.md"));
+  assert.ok(written.includes(".temper/assistants/shared-canon.json"));
   assert.ok(written.includes(".claude/commands/temper-ship.md"));
   assert.equal(fs.existsSync(path.join(repoDir, ".claude/commands/temper-balance.md")), true);
   assert.match(
     fs.readFileSync(path.join(repoDir, ".temper/assistants/codex.md"), "utf8"),
-    /pnpm exec temper coach --cwd \./
+    /shared-canon\.json/
+  );
+  assert.match(
+    fs.readFileSync(path.join(repoDir, ".temper/assistants/shared-canon.md"), "utf8"),
+    /Temper Shared Canon/
   );
   assert.match(
     fs.readFileSync(path.join(repoDir, "CLAUDE.md"), "utf8"),
-    /TEMPER_RUNTIME:BEGIN[\s\S]*pnpm exec temper ship full --cwd \./
+    /TEMPER_RUNTIME:BEGIN[\s\S]*shared-canon\.json/
   );
   assert.match(
     fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8"),

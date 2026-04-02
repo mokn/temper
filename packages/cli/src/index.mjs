@@ -10,10 +10,13 @@ import {
   renderAdoptionReport
 } from "./lib/project-analysis.mjs";
 import {
+  applyTemperUninstall,
   buildExistingProjectOnboarding,
   buildOnboardingInstallPreview,
   materializeOnboardingInstall,
+  planTemperUninstall,
   renderOnboardingPreview,
+  renderTemperUninstallPreview,
   runExistingProjectOnboardingRehearsal
 } from "./lib/onboarding.mjs";
 import {
@@ -75,6 +78,10 @@ export async function main(argv) {
     return runOnboard(rest);
   }
 
+  if (command === "uninstall" || command === "reset") {
+    return runUninstall(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -88,6 +95,7 @@ function showHelp() {
   console.log("Commands:");
   printList([
     "onboard existing [--cwd ...] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]",
+    "uninstall [--cwd ...] [--preview|--dry-run] [--write]",
     "doctor",
     "derive",
     "query <terms>",
@@ -505,6 +513,37 @@ function runAdopt(rest) {
   console.log("");
   process.stdout.write(report);
   console.log("Run with --write to create temper.config.json and assistant files.");
+}
+
+function runUninstall(rest) {
+  const args = parseCommonArgs(rest);
+  if (args.preview && args.write) {
+    throw new Error("Choose either preview/dry-run or write for uninstall.");
+  }
+
+  const plan = planTemperUninstall({ cwd: args.cwd });
+
+  if (args.json) {
+    const payload = args.write ? applyTemperUninstall({ cwd: args.cwd }) : plan;
+    console.log(JSON.stringify(payload, null, 2));
+    return;
+  }
+
+  if (args.write) {
+    const result = applyTemperUninstall({ cwd: args.cwd });
+    printHeader("Temper Uninstall");
+    console.log(`Root: ${result.projectRoot}`);
+    console.log("");
+    console.log("Removed:");
+    printList(result.applied.length > 0 ? result.applied : ["no Temper install artifacts found"]);
+    return;
+  }
+
+  printHeader("Temper Uninstall");
+  console.log(`Root: ${plan.projectRoot}`);
+  console.log("");
+  process.stdout.write(renderTemperUninstallPreview(plan));
+  console.log("Run with --write to remove these Temper artifacts.");
 }
 
 function runAssistant(rest) {
