@@ -53,3 +53,14 @@ Still to deepen:
 - `temper ship lite --cwd <repo> --intent "<summary>"`
 - `temper ship full --cwd <repo> --intent "<summary>"`
 - `temper assistant install --cwd <repo>`
+
+## GitHub Install Shape
+
+For a fresh install into another repo, install Temper as a dev dependency from GitHub, then run it through that repo's package manager:
+
+- `pnpm exec temper ...`
+- `npx temper ...`
+- `yarn temper ...`
+- `bunx temper ...`
+
+The generated Claude/Codex assistant files are written against that package-manager invocation, not a machine-local checkout path.

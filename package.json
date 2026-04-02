@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "bin": {
+    "temper": "./packages/cli/bin/temper.mjs"
+  },
   "packageManager": "pnpm@10.6.0",
   "scripts": {
     "temper": "node packages/cli/bin/temper.mjs",
