@@ -4,6 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import {
   analyzeProject,
   createConfigFromAnalysis
@@ -12,9 +13,9 @@ import { installAssistantAdapters } from "../src/lib/assistant.mjs";
 import { writeProjectConfig } from "../src/lib/project-config.mjs";
 import { runShip } from "../src/lib/ship.mjs";
 
-const CLI_PATH = "/Users/michaelorourke/temper-worktrees/ud-operator/packages/cli/bin/temper.mjs";
+const CLI_PATH = fileURLToPath(new URL("../bin/temper.mjs", import.meta.url));
 
-test("analyzeProject infers a UD-like repo shape", async (t) => {
+test("analyzeProject infers a MUD-style repo shape", async (t) => {
   const repoDir = createFixtureRepo(t);
   const analysis = analyzeProject({ cwd: repoDir });
   const config = createConfigFromAnalysis(analysis);
@@ -366,7 +367,7 @@ function initGitRepo(repoDir, branch, message) {
 
 function rootPackageJson() {
   return {
-    name: "ud-fixture",
+    name: "temper-fixture",
     private: true,
     packageManager: "pnpm@10.6.0",
     scripts: {

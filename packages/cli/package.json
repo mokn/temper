@@ -1,5 +1,5 @@
 {
-  "name": "@temper/cli",
+  "name": "temper-cli",
   "version": "0.1.0",
   "private": true,
   "type": "module",

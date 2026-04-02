@@ -4,10 +4,11 @@ import path from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { buildExistingProjectOnboarding, buildOnboardingInstallPreview } from "../src/lib/onboarding.mjs";
 import { runShip } from "../src/lib/ship.mjs";
 
-const CLI_PATH = "/Users/michaelorourke/temper-worktrees/ud-operator/packages/cli/bin/temper.mjs";
+const CLI_PATH = fileURLToPath(new URL("../bin/temper.mjs", import.meta.url));
 
 test("buildExistingProjectOnboarding classifies lifecycle, efficiency, and hook risk", async (t) => {
   const repoDir = createOnboardingFixtureRepo(t);
