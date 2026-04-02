@@ -1,0 +1,68 @@
+{
+  "id": "architecture/overlays/browser-typescript-monorepo",
+  "source": "architecture/overlays/browser-typescript-monorepo.md",
+  "metadata": {
+    "title": "Browser + TypeScript Monorepo Overlay Canon",
+    "doc_type": "architecture_overlay",
+    "overlay_id": "browser-typescript-monorepo",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "browser",
+      "typescript",
+      "monorepo",
+      "client",
+      "packages"
+    ],
+    "sources": [
+      "https://unity.com/how-to/architect-game-code-scriptable-objects",
+      "https://docs.godotengine.org/en/stable/getting_started/workflow/project_setup/project_organization.html",
+      "/Users/michaelorourke/ultimate-dominion"
+    ]
+  },
+  "sectionCount": 6,
+  "sections": [
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.01",
+      "title": "Why this overlay exists",
+      "level": 2,
+      "slug": "why-this-overlay-exists",
+      "summary": "Temper needs a stack overlay for web-first games that split client, services, simulation, and content tooling across packages. This stack is common for: - browser RPGs - on-chain o"
+    },
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.02",
+      "title": "Structural doctrine",
+      "level": 2,
+      "slug": "structural-doctrine",
+      "summary": "Prefer: - one package for the player client - one package for backend or service surfaces - one package for simulation or contract/runtime logic where applicable - root scripts tha"
+    },
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.03",
+      "title": "Source-of-truth implications",
+      "level": 2,
+      "slug": "source-of-truth-implications",
+      "summary": "For this stack, the repo should make it obvious which paths are: - canonical game content - generated code - client projections of content - deploy and environment surfaces Generat"
+    },
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.04",
+      "title": "Shipping implications",
+      "level": 2,
+      "slug": "shipping-implications",
+      "summary": "`ship lite` can often stay at the root script layer. `ship full` should usually add: - client typecheck - package-specific smoke or simulation passes - release-note generation from"
+    },
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.05",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- client data copies drift from canonical content - package-level scripts diverge from root workflow - deploy knowledge only exists in one service package - assistant advice ignore"
+    },
+    {
+      "id": "architecture/overlays/browser-typescript-monorepo.06",
+      "title": "Best Temper pairings",
+      "level": 2,
+      "slug": "best-temper-pairings",
+      "summary": "- `Kaplan 🎯` for player trust and onboarding - `Carmack 🔧` for build and deploy integrity - `Miyamoto ✨` for first-session client feel"
+    }
+  ]
+}

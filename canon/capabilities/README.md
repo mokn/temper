@@ -17,6 +17,8 @@ They are the canonical operating manuals for each capability.
 
 Seeded capabilities in this repo:
 
+- init
+- adopt
 - coach
 - ship
 - hotfix

@@ -42,6 +42,8 @@ Current seeded structure:
 - `families/simulation-management-sandbox.md`
 - `families/narrative-choice-driven-puzzle.md`
 - `families/social-persistent-ugc.md`
+- `overlays/browser-typescript-monorepo.md`
+- `overlays/mud-onchain-live-service.md`
 
 These docs are the canon the CLI should retrieve from.
 The design scaffold in `docs/spec/TEMPER_ARCHITECTURE_FAMILIES.md` remains the product-level overview.

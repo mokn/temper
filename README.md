@@ -15,7 +15,7 @@ The initial focus is:
 2. canonical-to-derived conversion
 3. local retrieval for cheap-model synthesis
 4. assistant-facing capability surfaces
-5. repo and workflow skeleton
+5. repo adoption and workflow execution
 
 See:
 
@@ -34,10 +34,22 @@ See:
 - derived-layer tooling scaffolded
 - local query/retrieval scaffolded
 - `coach` routing packet implemented
+- `init` and `adopt` project flows implemented
+- repo-aware `ship lite` / `ship full` execution implemented
+- assistant adapter file generation implemented
 
 Still to deepen:
 
 - source enrichment and sharper quote validation for Miyamoto, Meier, Wright, and Carmack
 - overlay canon for mobile/F2P, live-ops economy, procedural generation, and multiplayer authority
-- assistant adapter layer and cheap-model prompt contract
-- richer context ingestion from diffs, command output, and project state
+- richer hotfix/review/verify execution
+- deeper assistant automation on top of the generated adapter files
+
+## Current Entry Points
+
+- `temper adopt --cwd <repo>`
+- `temper adopt --cwd <repo> --write`
+- `temper init --cwd <repo>`
+- `temper ship lite --cwd <repo> --intent "<summary>"`
+- `temper ship full --cwd <repo> --intent "<summary>"`
+- `temper assistant install --cwd <repo>`

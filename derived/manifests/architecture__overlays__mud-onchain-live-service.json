@@ -1,0 +1,69 @@
+{
+  "id": "architecture/overlays/mud-onchain-live-service",
+  "source": "architecture/overlays/mud-onchain-live-service.md",
+  "metadata": {
+    "title": "MUD / On-Chain Live Service Overlay Canon",
+    "doc_type": "architecture_overlay",
+    "overlay_id": "mud-onchain-live-service",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "mud",
+      "onchain",
+      "live-service",
+      "deploy",
+      "authority"
+    ],
+    "sources": [
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/game-mode-and-game-state-in-unreal-engine?application_version=5.6",
+      "/Users/michaelorourke/ultimate-dominion/.claude/rules/deploy.md",
+      "/Users/michaelorourke/ultimate-dominion/docs/operations/DEPLOY_RUNBOOK.md",
+      "/Users/michaelorourke/ultimate-dominion"
+    ]
+  },
+  "sectionCount": 6,
+  "sections": [
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.01",
+      "title": "Why this overlay exists",
+      "level": 2,
+      "slug": "why-this-overlay-exists",
+      "summary": "An on-chain game has harsher truth surfaces than a normal browser game. The world address, deploy target, access grants, schema compatibility, and replay/indexer health are not sec"
+    },
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.02",
+      "title": "Structural doctrine",
+      "level": 2,
+      "slug": "structural-doctrine",
+      "summary": "Separate clearly: - canonical content and balance data - contract or world runtime - post-deploy and verification scripts - service surfaces like indexers and relayers - client pro"
+    },
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.03",
+      "title": "Operational doctrine",
+      "level": 2,
+      "slug": "operational-doctrine",
+      "summary": "This overlay demands: - explicit environment identity - explicit world address handling - no ambiguous bare deploy or sync commands - rollback-aware hotfix flow - verification afte"
+    },
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.04",
+      "title": "Shipping implications",
+      "level": 2,
+      "slug": "shipping-implications",
+      "summary": "`ship full` should assume stronger review when changes touch: - world config - deploy scripts - access control - relayer or indexer services - source-of-truth content that changes "
+    },
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.05",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- deploying to the wrong world - schema drift between contracts, indexer, and client - silent access loss after redeploy - stale world metadata causing clients to miss seed state -"
+    },
+    {
+      "id": "architecture/overlays/mud-onchain-live-service.06",
+      "title": "Best Temper pairings",
+      "level": 2,
+      "slug": "best-temper-pairings",
+      "summary": "- `Carmack 🔧` for correctness, deploy identity, and rollback discipline - `Kaplan 🎯` for player trust whenever balance or progression changes land on-chain - `Security` and `Infr"
+    }
+  ]
+}
