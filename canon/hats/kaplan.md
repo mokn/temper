@@ -1,3 +1,22 @@
+---
+title: Jeff Kaplan Hat Canon
+doc_type: hat
+hat_id: kaplan
+emoji: "🎯"
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - fairness
+  - trust
+  - readability
+  - progression
+  - onboarding
+  - live-ops
+  - community
+sources:
+  - local-import-ud-jeff-kaplan-design-philosophy
+---
+
 # Jeff Kaplan: Game Design Philosophy -- Canonical Reference
 
 Compiled from GDC talks, DICE keynotes, interviews, developer updates, forum posts,

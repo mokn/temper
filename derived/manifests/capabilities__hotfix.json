@@ -1,0 +1,48 @@
+{
+  "id": "capabilities/hotfix",
+  "source": "capabilities/hotfix.md",
+  "metadata": {
+    "title": "Hotfix Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "hotfix",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "prod",
+      "rollback",
+      "incident",
+      "blast-radius"
+    ]
+  },
+  "sectionCount": 4,
+  "sections": [
+    {
+      "id": "capabilities/hotfix.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Fast, narrow, rollback-aware repair path for live game incidents."
+    },
+    {
+      "id": "capabilities/hotfix.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- identify the live failure precisely - bound blast radius and affected environments - choose the smallest safe fix - require the minimum viable verification - record rollback poin"
+    },
+    {
+      "id": "capabilities/hotfix.03",
+      "title": "Doctrine",
+      "level": 2,
+      "slug": "doctrine",
+      "summary": "Hotfix is not \"ship but faster.\" It is a separate operating mode optimized for damaged trust, damaged revenue, or damaged play. Good hotfix behavior: - fix the failing surface, not"
+    },
+    {
+      "id": "capabilities/hotfix.04",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What is the smallest fix that safely stops the damage?"
+    }
+  ]
+}

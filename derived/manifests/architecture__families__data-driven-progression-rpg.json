@@ -1,0 +1,92 @@
+{
+  "id": "architecture/families/data-driven-progression-rpg",
+  "source": "architecture/families/data-driven-progression-rpg.md",
+  "metadata": {
+    "title": "Data-Driven Progression RPG Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "data-driven-progression-rpg",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "rpg",
+      "roguelite",
+      "progression",
+      "data-driven",
+      "abilities",
+      "balance",
+      "simulation"
+    ],
+    "sources": [
+      "https://unity.com/how-to/architect-game-code-scriptable-objects",
+      "https://unity.com/resources/create-modular-game-architecture-scriptableobjects-unity-6",
+      "https://dev.epicgames.com/documentation/unreal-engine/using-gameplay-abilities-in-unreal-engine",
+      "/Users/michaelorourke/ultimate-dominion"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/data-driven-progression-rpg.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "RPGs, roguelites, loot/progression games, and ability-driven games where content volume, balance tuning, and systemic progression matter more than authored one-off scripts."
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Separate canonical game data from runtime execution. Data should describe items, abilities, enemies, formulas, progression curves, and content sets. Runtime systems should interpre"
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- canonical content data - validation and codegen layer where needed - simulation and balance tooling - combat/effect runtime - progression and inventory runtime - client/presentat"
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "Source-of-truth data should usually include: - items, abilities, enemies, drops, and formulas - stat curves and progression unlocks - content gating and environment flags - tuning "
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "This family needs more than unit tests. It needs doctrine-aware simulation. Temper should encourage: - schema validation - referential integrity checks - simulation of drops, progr"
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "This family produces a lot of \"small\" data changes that can still be economically or emotionally huge. A one-line drop-rate change can alter trust, pacing, or build viability. Befo"
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- content data edited in multiple inconsistent places - opaque formulas nobody can reason about - ability logic duplicated between client and server - live tuning with no historica"
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "This family benefits enormously from strict data ownership and session discipline. One session can safely own combat formulas, another items, another client surfacing, but only if "
+    },
+    {
+      "id": "architecture/families/data-driven-progression-rpg.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Kaplan 🎯` for progression trust - `Meier ♟️` for choice and build quality - `Wright 🌱` for system interaction and replayability - `Carmack 🔧` for validation and release safet"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "id": "architecture/families/competitive-server-authoritative",
+  "source": "architecture/families/competitive-server-authoritative.md",
+  "metadata": {
+    "title": "Competitive Server-Authoritative Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "competitive-server-authoritative",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "moba",
+      "hero-shooter",
+      "pvp",
+      "authoritative-server",
+      "replication",
+      "prediction",
+      "fairness"
+    ],
+    "sources": [
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-quick-reference-in-unreal-engine?application_version=5.6",
+      "https://dev.epicgames.com/documentation/unreal-engine/using-gameplay-abilities-in-unreal-engine"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/competitive-server-authoritative.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "MOBAs, hero shooters, competitive action games, and any multiplayer game where fairness, replication, prediction, and authority boundaries define the player experience."
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Authority must be explicit. Server truth, client prediction, replicated state, player identity, match state, and ability/effect resolution need clear roles and vocabulary."
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- match and rules authority - replicated game state - player state and identity - ability/effect/attribute systems - client prediction and reconciliation - anti-cheat and trust bou"
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "Canonical sources should define: - match rules and modes - hero, ability, and item data - authoritative effect resolution rules - ranked or competitive tuning values - environment "
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "Verification must go beyond correctness in isolation. Temper should encourage: - replication and authority tests - prediction mismatch tests - ability/effect integrity checks - exp"
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "This family has unforgiving fairness costs. Bugs are not merely local defects; they can create competitive illegitimacy, abuse, or public loss of trust. Before shipping: - verify s"
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- authority split across too many layers - prediction that masks server truth too aggressively - player state stored in the wrong replicated surface - exploit surfaces created by o"
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "This family needs strict ownership for gameplay authority, backend/infra, and security. Multiple contributors can work in parallel, but risky changes should converge behind review "
+    },
+    {
+      "id": "architecture/families/competitive-server-authoritative.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Kaplan 🎯` for fairness and player trust - `Carmack 🔧` for authority, latency, and correctness - `Miyamoto ✨` for readability in combat and onboarding"
+    }
+  ]
+}

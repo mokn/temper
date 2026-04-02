@@ -1,0 +1,41 @@
+{
+  "id": "capabilities/audit",
+  "source": "capabilities/audit.md",
+  "metadata": {
+    "title": "Audit Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "audit",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "architecture",
+      "drift",
+      "consistency",
+      "debt"
+    ]
+  },
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/audit.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Inspect the repo for doctrine drift, architectural erosion, or silent inconsistency."
+    },
+    {
+      "id": "capabilities/audit.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- source-of-truth drift detection - command and workflow drift - architecture and folder-shape drift - stale config or dead-path surfacing"
+    },
+    {
+      "id": "capabilities/audit.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What has quietly become inconsistent, unsafe, or hard to reason about?"
+    }
+  ]
+}

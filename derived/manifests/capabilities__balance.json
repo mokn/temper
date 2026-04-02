@@ -1,0 +1,41 @@
+{
+  "id": "capabilities/balance",
+  "source": "capabilities/balance.md",
+  "metadata": {
+    "title": "Balance Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "balance",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "tuning",
+      "economy",
+      "progression",
+      "simulation"
+    ]
+  },
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/balance.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Review game-data and tuning changes through simulation, design doctrine, and player-risk framing."
+    },
+    {
+      "id": "capabilities/balance.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- diff balance-relevant data - route the right hats - run simulation where available - surface likely player-facing outcomes - recommend what must be tested before shipping"
+    },
+    {
+      "id": "capabilities/balance.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What player behavior or trust curve changes if this number ships?"
+    }
+  ]
+}

@@ -1,6 +1,26 @@
 {
   "id": "hats/kaplan",
   "source": "hats/kaplan.md",
+  "metadata": {
+    "title": "Jeff Kaplan Hat Canon",
+    "doc_type": "hat",
+    "hat_id": "kaplan",
+    "emoji": "🎯",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "fairness",
+      "trust",
+      "readability",
+      "progression",
+      "onboarding",
+      "live-ops",
+      "community"
+    ],
+    "sources": [
+      "local-import-ud-jeff-kaplan-design-philosophy"
+    ]
+  },
   "sectionCount": 82,
   "sections": [
     {

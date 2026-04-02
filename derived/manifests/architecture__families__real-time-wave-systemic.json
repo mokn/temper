@@ -1,0 +1,90 @@
+{
+  "id": "architecture/families/real-time-wave-systemic",
+  "source": "architecture/families/real-time-wave-systemic.md",
+  "metadata": {
+    "title": "Real-Time Wave Systemic Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "real-time-wave-systemic",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "tower-defense",
+      "auto-battler",
+      "wave",
+      "spawn",
+      "pacing",
+      "economy",
+      "systemic-pressure"
+    ],
+    "sources": [
+      "https://unity.com/how-to/architect-game-code-scriptable-objects",
+      "https://unity.com/resources/create-modular-game-architecture-scriptableobjects-unity-6"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/real-time-wave-systemic.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "Tower defense, auto-battlers, horde modes, survivor-like systems, and other games where pressure arrives in timed waves and the player manages spatial or economic responses."
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Separate schedule, spawn, economy, and combat resolution. These systems interact tightly, but they should not become one monolithic game loop."
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- wave schedule and encounter definitions - spawn and pathing systems - economy and reward systems - build/deploy or placement systems - combat and status resolution - telemetry an"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "Canonical data should usually include: - wave definitions - spawn compositions - reward and economy tables - unit/tower/loadout definitions - encounter pacing rules"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "Unit tests matter, but long-run scenario simulation matters more. Temper should encourage: - encounter simulations across many seeds - economy progression checks - dominant-strateg"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "Small value changes can shift the entire difficulty curve. This family needs release notes that explain pacing impact, not just implementation impact. Before shipping: - compare pr"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- wave content authored with no reusable pacing language - spawn logic intertwined with rendering or UI - economies that scale faster than pressure or vice versa - runaway dominant"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "Separate content and engine ownership clearly. One contributor can own encounters, one economy, one combat runtime, one UI, but only if simulations and dashboards expose the cross-"
+    },
+    {
+      "id": "architecture/families/real-time-wave-systemic.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Kaplan 🎯` for fairness and early trust - `Meier ♟️` for build diversity and tradeoffs - `Wright 🌱` for systemic interaction - `Miyamoto ✨` for readability under pressure"
+    }
+  ]
+}

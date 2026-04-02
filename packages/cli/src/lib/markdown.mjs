@@ -1,3 +1,12 @@
+export function parseMarkdownDocument(markdown) {
+  const { metadata, body } = extractFrontmatter(markdown);
+  return {
+    metadata,
+    body,
+    sections: extractSections(body)
+  };
+}
+
 export function extractSections(markdown) {
   const lines = markdown.split(/\r?\n/);
   const sections = [];
@@ -43,6 +52,60 @@ export function extractSections(markdown) {
   return sections.filter((section) => section.content.length > 0);
 }
 
+export function extractFrontmatter(markdown) {
+  if (!markdown.startsWith("---\n")) {
+    return {
+      metadata: {},
+      body: markdown
+    };
+  }
+
+  const lines = markdown.split(/\r?\n/);
+  let index = 1;
+  const metadata = {};
+  let activeArrayKey = null;
+
+  for (; index < lines.length; index += 1) {
+    const line = lines[index];
+
+    if (line.trim() === "---") {
+      return {
+        metadata,
+        body: lines.slice(index + 1).join("\n")
+      };
+    }
+
+    if (/^\s*-\s+/.test(line) && activeArrayKey) {
+      metadata[activeArrayKey].push(normalizeFrontmatterValue(line.replace(/^\s*-\s+/, "")));
+      continue;
+    }
+
+    const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
+    if (!match) {
+      activeArrayKey = null;
+      continue;
+    }
+
+    const [, rawKey, rawValue] = match;
+    const key = rawKey.trim();
+    const value = rawValue.trim();
+
+    if (value.length === 0) {
+      metadata[key] = [];
+      activeArrayKey = key;
+      continue;
+    }
+
+    metadata[key] = normalizeFrontmatterValue(value);
+    activeArrayKey = null;
+  }
+
+  return {
+    metadata: {},
+    body: markdown
+  };
+}
+
 export function slugify(input) {
   return input
     .toLowerCase()
@@ -53,4 +116,8 @@ export function slugify(input) {
 export function summarizeContent(content) {
   const text = content.replace(/\s+/g, " ").trim();
   return text.slice(0, 180);
+}
+
+function normalizeFrontmatterValue(input) {
+  return input.replace(/^['"]|['"]$/g, "").trim();
 }

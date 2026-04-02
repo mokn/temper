@@ -1,6 +1,16 @@
 {
   "id": "hats/README",
   "source": "hats/README.md",
+  "metadata": {
+    "title": "Hat Canon Index",
+    "doc_type": "index",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "hats",
+      "doctrine"
+    ]
+  },
   "sectionCount": 1,
   "sections": [
     {

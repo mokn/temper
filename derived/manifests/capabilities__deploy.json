@@ -1,0 +1,41 @@
+{
+  "id": "capabilities/deploy",
+  "source": "capabilities/deploy.md",
+  "metadata": {
+    "title": "Deploy Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "deploy",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "environments",
+      "beta",
+      "prod",
+      "release"
+    ]
+  },
+  "sectionCount": 3,
+  "sections": [
+    {
+      "id": "capabilities/deploy.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Move a verified build or content change into a named environment with explicit target awareness."
+    },
+    {
+      "id": "capabilities/deploy.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- target environment validation - environment-specific preflight - deploy orchestration - post-deploy checks - deploy identity recording"
+    },
+    {
+      "id": "capabilities/deploy.03",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "What exactly is being promoted, to which environment, with what verification behind it?"
+    }
+  ]
+}

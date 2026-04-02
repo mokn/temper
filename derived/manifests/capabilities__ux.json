@@ -1,0 +1,49 @@
+{
+  "id": "capabilities/ux",
+  "source": "capabilities/ux.md",
+  "metadata": {
+    "title": "UX Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "ux",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "onboarding",
+      "first-five-minutes",
+      "readability",
+      "flow",
+      "mobile"
+    ]
+  },
+  "sectionCount": 4,
+  "sections": [
+    {
+      "id": "capabilities/ux.01",
+      "title": "Purpose",
+      "level": 2,
+      "slug": "purpose",
+      "summary": "Review player experience with a bias toward the first five minutes, legibility, friction, and flow across desktop and mobile contexts."
+    },
+    {
+      "id": "capabilities/ux.02",
+      "title": "Responsibilities",
+      "level": 2,
+      "slug": "responsibilities",
+      "summary": "- first-session onboarding review - readability and hierarchy review - friction and dead-end detection - feel and feedback review - mobile and small-screen pass - player-flow revie"
+    },
+    {
+      "id": "capabilities/ux.03",
+      "title": "Doctrine",
+      "level": 2,
+      "slug": "doctrine",
+      "summary": "This capability should frequently route through `Kaplan 🎯` and `Miyamoto ✨`. For game products, UX is not a thin visual layer. It is how the player learns to trust the game."
+    },
+    {
+      "id": "capabilities/ux.04",
+      "title": "Key Question",
+      "level": 2,
+      "slug": "key-question",
+      "summary": "Where does the player lose understanding, trust, or momentum in the first five minutes?"
+    }
+  ]
+}

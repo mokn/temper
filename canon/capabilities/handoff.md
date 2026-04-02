@@ -1,3 +1,16 @@
+---
+title: Handoff Capability Canon
+doc_type: capability
+capability_id: handoff
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - sessions
+  - coordination
+  - worktrees
+  - restart-point
+---
+
 # Handoff
 
 ## Purpose

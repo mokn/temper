@@ -1,3 +1,16 @@
+---
+title: Ship Capability Canon
+doc_type: capability
+capability_id: ship
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - release
+  - patch-notes
+  - review-routing
+  - verification
+---
+
 # Ship
 
 ## Purpose

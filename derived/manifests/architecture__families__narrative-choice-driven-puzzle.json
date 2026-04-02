@@ -1,0 +1,89 @@
+{
+  "id": "architecture/families/narrative-choice-driven-puzzle",
+  "source": "architecture/families/narrative-choice-driven-puzzle.md",
+  "metadata": {
+    "title": "Narrative Choice-Driven Puzzle Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "narrative-choice-driven-puzzle",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "narrative",
+      "branching",
+      "puzzle",
+      "state-flags",
+      "authored-content",
+      "comprehension"
+    ],
+    "sources": [
+      "https://github.com/inkle/ink",
+      "https://github.com/inkle/inky"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "Branching narrative games, dialogue-heavy adventures, story puzzlers, and other games where authored content, state flags, and comprehension gates are the core experience."
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Separate narrative data, story state, puzzle logic, and presentation. Writers need authoring power, but authored content must still live in a testable and reviewable system."
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- narrative scripts or graph data - story-state and flag runtime - puzzle-state runtime - tooling for branching inspection - UI and presentation layer - content validation and loca"
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "Canonical sources should usually define: - dialogue and branching scripts - story and quest flags - puzzle definitions and answer logic - content unlock conditions - localization-r"
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "This family needs content integrity checks as badly as combat games need balance checks. Temper should encourage: - branch reachability checks - dead-end and orphan-node detection "
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "Narrative bugs damage trust because players cannot always repair them. A broken flag can cost hours of progress or silently erase the intended emotional payoff. Before shipping: - "
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- branching logic hidden in scattered code instead of visible script/data - impossible states caused by ad hoc flags - puzzle gates that are unclear rather than challenging - conte"
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "This family needs a clean writer/programmer boundary. Multiple contributors can work in parallel when scripts, state rules, and presentation are separated cleanly and checked autom"
+    },
+    {
+      "id": "architecture/families/narrative-choice-driven-puzzle.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Miyamoto ✨` for clarity and player comprehension - `Kaplan 🎯` for player trust around progression gates - `Meier ♟️` for choice quality in branching design"
+    }
+  ]
+}

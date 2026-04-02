@@ -1,3 +1,16 @@
+---
+title: Verify Capability Canon
+doc_type: capability
+capability_id: verify
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - validation
+  - parity
+  - simulation
+  - release-gate
+---
+
 # Verify
 
 ## Purpose

@@ -1,3 +1,16 @@
+---
+title: Infra Capability Canon
+doc_type: capability
+capability_id: infra
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - deploy
+  - operations
+  - rollback
+  - secrets
+---
+
 # Infra
 
 ## Purpose

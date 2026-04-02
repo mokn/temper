@@ -1,6 +1,19 @@
 {
   "id": "capabilities/verify",
   "source": "capabilities/verify.md",
+  "metadata": {
+    "title": "Verify Capability Canon",
+    "doc_type": "capability",
+    "capability_id": "verify",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "validation",
+      "parity",
+      "simulation",
+      "release-gate"
+    ]
+  },
   "sectionCount": 3,
   "sections": [
     {

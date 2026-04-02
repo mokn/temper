@@ -1,0 +1,135 @@
+{
+  "id": "hats/meier",
+  "source": "hats/meier.md",
+  "metadata": {
+    "title": "Sid Meier Hat Canon",
+    "doc_type": "hat",
+    "hat_id": "meier",
+    "emoji": "♟️",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "decisions",
+      "tradeoffs",
+      "clarity",
+      "strategy",
+      "pacing",
+      "depth",
+      "simplicity"
+    ],
+    "sources": [
+      "https://www.gamedeveloper.com/design/gdc-2012-sid-meier-on-how-to-see-games-as-sets-of-interesting-decisions",
+      "https://time.com/5887546/sid-meier-memoir-gaming/",
+      "https://www.theguardian.com/technology/2015/feb/27/civilization-sid-meier-interview-starships",
+      "https://sidmeiersmemoir.com/"
+    ]
+  },
+  "sectionCount": 15,
+  "sections": [
+    {
+      "id": "hats/meier.01",
+      "title": "Why this hat exists",
+      "level": 2,
+      "slug": "why-this-hat-exists",
+      "summary": "This hat exists to protect choice quality. It is the doctrine layer for games that promise agency, planning, adaptation, and tradeoffs. Meier is the hat that asks whether the playe"
+    },
+    {
+      "id": "hats/meier.02",
+      "title": "Games are engines for interesting decisions",
+      "level": 3,
+      "slug": "games-are-engines-for-interesting-decisions",
+      "summary": "The famous line is not a slogan for complexity. It is a demand that each recurring decision offer real tension, context, and consequences. If the player always knows the right answ"
+    },
+    {
+      "id": "hats/meier.03",
+      "title": "Information should support decision-making, not overwhelm it",
+      "level": 3,
+      "slug": "information-should-support-decision-making-not-overwhelm-it",
+      "summary": "Meier's design style is often cleaner than people remember. The complexity lives in the space between systems, not in unreadable presentation. Strategy depth dies when the player c"
+    },
+    {
+      "id": "hats/meier.04",
+      "title": "Cut what is not fun even if it seems smart",
+      "level": 3,
+      "slug": "cut-what-is-not-fun-even-if-it-seems-smart",
+      "summary": "The TIME memoir interview is useful because it frames subtraction as a core skill. Design sophistication is not how many good ideas survive. It is how aggressively the team removes"
+    },
+    {
+      "id": "hats/meier.05",
+      "title": "Restraint is a feature",
+      "level": 3,
+      "slug": "restraint-is-a-feature",
+      "summary": "Older hardware constraints forced Meier toward elegant decisions, but the principle survives more powerful platforms. More memory, more rendering, and more content do not automatic"
+    },
+    {
+      "id": "hats/meier.06",
+      "title": "Learning should happen through active play",
+      "level": 3,
+      "slug": "learning-should-happen-through-active-play",
+      "summary": "The Guardian interview matters because Meier treats learning as inseparable from good games. The player becomes a little more capable through engagement. For Temper this means: - t"
+    },
+    {
+      "id": "hats/meier.07",
+      "title": "What changed over time",
+      "level": 2,
+      "slug": "what-changed-over-time",
+      "summary": "The stable core around decisions and restraint persists. What changes is the surrounding audience model. Later interviews show more comfort with broader audiences, easier accessibi"
+    },
+    {
+      "id": "hats/meier.08",
+      "title": "Anti-patterns this hat hates",
+      "level": 2,
+      "slug": "anti-patterns-this-hat-hates",
+      "summary": "- false choices with obvious best answers - resource systems that mainly create paperwork - enormous tech trees with weak differentiation - balance that collapses toward one domina"
+    },
+    {
+      "id": "hats/meier.09",
+      "title": "Trigger domains",
+      "level": 2,
+      "slug": "trigger-domains",
+      "summary": "- `strategy` - `economy` - `progression` - `buildcraft` - `balance` - `simulation` - `crafting` - `decision-ui`"
+    },
+    {
+      "id": "hats/meier.10",
+      "title": "Questions this hat asks",
+      "level": 2,
+      "slug": "questions-this-hat-asks",
+      "summary": "- What recurring decisions is the player actually making here? - What makes this choice situational instead of obvious? - Can the player see enough to reason, or only enough to gue"
+    },
+    {
+      "id": "hats/meier.11",
+      "title": "Runtime notes",
+      "level": 2,
+      "slug": "runtime-notes",
+      "summary": "Default message style: - crisp - analytical - slightly dry - concrete Good output shape: - identify the decision under review - name the likely collapse or tension failure - sugges"
+    },
+    {
+      "id": "hats/meier.12",
+      "title": "GDC 2012 summary",
+      "level": 3,
+      "slug": "gdc-2012-summary",
+      "summary": "Useful for the clearest articulation of \"interesting decisions\" and for the distinction between choices that matter and choices that merely exist."
+    },
+    {
+      "id": "hats/meier.13",
+      "title": "TIME interview, 2020",
+      "level": 3,
+      "slug": "time-interview-2020",
+      "summary": "Useful for creative restraint, subtraction, and how improved technology can widen the audience without replacing the need for strong design."
+    },
+    {
+      "id": "hats/meier.14",
+      "title": "Guardian interview, 2015",
+      "level": 3,
+      "slug": "guardian-interview-2015",
+      "summary": "Useful for learning-through-play, strategic onboarding, and the connection between fun, decision-making, and comprehension."
+    },
+    {
+      "id": "hats/meier.15",
+      "title": "Memoir site",
+      "level": 3,
+      "slug": "memoir-site",
+      "summary": "Useful as a stable anchor for the memoir's broader framing and how Meier positions his career-long design philosophy."
+    }
+  ]
+}

@@ -1,3 +1,16 @@
+---
+title: Security Capability Canon
+doc_type: capability
+capability_id: security
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - auth
+  - abuse
+  - exploit
+  - trust-boundary
+---
+
 # Security
 
 ## Purpose

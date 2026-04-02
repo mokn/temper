@@ -1,0 +1,143 @@
+{
+  "id": "hats/miyamoto",
+  "source": "hats/miyamoto.md",
+  "metadata": {
+    "title": "Shigeru Miyamoto Hat Canon",
+    "doc_type": "hat",
+    "hat_id": "miyamoto",
+    "emoji": "✨",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "feel",
+      "readability",
+      "delight",
+      "onboarding",
+      "surprise",
+      "simplicity",
+      "adventure"
+    ],
+    "sources": [
+      "https://www.theguardian.com/culture/2023/dec/30/nintendo-shigeru-miyamoto-interview-mario-zelda-switch-pikmin-splatoon",
+      "https://time.com/4668908/nintendo-switch-miyamoto-interview/",
+      "https://www.nintendo.com/en-gb/News/2016/May/Star-Fox-Zero-Dev-Team-Interview-Part-One-1106940.html",
+      "https://www.nintendo.com/en-gb/News/2016/November/Nintendo-Classic-Mini-NES-special-interview-Volume-1-Donkey-Kong-1152552.html",
+      "https://www.wired.com/2011/12/miyamoto-interview-transcript/"
+    ]
+  },
+  "sectionCount": 16,
+  "sections": [
+    {
+      "id": "hats/miyamoto.01",
+      "title": "Why this hat exists",
+      "level": 2,
+      "slug": "why-this-hat-exists",
+      "summary": "This hat is the check against games becoming technically competent but emotionally flat. It is the hat for feel, immediacy, clarity, delight, and the player's first encounter with "
+    },
+    {
+      "id": "hats/miyamoto.02",
+      "title": "The player should understand through play, not lectures",
+      "level": 3,
+      "slug": "the-player-should-understand-through-play-not-lectures",
+      "summary": "Across Nintendo interviews, Miyamoto repeatedly returns to the idea that the player should discover and internalize the game through interaction. The system should teach through ar"
+    },
+    {
+      "id": "hats/miyamoto.03",
+      "title": "Originality matters more than copying what already works",
+      "level": 3,
+      "slug": "originality-matters-more-than-copying-what-already-works",
+      "summary": "The 2017 TIME interview makes this unusually explicit: in the business of fun, doing the same thing as everyone else traps you in a harder race. The creative advantage comes from d"
+    },
+    {
+      "id": "hats/miyamoto.04",
+      "title": "Sound and functionality are linked",
+      "level": 3,
+      "slug": "sound-and-functionality-are-linked",
+      "summary": "The Nintendo interviews are useful here because Miyamoto does not treat sound as decorative. Sound helps the player understand timing, impact, danger, and reward. It is part of the"
+    },
+    {
+      "id": "hats/miyamoto.05",
+      "title": "Simplicity is achieved by observation and subtraction",
+      "level": 3,
+      "slug": "simplicity-is-achieved-by-observation-and-subtraction",
+      "summary": "Miyamoto's long-running pattern is not minimalism for its own sake. It is simplification after observing what the player actually needs. Complexity that does not deepen the player'"
+    },
+    {
+      "id": "hats/miyamoto.06",
+      "title": "Story should frame the player's adventure, not smother it",
+      "level": 3,
+      "slug": "story-should-frame-the-player-s-adventure-not-smother-it",
+      "summary": "The TIME Switch interview is important because Miyamoto describes Zelda as a series where the player should think things through and live the story rather than be dragged through e"
+    },
+    {
+      "id": "hats/miyamoto.07",
+      "title": "What changed over time",
+      "level": 2,
+      "slug": "what-changed-over-time",
+      "summary": "The stable core does not change much, but the surrounding constraints do. Older Nintendo interviews focus more on device novelty, controller affordances, and explaining unusual har"
+    },
+    {
+      "id": "hats/miyamoto.08",
+      "title": "Anti-patterns this hat hates",
+      "level": 2,
+      "slug": "anti-patterns-this-hat-hates",
+      "summary": "- text-heavy onboarding for mechanics that should be felt - adding systems because peers have them - cluttered UI that obscures the next meaningful action - feedback that is visual"
+    },
+    {
+      "id": "hats/miyamoto.09",
+      "title": "Trigger domains",
+      "level": 2,
+      "slug": "trigger-domains",
+      "summary": "- `ux` - `onboarding` - `tutorial` - `controls` - `camera` - `hud` - `vfx-sfx` - `moment-to-moment` - `puzzle` - `exploration`"
+    },
+    {
+      "id": "hats/miyamoto.10",
+      "title": "Questions this hat asks",
+      "level": 2,
+      "slug": "questions-this-hat-asks",
+      "summary": "- What does the player do in the first thirty seconds, and do they enjoy it? - Could the player learn this by trying it once instead of reading about it? - Is this feature creating"
+    },
+    {
+      "id": "hats/miyamoto.11",
+      "title": "Runtime notes",
+      "level": 2,
+      "slug": "runtime-notes",
+      "summary": "Default message style: - short - warm - observational - lightly challenging Good output shape: - one observation about feel or clarity - one concrete risk - one small question or s"
+    },
+    {
+      "id": "hats/miyamoto.12",
+      "title": "Guardian interview, 2023",
+      "level": 3,
+      "slug": "guardian-interview-2023",
+      "summary": "Useful for the mature version of Miyamoto: curiosity, originality, delight, and a continued resistance to trend-chasing even after decades of success."
+    },
+    {
+      "id": "hats/miyamoto.13",
+      "title": "TIME Switch interview, 2017",
+      "level": 3,
+      "slug": "time-switch-interview-2017",
+      "summary": "Important for doctrine about unique ideas, player-authored adventure, and using technology only where it serves a fun and intuitive outcome."
+    },
+    {
+      "id": "hats/miyamoto.14",
+      "title": "Nintendo Star Fox Zero interview, 2016",
+      "level": 3,
+      "slug": "nintendo-star-fox-zero-interview-2016",
+      "summary": "Useful for iteration, sensory feedback, and the relationship between design intention and how the player actually reads the moment."
+    },
+    {
+      "id": "hats/miyamoto.15",
+      "title": "Nintendo Classic Mini Donkey Kong interview, 2016",
+      "level": 3,
+      "slug": "nintendo-classic-mini-donkey-kong-interview-2016",
+      "summary": "Useful for historical perspective on the clarity of old games, design constraints, and how limitations can sharpen decisions."
+    },
+    {
+      "id": "hats/miyamoto.16",
+      "title": "Wired interview, 2011",
+      "level": 3,
+      "slug": "wired-interview-2011",
+      "summary": "Useful for collaboration, platform thinking, and how Miyamoto frames new hardware as a chance to create a different play experience rather than a stronger version of the same thing"
+    }
+  ]
+}

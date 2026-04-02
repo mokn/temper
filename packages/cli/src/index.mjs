@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { repoRoot, specRoot } from "./lib/paths.mjs";
-import { deriveCanonDocs, inspectDoctrine } from "./lib/doctrine.mjs";
+import { deriveCanonDocs, inspectDoctrine, searchDoctrine } from "./lib/doctrine.mjs";
 import { printHeader, printList } from "./lib/output.mjs";
 
 const capabilityCommands = new Set([
@@ -9,6 +9,7 @@ const capabilityCommands = new Set([
   "adopt",
   "doctor",
   "ship",
+  "hotfix",
   "review",
   "verify",
   "handoff",
@@ -36,6 +37,10 @@ export async function main(argv) {
     return runDerive();
   }
 
+  if (command === "query") {
+    return runQuery(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -51,9 +56,11 @@ function showHelp() {
   printList([
     "doctor",
     "derive",
+    "query <terms>",
     "init",
     "adopt",
     "ship [lite|full]",
+    "hotfix",
     "review",
     "verify",
     "handoff",
@@ -74,6 +81,9 @@ function runDoctor() {
   console.log(`Repo root: ${repoRoot}`);
   console.log(`Spec docs present: ${fs.existsSync(specRoot) ? "yes" : "no"}`);
   console.log(`Canonical docs: ${doctrine.canonDocCount}`);
+  console.log(
+    `Breakdown: hats ${doctrine.grouped.hats}, architecture ${doctrine.grouped.architecture}, capabilities ${doctrine.grouped.capabilities}, other ${doctrine.grouped.other}`
+  );
   printList(doctrine.canonDocs);
 }
 
@@ -82,6 +92,28 @@ function runDerive() {
   const results = deriveCanonDocs();
   for (const result of results) {
     console.log(`${result.docId}: ${result.sectionCount} sections`);
+  }
+}
+
+function runQuery(rest) {
+  const query = rest.join(" ").trim();
+  if (!query) {
+    throw new Error("Usage: temper query <terms>");
+  }
+
+  printHeader("Temper Query");
+  console.log(`Query: ${query}`);
+  console.log("");
+
+  const results = searchDoctrine(query);
+  if (results.length === 0) {
+    console.log("No matches.");
+    return;
+  }
+
+  for (const result of results) {
+    console.log(`${result.score.toString().padStart(2, " ")}  ${result.doc} :: ${result.title}`);
+    console.log(`    ${result.summary}`);
   }
 }
 

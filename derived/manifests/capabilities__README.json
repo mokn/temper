@@ -1,6 +1,16 @@
 {
   "id": "capabilities/README",
   "source": "capabilities/README.md",
+  "metadata": {
+    "title": "Capability Canon Index",
+    "doc_type": "index",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "capabilities",
+      "commands"
+    ]
+  },
   "sectionCount": 1,
   "sections": [
     {

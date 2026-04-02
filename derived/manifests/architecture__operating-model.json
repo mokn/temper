@@ -1,0 +1,92 @@
+{
+  "id": "architecture/operating-model",
+  "source": "architecture/operating-model.md",
+  "metadata": {
+    "title": "Game Project Operating Model Canon",
+    "doc_type": "architecture_operating_model",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "operating-model",
+      "sessions",
+      "worktrees",
+      "release",
+      "hotfix",
+      "handoff",
+      "collaboration",
+      "source-of-truth"
+    ],
+    "sources": [
+      "/Users/michaelorourke/Documents/ultimate-dominion/docs/TEMPER_FULL_DESIGN.md",
+      "/Users/michaelorourke/ultimate-dominion/docs/operations/DEPLOY_RUNBOOK.md",
+      "/Users/michaelorourke/ultimate-dominion/.claude/rules/deploy.md",
+      "/Users/michaelorourke/ultimate-dominion/SESSION.md"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/operating-model.01",
+      "title": "Why this doc exists",
+      "level": 2,
+      "slug": "why-this-doc-exists",
+      "summary": "Temper is not only a content or code organizer. It is an operating model for teams working with multiple humans, multiple AI sessions, multiple branches, and multiple environments."
+    },
+    {
+      "id": "architecture/operating-model.02",
+      "title": "Non-negotiable project surfaces",
+      "level": 2,
+      "slug": "non-negotiable-project-surfaces",
+      "summary": "Every Temper project should define: - source-of-truth content and config paths - runtime code versus data boundaries - local, beta, and prod environments - worktree and branch conv"
+    },
+    {
+      "id": "architecture/operating-model.03",
+      "title": "Source-of-truth doctrine",
+      "level": 2,
+      "slug": "source-of-truth-doctrine",
+      "summary": "Source-of-truth boundaries must be explicit. A team should always know where an item, ability, card, balance rule, encounter, economy curve, or deploy setting ultimately lives. Gen"
+    },
+    {
+      "id": "architecture/operating-model.04",
+      "title": "Multi-session and multi-person doctrine",
+      "level": 2,
+      "slug": "multi-session-and-multi-person-doctrine",
+      "summary": "This is first-class, not an edge case. Temper should assume: - multiple contributors will edit concurrently - multiple AI sessions may operate in parallel - dirty worktrees create "
+    },
+    {
+      "id": "architecture/operating-model.05",
+      "title": "Release doctrine",
+      "level": 2,
+      "slug": "release-doctrine",
+      "summary": "Every project needs a release path with explicit gates: - verify content integrity - build and typecheck - run scoped tests - route specialist review where required - prepare relea"
+    },
+    {
+      "id": "architecture/operating-model.06",
+      "title": "Hotfix doctrine",
+      "level": 2,
+      "slug": "hotfix-doctrine",
+      "summary": "Every project needs a narrower, faster path for production repair that still preserves blast-radius awareness and rollback thinking. Temper hotfix flow should always ask: - what is"
+    },
+    {
+      "id": "architecture/operating-model.07",
+      "title": "Capability doctrine",
+      "level": 2,
+      "slug": "capability-doctrine",
+      "summary": "Assistant-facing commands are not marketing sugar. They are operating primitives. At minimum, the project should understand: - `doctor` - `verify` - `ship lite` - `ship full` - `re"
+    },
+    {
+      "id": "architecture/operating-model.08",
+      "title": "Failure modes this operating model is designed to prevent",
+      "level": 2,
+      "slug": "failure-modes-this-operating-model-is-designed-to-prevent",
+      "summary": "- source-of-truth drift - orphaned work in hidden sessions - multiple people editing the same release surface without coordination - emergency hotfixes with no rollback or evidence"
+    },
+    {
+      "id": "architecture/operating-model.09",
+      "title": "Runtime implications",
+      "level": 2,
+      "slug": "runtime-implications",
+      "summary": "The runtime should always be able to answer: - what changed - where the truth lives - who owns this workstream - what environment is affected - what doctrine applies to the decisio"
+    }
+  ]
+}

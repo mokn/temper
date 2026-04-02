@@ -1,3 +1,13 @@
+---
+title: Hat Canon Index
+doc_type: index
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - hats
+  - doctrine
+---
+
 # Hat Canon
 
 Canonical hat docs belong here.
@@ -18,5 +28,15 @@ Each doc should contain:
 - examples
 - reversals and caveats
 - sources
+- frontmatter metadata for retrieval
 
-Only `kaplan.md` is canonical enough to be considered seeded right now.
+Seeded set:
+
+- `kaplan.md`
+- `miyamoto.md`
+- `meier.md`
+- `wright.md`
+- `carmack.md`
+
+Each hat doc should be deep enough to stand alone as a reference, but structured enough
+to support cheap runtime retrieval.

@@ -1,0 +1,89 @@
+{
+  "id": "architecture/families/deterministic-turn-based",
+  "source": "architecture/families/deterministic-turn-based.md",
+  "metadata": {
+    "title": "Deterministic Turn-Based Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "deterministic-turn-based",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "board-game",
+      "card-game",
+      "tactics",
+      "deterministic",
+      "replay",
+      "turn-order",
+      "state-machine"
+    ],
+    "sources": [
+      "https://boardgame.io/"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/deterministic-turn-based.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "Board games, digital card games, tactics games, auto-resolved conflict systems, and other games where the core state progression happens through discrete validated moves."
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Treat the game as a state machine with explicit moves, turn order, and phase changes. If the game cannot be replayed from a sequence of inputs, the architecture is probably too ent"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- core rules engine - state schema and serialization layer - move validation and reducers - phase and turn-order system - client presentation - AI or simulation harness - logs, rep"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "The source of truth should usually be: - state schema - move definitions - effect resolution rules - setup and phase definitions - card, unit, or board data Rendering should not ow"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "This family should be the easiest to test exhaustively. Temper should encourage: - deterministic test seeds - replay from move logs - snapshotting of state transitions - simulation"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "Hotfixes are safer when the rules engine is isolated. The biggest risk is not usually deploy mechanics but invalidating live matches, migrations, or existing saves. Before shipping"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- hidden state living only in UI or network code - nondeterminism entering move resolution - ambiguous timing windows - incomplete logs that make replays untrustworthy - content pa"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "This family works especially well with multi-session development if the rules engine is clean and the logs are stable. Multiple contributors can safely work in parallel when they o"
+    },
+    {
+      "id": "architecture/families/deterministic-turn-based.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Meier ♟️` for choice quality - `Kaplan 🎯` for fairness and clarity - `Carmack 🔧` for determinism and debugging"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { canonRoot, derivedRoot } from "./paths.mjs";
-import { extractSections, summarizeContent } from "./markdown.mjs";
+import { parseMarkdownDocument, summarizeContent } from "./markdown.mjs";
 
 export function listCanonDocs() {
   return walkMarkdownFiles(canonRoot);
@@ -14,12 +14,13 @@ export function deriveCanonDocs() {
   for (const docPath of docs) {
     const relativePath = path.relative(canonRoot, docPath);
     const markdown = fs.readFileSync(docPath, "utf8");
-    const sections = extractSections(markdown);
+    const { metadata, sections } = parseMarkdownDocument(markdown);
     const docId = relativePath.replace(/\\/g, "/").replace(/\.md$/, "");
 
     const manifest = {
       id: docId,
       source: relativePath.replace(/\\/g, "/"),
+      metadata,
       sectionCount: sections.length,
       sections: sections.map((section, index) => ({
         id: `${docId}.${String(index + 1).padStart(2, "0")}`,
@@ -41,6 +42,7 @@ export function deriveCanonDocs() {
       JSON.stringify({
         id: `${docId}.${String(index + 1).padStart(2, "0")}`,
         doc: docId,
+        metadata,
         title: section.title,
         level: section.level,
         slug: section.slug,
@@ -63,10 +65,78 @@ export function deriveCanonDocs() {
 
 export function inspectDoctrine() {
   const docs = listCanonDocs();
+  const grouped = {
+    hats: 0,
+    architecture: 0,
+    capabilities: 0,
+    other: 0
+  };
+
+  for (const docPath of docs) {
+    const relative = path.relative(canonRoot, docPath).replace(/\\/g, "/");
+    if (relative.startsWith("hats/")) {
+      grouped.hats += 1;
+    } else if (relative.startsWith("architecture/")) {
+      grouped.architecture += 1;
+    } else if (relative.startsWith("capabilities/")) {
+      grouped.capabilities += 1;
+    } else {
+      grouped.other += 1;
+    }
+  }
+
   return {
     canonDocCount: docs.length,
-    canonDocs: docs.map((docPath) => path.relative(canonRoot, docPath).replace(/\\/g, "/"))
+    canonDocs: docs.map((docPath) => path.relative(canonRoot, docPath).replace(/\\/g, "/")),
+    grouped
   };
+}
+
+export function searchDoctrine(query, options = {}) {
+  const terms = tokenize(query);
+  if (terms.length === 0) {
+    return [];
+  }
+
+  const limit = Number.isFinite(options.limit) ? options.limit : 8;
+  const results = [];
+
+  for (const docPath of listCanonDocs()) {
+    const relativePath = path.relative(canonRoot, docPath).replace(/\\/g, "/");
+    const markdown = fs.readFileSync(docPath, "utf8");
+    const { metadata, sections } = parseMarkdownDocument(markdown);
+    const docId = relativePath.replace(/\.md$/, "");
+    const metadataTerms = collectMetadataTerms(metadata);
+
+    for (const [index, section] of sections.entries()) {
+      const score = scoreSection({
+        terms,
+        section,
+        docId,
+        metadataTerms
+      });
+
+      if (score <= 0) {
+        continue;
+      }
+
+      results.push({
+        id: `${docId}.${String(index + 1).padStart(2, "0")}`,
+        doc: docId,
+        source: relativePath,
+        title: section.title,
+        slug: section.slug,
+        level: section.level,
+        score,
+        summary: summarizeContent(section.content),
+        metadata
+      });
+    }
+  }
+
+  return results
+    .sort((left, right) => right.score - left.score || left.doc.localeCompare(right.doc))
+    .slice(0, limit);
 }
 
 function walkMarkdownFiles(root) {
@@ -93,4 +163,63 @@ function walkMarkdownFiles(root) {
 
 function safeFileName(input) {
   return input.replace(/[\\/]/g, "__");
+}
+
+function tokenize(input) {
+  return input
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((term) => term.trim())
+    .filter(Boolean);
+}
+
+function collectMetadataTerms(metadata) {
+  const values = [];
+
+  for (const value of Object.values(metadata)) {
+    if (Array.isArray(value)) {
+      values.push(...value);
+    } else if (typeof value === "string") {
+      values.push(value);
+    }
+  }
+
+  return tokenize(values.join(" "));
+}
+
+function scoreSection({ terms, section, docId, metadataTerms }) {
+  const titleTerms = tokenize(section.title);
+  const slugTerms = tokenize(section.slug);
+  const docTerms = tokenize(docId);
+  const body = section.content.toLowerCase();
+  let score = 0;
+
+  for (const term of terms) {
+    let termScore = 0;
+    let matched = false;
+
+    if (titleTerms.includes(term)) {
+      termScore = Math.max(termScore, 8);
+      matched = true;
+    }
+    if (slugTerms.includes(term)) {
+      termScore = Math.max(termScore, 6);
+      matched = true;
+    }
+    if (docTerms.includes(term)) {
+      termScore = Math.max(termScore, 4);
+      matched = true;
+    }
+    if (body.includes(term)) {
+      termScore = Math.max(termScore, 1);
+      matched = true;
+    }
+    if (matched && metadataTerms.includes(term)) {
+      termScore += 2;
+    }
+
+    score += termScore;
+  }
+
+  return score;
 }

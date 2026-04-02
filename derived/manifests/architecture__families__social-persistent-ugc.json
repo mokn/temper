@@ -1,0 +1,91 @@
+{
+  "id": "architecture/families/social-persistent-ugc",
+  "source": "architecture/families/social-persistent-ugc.md",
+  "metadata": {
+    "title": "Social Persistent UGC Architecture Canon",
+    "doc_type": "architecture_family",
+    "family_id": "social-persistent-ugc",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "social",
+      "persistent",
+      "ugc",
+      "creator-tools",
+      "moderation",
+      "permissions",
+      "publishing"
+    ],
+    "sources": [
+      "https://create.roblox.com/docs/projects/collaboration",
+      "https://create.roblox.com/docs/production/publishing/publish-experiences-and-places",
+      "https://create.roblox.com/docs/cloud/open-cloud/usage-place-publishing"
+    ]
+  },
+  "sectionCount": 9,
+  "sections": [
+    {
+      "id": "architecture/families/social-persistent-ugc.01",
+      "title": "What belongs here",
+      "level": 2,
+      "slug": "what-belongs-here",
+      "summary": "Social worlds, creator platforms, persistent shared games, and any product where user content, permissions, moderation, and publishing workflows are core to the platform."
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.02",
+      "title": "Core structural rule",
+      "level": 2,
+      "slug": "core-structural-rule",
+      "summary": "Separate creation, moderation, publication, and live runtime. Treat permissions and ownership as architecture, not policy text."
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.03",
+      "title": "Preferred project structure",
+      "level": 2,
+      "slug": "preferred-project-structure",
+      "summary": "- creator-facing content and tooling - permission and ownership model - publishing pipeline - live runtime and persistent data - moderation and safety systems - rollback and recove"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.04",
+      "title": "Source-of-truth boundaries",
+      "level": 2,
+      "slug": "source-of-truth-boundaries",
+      "summary": "Canonical sources should usually define: - creator roles and permissions - publishing targets and version identities - moderation policies and enforcement hooks - world or experien"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.05",
+      "title": "Verification model",
+      "level": 2,
+      "slug": "verification-model",
+      "summary": "Verification needs to cover social and operational risk, not only code behavior. Temper should encourage: - permission-boundary tests - publish and rollback rehearsal - moderation-"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.06",
+      "title": "Release and hotfix concerns",
+      "level": 2,
+      "slug": "release-and-hotfix-concerns",
+      "summary": "The publishing surface is itself a product feature. Release mistakes can expose private content, break creator trust, or corrupt persistent worlds. Before shipping: - verify permis"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.07",
+      "title": "Failure modes",
+      "level": 2,
+      "slug": "failure-modes",
+      "summary": "- permission models implied in code instead of made explicit - creators blocked by unclear ownership or publish rules - persistent state changes with no migration safety - moderati"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.08",
+      "title": "Team operating notes",
+      "level": 2,
+      "slug": "team-operating-notes",
+      "summary": "This family has the highest operational and safety surface. Infra, security, moderation, and product ownership all need strong coordination. Multi-session workflows are possible, b"
+    },
+    {
+      "id": "architecture/families/social-persistent-ugc.09",
+      "title": "Best Temper overlays",
+      "level": 2,
+      "slug": "best-temper-overlays",
+      "summary": "- `Kaplan 🎯` for player and creator trust - `Carmack 🔧` for permissions, rollback, and operational rigor - `Wright 🌱` for creative leverage and social possibility space"
+    }
+  ]
+}

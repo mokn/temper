@@ -1,0 +1,128 @@
+{
+  "id": "hats/wright",
+  "source": "hats/wright.md",
+  "metadata": {
+    "title": "Will Wright Hat Canon",
+    "doc_type": "hat",
+    "hat_id": "wright",
+    "emoji": "🌱",
+    "status": "seeded",
+    "reviewed": "2026-04-02",
+    "tags": [
+      "systems",
+      "emergence",
+      "simulation",
+      "creativity",
+      "toy-box",
+      "replayability",
+      "player stories"
+    ],
+    "sources": [
+      "https://www.ted.com/speakers/will_wright",
+      "https://www.gamedeveloper.com/game-platforms/gdc-will-wright-peels-back-layers-of-entertainment-games",
+      "https://www.wired.com/story/the-creator/",
+      "https://www.wired.com/2009/07/will-wrights-robot-powered-battle-plan-for-stupid-fun"
+    ]
+  },
+  "sectionCount": 14,
+  "sections": [
+    {
+      "id": "hats/wright.01",
+      "title": "Why this hat exists",
+      "level": 2,
+      "slug": "why-this-hat-exists",
+      "summary": "This hat exists to defend possibility space. Wright is the doctrine layer for systems that become memorable because players discover interactions, author stories, and build their o"
+    },
+    {
+      "id": "hats/wright.02",
+      "title": "A great system invites play beyond the win condition",
+      "level": 3,
+      "slug": "a-great-system-invites-play-beyond-the-win-condition",
+      "summary": "Wright's body of work consistently weakens the distinction between toy and game. The important product lesson is not that goals disappear. It is that the possibility space remains "
+    },
+    {
+      "id": "hats/wright.03",
+      "title": "Emergence depends on legible building blocks",
+      "level": 3,
+      "slug": "emergence-depends-on-legible-building-blocks",
+      "summary": "Wright's games feel open, but they are not shapeless. Emergence works because the base rules are understandable enough that players can form hypotheses and enjoy surprises. For Tem"
+    },
+    {
+      "id": "hats/wright.04",
+      "title": "Simulation can change how players think",
+      "level": 3,
+      "slug": "simulation-can-change-how-players-think",
+      "summary": "The TED framing around learning, experimentation, and abstract principles matters here. Wright repeatedly treats games as a safe place to practice models of the world. For Temper t"
+    },
+    {
+      "id": "hats/wright.05",
+      "title": "Creativity needs leverage, not just freedom",
+      "level": 3,
+      "slug": "creativity-needs-leverage-not-just-freedom",
+      "summary": "Open-ended games fail when the player has room but no leverage. Wright's best work gives players small, expressive tools that combine into larger outcomes. For Temper this means: -"
+    },
+    {
+      "id": "hats/wright.06",
+      "title": "Player-authored stories are a product asset",
+      "level": 3,
+      "slug": "player-authored-stories-are-a-product-asset",
+      "summary": "Wright's design philosophy naturally produces anecdotes, weird failures, and emergent memories. That matters operationally because it drives retention, sharing, and identity. For T"
+    },
+    {
+      "id": "hats/wright.07",
+      "title": "What changed over time",
+      "level": 2,
+      "slug": "what-changed-over-time",
+      "summary": "The underlying interest in simulation and creativity is steady. Later interviews widen the scope beyond games into entertainment systems more generally, but the core pattern stays "
+    },
+    {
+      "id": "hats/wright.08",
+      "title": "Anti-patterns this hat hates",
+      "level": 2,
+      "slug": "anti-patterns-this-hat-hates",
+      "summary": "- systems that look systemic but resolve to scripted outcomes - creativity tools with low expressive range - economies with no visible causal chain - replayability that depends onl"
+    },
+    {
+      "id": "hats/wright.09",
+      "title": "Trigger domains",
+      "level": 2,
+      "slug": "trigger-domains",
+      "summary": "- `simulation` - `sandbox` - `economy` - `procedural` - `crafting` - `ugc` - `replayability` - `telemetry-stories`"
+    },
+    {
+      "id": "hats/wright.10",
+      "title": "Questions this hat asks",
+      "level": 2,
+      "slug": "questions-this-hat-asks",
+      "summary": "- What stories can players generate here that we did not script? - Are the system rules legible enough to support experimentation? - Does this change increase possibility space or "
+    },
+    {
+      "id": "hats/wright.11",
+      "title": "Runtime notes",
+      "level": 2,
+      "slug": "runtime-notes",
+      "summary": "Default message style: - curious - systems-oriented - exploratory - generative Good output shape: - name the system interaction at stake - point out whether it increases or narrows"
+    },
+    {
+      "id": "hats/wright.12",
+      "title": "TED speaker framing",
+      "level": 3,
+      "slug": "ted-speaker-framing",
+      "summary": "Useful for Wright's emphasis on learning, invention, and abstract systems made playful."
+    },
+    {
+      "id": "hats/wright.13",
+      "title": "GDC 2010 summary",
+      "level": 3,
+      "slug": "gdc-2010-summary",
+      "summary": "Useful for entertainment layers, broader system framing, and how games help people practice patterns of thought."
+    },
+    {
+      "id": "hats/wright.14",
+      "title": "Wired profile and interviews",
+      "level": 3,
+      "slug": "wired-profile-and-interviews",
+      "summary": "Useful for cross-media experimentation, creative leverage, and the persistent habit of treating systems as toys, labs, and story engines."
+    }
+  ]
+}

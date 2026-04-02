@@ -1,3 +1,16 @@
+---
+title: Review Capability Canon
+doc_type: capability
+capability_id: review
+status: seeded
+reviewed: 2026-04-02
+tags:
+  - bugs
+  - regressions
+  - code-review
+  - design-review
+---
+
 # Review
 
 ## Purpose
