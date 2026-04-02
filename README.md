@@ -55,6 +55,9 @@ Still to deepen:
 - `temper uninstall --cwd <repo> --preview`
 - `temper uninstall --cwd <repo> --write`
 - `temper handoff --cwd <repo> --slug <slug> --summary "<summary>" --next "<next step>"`
+- `temper inspect --cwd <repo>`
+- `temper runs ls --cwd <repo>`
+- `temper runs show <id> --cwd <repo>`
 - `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
@@ -93,6 +96,16 @@ The token strategy is:
 - keep `SESSION.md` short
 - put restart detail in `HANDOFF_<slug>.md`
 - have Claude and Codex read the same continuity canon before relying on chat history
+
+Temper now also records write/execution artifacts under:
+
+- `.temper/runs/<run-id>.json`
+
+This is the first harness-history layer:
+
+- write commands like `adopt`, `init`, `onboard --write`, and `handoff --write` record machine-readable artifacts
+- executed `ship` runs record the full ship report
+- read-only preview and dry-run flows stay read-only by default
 
 ## Existing Project Onboarding
 
@@ -159,3 +172,11 @@ The intended split is:
 
 - `SESSION.md` is the short active board
 - `HANDOFF_<slug>.md` is the restart document with enough detail to resume cold
+
+## Inspecting Harness State
+
+Use these to inspect the repo-local harness state without reading files by hand:
+
+- `temper inspect --cwd <repo>`
+- `temper runs ls --cwd <repo>`
+- `temper runs show latest --cwd <repo>`

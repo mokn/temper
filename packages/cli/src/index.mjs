@@ -25,13 +25,16 @@ import {
   materializeContinuityInstall,
   renderHandoffPreview
 } from "./lib/continuity.mjs";
+import { buildInspectReport } from "./lib/inspect.mjs";
 import {
   CONFIG_FILENAME,
   findConfig,
+  findProjectRoot,
   loadProjectConfig,
   writeProjectConfig,
   writeProjectFile
 } from "./lib/project-config.mjs";
+import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 
@@ -76,6 +79,14 @@ export async function main(argv) {
     return runCoach(rest);
   }
 
+  if (command === "inspect") {
+    return runInspect(rest);
+  }
+
+  if (command === "runs") {
+    return runRuns(rest);
+  }
+
   if (command === "assistant") {
     return runAssistant(rest);
   }
@@ -110,6 +121,8 @@ function showHelp() {
     "derive",
     "query <terms>",
     "coach [--json] [--intent ...] [--hat ...] [--capability ...] [--cwd ...] [--no-repo]",
+    "inspect [--cwd ...] [--json]",
+    "runs [ls|show <id>] [--cwd ...] [--json]",
     "assistant <install|show>",
     "init [--cwd ...] [--family ...] [--stack ...] [--existing]",
     "adopt [--cwd ...] [--write] [--assistant claude,codex]",
@@ -201,6 +214,111 @@ function runCoach(rest) {
   printCoachPacket("Temper Coach", packet);
 }
 
+function runInspect(rest) {
+  const args = parseCommonArgs(rest);
+  const report = buildInspectReport({ cwd: args.cwd });
+
+  if (args.json) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  printHeader("Temper Inspect");
+  console.log(`Root: ${report.project.root}`);
+  console.log(`Project: ${report.project.name}`);
+  console.log(`Config: ${report.config.present ? report.config.path : "none"}`);
+
+  if (report.repo.available) {
+    console.log(`Repo: ${report.repo.branch} | ${report.repo.dirty ? "dirty" : "clean"} | changed ${report.repo.counts.changed}`);
+  }
+
+  console.log("");
+  console.log("Assistants:");
+  printList(renderInspectFileLines(report.assistants));
+
+  console.log("");
+  console.log("Continuity:");
+  printList([
+    `session: ${report.continuity.session_file.present ? report.continuity.session_file.path : "missing"}`,
+    ...renderInspectFileLines(report.continuity.workflow_files),
+    `handoffs: ${report.continuity.handoff_count}`
+  ]);
+
+  if (report.execution_policy) {
+    console.log("");
+    console.log("Execution Policy:");
+    printList([
+      `stages: ${report.execution_policy.stages.join(" -> ") || "none"}`,
+      `lite blessed: ${report.execution_policy.lite.blessed.join(", ") || "none"}`,
+      `lite gated: ${report.execution_policy.lite.gated.join(", ") || "none"}`,
+      `full blessed: ${report.execution_policy.full.blessed.join(", ") || "none"}`,
+      `full gated: ${report.execution_policy.full.gated.join(", ") || "none"}`
+    ]);
+  }
+
+  console.log("");
+  console.log("Runs:");
+  printList(
+    report.runs.latest.length > 0
+      ? report.runs.latest.map((item) => `${item.run_id} | ${item.command} ${item.action} | ${item.status}`)
+      : ["none"]
+  );
+}
+
+function runRuns(rest) {
+  const [subcommand = "ls", maybeId, ...subRest] = rest;
+  if (subcommand !== "ls" && subcommand !== "show") {
+    throw new Error("Usage: temper runs [ls|show <id>] [--cwd ...] [--json]");
+  }
+
+  if (subcommand === "show") {
+    const args = parseCommonArgs(subRest);
+    const artifact = loadRunArtifact({
+      cwd: args.cwd,
+      id: maybeId || "latest"
+    });
+
+    if (args.json) {
+      console.log(JSON.stringify(artifact, null, 2));
+      return;
+    }
+
+    printHeader("Temper Run");
+    console.log(`Root: ${findProjectRoot(args.cwd)}`);
+    console.log(`Run: ${artifact.run_id}`);
+    console.log(`Recorded: ${artifact.recorded_at}`);
+    console.log(`Command: ${artifact.command} ${artifact.action}`);
+    console.log(`Status: ${artifact.summary?.status || "unknown"}`);
+    console.log(`Artifact: ${artifact.relative_path}`);
+    console.log("");
+    console.log(JSON.stringify(artifact.payload, null, 2));
+    return;
+  }
+
+  const args = parseCommonArgs([maybeId, ...subRest].filter(Boolean));
+  const artifacts = listRunArtifacts({ cwd: args.cwd });
+
+  if (args.json) {
+    console.log(JSON.stringify(artifacts, null, 2));
+    return;
+  }
+
+  printHeader("Temper Runs");
+  console.log(`Root: ${findProjectRoot(args.cwd)}`);
+  if (artifacts.length === 0) {
+    console.log("No runs recorded.");
+    return;
+  }
+
+  console.log("");
+  printList(
+    artifacts.map(
+      (item) =>
+        `${item.run_id} | ${item.command} ${item.action} | ${item.summary?.status || "unknown"} | ${item.repo?.branch || "unknown"}`
+    )
+  );
+}
+
 function runCapability(command, rest) {
   const supportsCoach = new Set(["ship", "hotfix", "balance", "ux", "security", "infra"]);
   const capabilityRest = [...rest];
@@ -237,8 +355,22 @@ function runCapability(command, rest) {
       return;
     }
 
+    const recorded =
+      report.execution.dry_run === true
+        ? null
+        : recordRunArtifact({
+            cwd: input.cwd,
+            command: "ship",
+            action: input.mode,
+            payload: report
+          });
+
     printHeader("Temper Ship");
     printShipReport(report);
+    if (recorded) {
+      console.log("");
+      console.log(`Run Artifact: ${recorded.relativePath}`);
+    }
     return;
   }
 
@@ -316,6 +448,15 @@ function runInit(rest) {
     config,
     analysis
   });
+  const recorded = recordRunArtifact({
+    cwd: analysis.root,
+    command: "init",
+    action: "write",
+    payload: {
+      configPath: relativize(analysis.root, configPath),
+      generated: [...continuity.written, ...written]
+    }
+  });
 
   printHeader("Temper Init");
   console.log(`Root: ${analysis.root}`);
@@ -325,6 +466,8 @@ function runInit(rest) {
   console.log("");
   console.log("Generated:");
   printList([relativize(analysis.root, configPath), ...continuity.written, ...written]);
+  console.log("");
+  console.log(`Run Artifact: ${recorded.relativePath}`);
 }
 
 function runOnboard(rest) {
@@ -450,6 +593,19 @@ function runOnboard(rest) {
       assistants: args.assistants,
       force: args.force
     });
+    const recorded = recordRunArtifact({
+      cwd: result.analysis.root,
+      command: "onboard",
+      action: "write",
+      payload: {
+        configPath: relativize(result.analysis.root, generated.configPath),
+        onboardingPath: relativize(result.analysis.root, generated.onboardingPath),
+        onboardingJsonPath: relativize(result.analysis.root, generated.onboardingJsonPath),
+        adoptionPath: relativize(result.analysis.root, generated.adoptionPath),
+        continuity: generated.continuity.written,
+        assistants: generated.written
+      }
+    });
 
     printTemperBanner("Existing project onboarding complete");
     console.log("");
@@ -467,6 +623,8 @@ function runOnboard(rest) {
       relativize(result.analysis.root, generated.adoptionPath),
       ...generated.written
     ]);
+    console.log("");
+    console.log(`Run Artifact: ${recorded.relativePath}`);
     return;
   }
 
@@ -518,6 +676,17 @@ function runAdopt(rest) {
       analysis,
       assistants: args.assistants
     });
+    const recorded = recordRunArtifact({
+      cwd: analysis.root,
+      command: "adopt",
+      action: "write",
+      payload: {
+        configPath: relativize(analysis.root, configPath),
+        reportPath: relativize(analysis.root, reportPath),
+        continuity: continuity.written,
+        assistants: written
+      }
+    });
 
     printHeader("Temper Adopt");
     console.log(`Root: ${analysis.root}`);
@@ -526,6 +695,8 @@ function runAdopt(rest) {
     console.log("");
     console.log("Generated:");
     printList([relativize(analysis.root, configPath), relativize(analysis.root, reportPath), ...continuity.written, ...written]);
+    console.log("");
+    console.log(`Run Artifact: ${recorded.relativePath}`);
     return;
   }
 
@@ -590,10 +761,24 @@ function runHandoff(rest) {
 
   if (args.write) {
     const result = applyHandoffPlan(plan);
+    const recorded = recordRunArtifact({
+      cwd: result.projectRoot,
+      command: "handoff",
+      action: "write",
+      payload: {
+        handoffPath: relativize(result.projectRoot, result.handoffPath),
+        sessionPath: relativize(result.projectRoot, result.sessionPath),
+        sessionStatePath: relativize(result.projectRoot, result.sessionStatePath),
+        slug: plan.slug,
+        status: plan.status,
+        nextSteps: plan.nextSteps
+      }
+    });
     printHeader("Temper Handoff");
     console.log(`Root: ${result.projectRoot}`);
     console.log(`Handoff: ${result.handoffPath}`);
     console.log(`Session: ${result.sessionPath}`);
+    console.log(`Run Artifact: ${recorded.relativePath}`);
     return;
   }
 
@@ -809,4 +994,8 @@ function parseHandoffArgs(args) {
 
 function relativize(root, absolutePath) {
   return path.relative(root, absolutePath).replace(/\\/g, "/") || ".";
+}
+
+function renderInspectFileLines(group) {
+  return Object.values(group).map((item) => `${item.path}: ${item.present ? "present" : "missing"}`);
 }

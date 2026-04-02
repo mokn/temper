@@ -12,6 +12,8 @@ import { installAssistantAdapters } from "../src/lib/assistant.mjs";
 import { writeProjectConfig } from "../src/lib/project-config.mjs";
 import { runShip } from "../src/lib/ship.mjs";
 
+const CLI_PATH = "/Users/michaelorourke/temper-worktrees/ud-operator/packages/cli/bin/temper.mjs";
+
 test("analyzeProject infers a UD-like repo shape", async (t) => {
   const repoDir = createFixtureRepo(t);
   const analysis = analyzeProject({ cwd: repoDir });
@@ -91,11 +93,7 @@ test("runShip executes configured steps from generated config", async (t) => {
 
   writeProjectConfig(repoDir, config);
 
-  execFileSync("git", ["init", "-b", "dev", repoDir], { stdio: "ignore" });
-  execFileSync("git", ["-C", repoDir, "config", "user.email", "temper@example.com"], { stdio: "ignore" });
-  execFileSync("git", ["-C", repoDir, "config", "user.name", "Temper Test"], { stdio: "ignore" });
-  execFileSync("git", ["-C", repoDir, "add", "."], { stdio: "ignore" });
-  execFileSync("git", ["-C", repoDir, "commit", "-m", "fixture"], { stdio: "ignore" });
+  initGitRepo(repoDir, "dev", "fixture");
 
   const report = runShip({
     cwd: repoDir,
@@ -109,6 +107,66 @@ test("runShip executes configured steps from generated config", async (t) => {
   assert.ok(report.execution.steps.some((step) => step.id === "typecheck" && step.ok));
   assert.ok(report.execution.steps.some((step) => step.id === "balance_verify" && step.ok));
   assert.ok(report.patch_notes.summary.some((line) => /Primary hat:/.test(line)));
+});
+
+test("temper records write and ship runs, then lists and shows them", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  initGitRepo(repoDir, "dev", "fixture");
+
+  execFileSync("node", [CLI_PATH, "adopt", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+  execFileSync("git", ["-C", repoDir, "add", "."], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "commit", "-m", "adopted"], { stdio: "ignore" });
+
+  execFileSync("node", [CLI_PATH, "ship", "full", "--cwd", repoDir, "--intent", "player-facing balance pass"], {
+    stdio: "ignore"
+  });
+
+  const runs = JSON.parse(
+    execFileSync("node", [CLI_PATH, "runs", "ls", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.ok(runs.length >= 2);
+  assert.ok(runs.some((item) => item.command === "adopt" && item.action === "write"));
+  assert.ok(runs.some((item) => item.command === "ship" && item.action === "full"));
+
+  const latestShip = runs.find((item) => item.command === "ship");
+  const shown = JSON.parse(
+    execFileSync("node", [CLI_PATH, "runs", "show", latestShip.run_id, "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(shown.command, "ship");
+  assert.equal(shown.action, "full");
+  assert.equal(shown.payload.type, "temper.ship.report");
+});
+
+test("temper inspect summarizes installed surfaces and recent runs", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  initGitRepo(repoDir, "dev", "fixture");
+
+  execFileSync("node", [CLI_PATH, "adopt", "--cwd", repoDir, "--write"], {
+    stdio: "ignore"
+  });
+
+  const report = JSON.parse(
+    execFileSync("node", [CLI_PATH, "inspect", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(report.type, "temper.inspect.report");
+  assert.equal(report.config.present, true);
+  assert.equal(report.assistants.shared_canon_json.present, true);
+  assert.equal(report.continuity.workflow_files.continuity_json.present, true);
+  assert.ok(report.runs.count >= 1);
+  assert.ok(report.runs.latest.some((item) => item.command === "adopt"));
 });
 
 function createFixtureRepo(t) {
@@ -179,6 +237,14 @@ function write(root, relativePath, content) {
   const filePath = path.join(root, relativePath);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
   fs.writeFileSync(filePath, content);
+}
+
+function initGitRepo(repoDir, branch, message) {
+  execFileSync("git", ["init", "-b", branch, repoDir], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "config", "user.email", "temper@example.com"], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "config", "user.name", "Temper Test"], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "add", "."], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "commit", "-m", message], { stdio: "ignore" });
 }
 
 function rootPackageJson() {
