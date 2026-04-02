@@ -935,7 +935,48 @@ function runHandoff(rest) {
 function runAssistant(rest) {
   const [subcommand = "show", ...subRest] = rest;
   const args = parseCommonArgs(subRest);
-  const config = loadProjectConfig({ cwd: args.cwd });
+  const config = loadProjectConfig({ cwd: args.cwd, required: false });
+
+  if (!config) {
+    const interview = buildOnboardingInterview({
+      cwd: args.cwd,
+      family: args.family,
+      stack: args.stack,
+      name: args.name,
+      betaBranch: args.betaBranch,
+      prodBranch: args.prodBranch
+    });
+
+    if (subcommand === "install") {
+      throw new Error(
+        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd . --json` and ask the interview questions in chat first."
+      );
+    }
+
+    if (args.json) {
+      console.log(
+        JSON.stringify(
+          {
+            status: "needs_onboarding",
+            interview
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
+    printHeader("Temper Assistant");
+    console.log(`Root: ${interview.project_root}`);
+    console.log("Status: needs onboarding");
+    console.log("");
+    process.stdout.write(renderOnboardingInterview(interview));
+    console.log("");
+    console.log("Ask those questions in chat, then rerun the apply command with the user's answers.");
+    return;
+  }
+
   const analysis = analyzeProject({ cwd: config.__projectRoot });
 
   if (subcommand === "install") {
@@ -955,6 +996,7 @@ function runAssistant(rest) {
 
   printHeader("Temper Assistant");
   console.log(`Root: ${config.__projectRoot}`);
+  console.log("Status: onboarded");
   console.log(`Claude guide: .temper/assistants/claude.md`);
   console.log(`Codex guide: .temper/assistants/codex.md`);
   console.log(`Claude commands: .claude/commands/temper-*.md`);

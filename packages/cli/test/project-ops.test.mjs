@@ -87,6 +87,21 @@ test("assistant install writes guides and Claude commands", async (t) => {
   );
 });
 
+test("assistant show falls back to onboarding interview when Temper is installed but not onboarded", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  const payload = JSON.parse(
+    execFileSync("node", [CLI_PATH, "assistant", "show", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(payload.status, "needs_onboarding");
+  assert.ok(payload.interview);
+  assert.ok(payload.interview.questions.some((item) => item.id === "name"));
+  assert.match(payload.interview.apply_command, /temper onboard existing --write/);
+});
+
 test("runShip executes configured steps from generated config", async (t) => {
   const repoDir = createFixtureRepo(t);
   const analysis = analyzeProject({ cwd: repoDir });
