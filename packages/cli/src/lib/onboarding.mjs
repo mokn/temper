@@ -38,12 +38,14 @@ const REHEARSAL_SKIP_DIRS = new Set([...SKIP_DIRS, ".temper"]);
 
 export function buildExistingProjectOnboarding(options = {}) {
   const analysis = analyzeProject({ cwd: options.cwd });
-  const baseConfig = createConfigFromAnalysis(analysis, {
+  const initialConfig = createConfigFromAnalysis(analysis, {
     mode: "onboarded",
     family: options.family,
     stack: options.stack,
     name: options.name
   });
+  const answers = normalizeOnboardingAnswers(initialConfig, options);
+  const baseConfig = applyOnboardingAnswersToConfig(initialConfig, answers);
   const packageCatalog = scanPackageDefinitions(analysis.root);
   const workflows = inspectGitHubWorkflows(analysis.root);
   const history = inspectGitHistory(analysis.repo.gitRoot);
@@ -87,6 +89,7 @@ export function buildExistingProjectOnboarding(options = {}) {
         current_startup_tokens: efficiency.current_startup_tokens,
         projected_startup_tokens: efficiency.projected_startup_tokens
       },
+      operator_answers: answers,
       memory,
       resurfacing: resurfacing.map((item) => ({
         id: item.id,
@@ -108,6 +111,7 @@ export function buildExistingProjectOnboarding(options = {}) {
     history,
     workflows,
     strengths,
+    operator_answers: answers,
     efficiency,
     memory,
     resurfacing,
@@ -126,6 +130,73 @@ export function buildExistingProjectOnboarding(options = {}) {
       onboarding
     }),
     adoptionReport: renderAdoptionReport(analysis, config)
+  };
+}
+
+export function buildOnboardingInterview(options = {}) {
+  const result = buildExistingProjectOnboarding(options);
+  const answers = result.onboarding.operator_answers ?? {};
+  const environments = result.config.environments ?? {};
+  const questions = [
+    {
+      id: "name",
+      kind: "text",
+      prompt: "What should Temper call this repo in its operating contract?",
+      default: answers.name || result.config.name,
+      rationale: "Shows up in Temper reports and assistant-facing repo identity."
+    },
+    {
+      id: "family",
+      kind: "text",
+      prompt: "Is the inferred repo family right, or should it use a different family id?",
+      default: answers.family || result.config.family,
+      rationale: "Controls doctrine framing and capability routing."
+    },
+    {
+      id: "stack",
+      kind: "text",
+      prompt: "Is the inferred stack right, or should it use a different stack id?",
+      default: answers.stack || result.config.stack?.id || "",
+      rationale: "Controls the repo contract Temper writes for assistants."
+    }
+  ];
+
+  if (environments.beta) {
+    questions.push({
+      id: "beta_branch",
+      kind: "text",
+      prompt: "Which branch should Temper treat as beta or staging?",
+      default: answers.beta_branch || environments.beta.branch,
+      rationale: "Used for environment routing and ship context."
+    });
+  }
+
+  if (environments.prod) {
+    questions.push({
+      id: "prod_branch",
+      kind: "text",
+      prompt: "Which branch should Temper treat as production?",
+      default: answers.prod_branch || environments.prod.branch,
+      rationale: "Used for environment routing and prod-sensitive confirmation."
+    });
+  }
+
+  return {
+    project_root: result.analysis.root,
+    recommended_answers: answers,
+    apply_command:
+      "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
+    inferred: {
+      name: result.analysis.name,
+      family: result.analysis.family.id,
+      stack: result.analysis.stack.id,
+      environments: Object.fromEntries(
+        Object.entries(environments).map(([id, value]) => [id, value.branch])
+      )
+    },
+    questions,
+    next_step:
+      "Ask these questions in chat, then rerun the apply command with any overrides the user gave."
   };
 }
 
@@ -228,6 +299,24 @@ export function renderOnboardingPreview(preview) {
 
   lines.push("", "## Habit Changes", ...asBulletLines(preview.habit_changes));
   lines.push("", "## Rollback", ...asBulletLines(preview.rollback));
+
+  return lines.join("\n") + "\n";
+}
+
+export function renderOnboardingInterview(interview) {
+  const lines = [
+    "## Onboarding Interview",
+    "- ask the user these questions in chat",
+    "- when they answer, rerun `temper onboard existing --write` with any overrides",
+    "",
+    "## Questions"
+  ];
+
+  for (const [index, question] of interview.questions.entries()) {
+    lines.push(`${index + 1}. ${question.prompt}`);
+    lines.push(`   default: ${question.default || "none"}`);
+    lines.push(`   why: ${question.rationale}`);
+  }
 
   return lines.join("\n") + "\n";
 }
@@ -1265,6 +1354,43 @@ function buildPreviewRollback(fileChanges) {
   }
 
   return rollback.length > 0 ? rollback : ["no manual rollback steps are needed beyond deleting generated Temper files."];
+}
+
+function normalizeOnboardingAnswers(config, options) {
+  return {
+    name: options.name || config.name,
+    family: options.family || config.family,
+    stack: options.stack || config.stack?.id || "",
+    ...(config.environments?.beta ? { beta_branch: options.betaBranch || config.environments.beta.branch } : {}),
+    ...(config.environments?.prod ? { prod_branch: options.prodBranch || config.environments.prod.branch } : {})
+  };
+}
+
+function applyOnboardingAnswersToConfig(config, answers) {
+  const environments = { ...(config.environments ?? {}) };
+  if (answers.beta_branch && environments.beta) {
+    environments.beta = {
+      ...environments.beta,
+      branch: answers.beta_branch
+    };
+  }
+  if (answers.prod_branch && environments.prod) {
+    environments.prod = {
+      ...environments.prod,
+      branch: answers.prod_branch
+    };
+  }
+
+  return {
+    ...config,
+    name: answers.name || config.name,
+    family: answers.family || config.family,
+    stack: {
+      ...(config.stack ?? {}),
+      id: answers.stack || config.stack?.id || ""
+    },
+    environments
+  };
 }
 
 function scanPackageDefinitions(root) {

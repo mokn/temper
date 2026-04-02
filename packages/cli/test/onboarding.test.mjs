@@ -100,6 +100,58 @@ test("onboard existing --dry-run aliases preview in json mode", async (t) => {
   assert.ok(parsed.preview.file_changes.some((item) => item.path === "CLAUDE.md" && item.action === "update"));
 });
 
+test("onboard existing --interview emits assistant-facing questions and defaults", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+  const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--interview", "--json"], {
+    encoding: "utf8"
+  });
+  const parsed = JSON.parse(output);
+
+  assert.deepEqual(Object.keys(parsed), ["interview"]);
+  assert.equal(fs.realpathSync(parsed.interview.project_root), fs.realpathSync(repoDir));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "name"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "family"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "stack"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "beta_branch"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "prod_branch"));
+  assert.match(parsed.interview.apply_command, /temper onboard existing --write/);
+  assert.match(parsed.interview.next_step, /rerun the apply command/);
+});
+
+test("onboard existing --write applies chat-collected onboarding overrides", async (t) => {
+  const repoDir = createOnboardingFixtureRepo(t);
+
+  execFileSync(
+    "node",
+    [
+      CLI_PATH,
+      "onboard",
+      "existing",
+      "--cwd",
+      repoDir,
+      "--write",
+      "--name",
+      "UD Operator",
+      "--beta-branch",
+      "beta",
+      "--prod-branch",
+      "release"
+    ],
+    {
+      stdio: "ignore"
+    }
+  );
+
+  const config = JSON.parse(fs.readFileSync(path.join(repoDir, "temper.config.json"), "utf8"));
+  const onboarding = JSON.parse(fs.readFileSync(path.join(repoDir, ".temper/reports/onboarding.json"), "utf8"));
+  assert.equal(config.name, "UD Operator");
+  assert.equal(config.environments.beta.branch, "beta");
+  assert.equal(config.environments.prod.branch, "release");
+  assert.equal(onboarding.operator_answers.name, "UD Operator");
+  assert.equal(onboarding.operator_answers.beta_branch, "beta");
+  assert.equal(onboarding.operator_answers.prod_branch, "release");
+});
+
 test("runShip respects onboarded blessed defaults and gated promotion", async (t) => {
   const repoDir = createOnboardingFixtureRepo(t);
 

@@ -10,11 +10,13 @@ import {
   renderAdoptionReport
 } from "./lib/project-analysis.mjs";
 import {
+  buildOnboardingInterview,
   applyTemperUninstall,
   buildExistingProjectOnboarding,
   buildOnboardingInstallPreview,
   materializeOnboardingInstall,
   planTemperUninstall,
+  renderOnboardingInterview,
   renderOnboardingPreview,
   renderTemperUninstallPreview,
   runExistingProjectOnboardingRehearsal
@@ -128,7 +130,7 @@ function showHelp() {
   console.log("");
   console.log("Commands:");
   printList([
-    "onboard existing [--cwd ...] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]",
+    "onboard existing [--cwd ...] [--interview] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>] [--assistant claude,codex]",
     "uninstall [--cwd ...] [--preview|--dry-run] [--write]",
     "doctor",
     "derive",
@@ -576,14 +578,19 @@ function runOnboard(rest) {
   const [subcommand = "existing", ...subRest] = rest;
   if (subcommand !== "existing") {
     throw new Error(
-      "Usage: temper onboard existing [--cwd ...] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--assistant claude,codex]"
+      "Usage: temper onboard existing [--cwd ...] [--interview] [--preview|--dry-run] [--write] [--rehearse] [--lab first-run] [--out <dir>] [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>] [--assistant claude,codex]"
     );
   }
 
   const args = parseCommonArgs(subRest);
-  const actionModes = [args.preview ? "preview" : null, args.write ? "write" : null, args.rehearse ? "rehearse" : null].filter(Boolean);
+  const actionModes = [
+    args.interview ? "interview" : null,
+    args.preview ? "preview" : null,
+    args.write ? "write" : null,
+    args.rehearse ? "rehearse" : null
+  ].filter(Boolean);
   if (actionModes.length > 1) {
-    throw new Error("Choose one of --preview/--dry-run, --write, or --rehearse.");
+    throw new Error("Choose one of --interview, --preview/--dry-run, --write, or --rehearse.");
   }
 
   if (args.rehearse) {
@@ -592,6 +599,8 @@ function runOnboard(rest) {
       family: args.family,
       stack: args.stack,
       name: args.name,
+      betaBranch: args.betaBranch,
+      prodBranch: args.prodBranch,
       assistants: args.assistants,
       lab: args.lab,
       out: args.out
@@ -653,14 +662,37 @@ function runOnboard(rest) {
     cwd: args.cwd,
     family: args.family,
     stack: args.stack,
-    name: args.name
+    name: args.name,
+    betaBranch: args.betaBranch,
+    prodBranch: args.prodBranch
   });
   const preview = buildOnboardingInstallPreview({
     result,
     assistants: args.assistants
   });
+  const interview = buildOnboardingInterview({
+    cwd: args.cwd,
+    family: args.family,
+    stack: args.stack,
+    name: args.name,
+    betaBranch: args.betaBranch,
+    prodBranch: args.prodBranch
+  });
 
   if (args.json) {
+    if (args.interview) {
+      console.log(
+        JSON.stringify(
+          {
+            interview
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
     console.log(
       JSON.stringify(
         {
@@ -677,6 +709,15 @@ function runOnboard(rest) {
     return;
   }
 
+  if (args.interview) {
+    printTemperBanner("Existing project onboarding interview");
+    console.log("");
+    console.log(`Root: ${result.analysis.root}`);
+    console.log("");
+    process.stdout.write(renderOnboardingInterview(interview));
+    return;
+  }
+
   if (args.preview) {
     printTemperBanner("Existing project onboarding preview");
     console.log("");
@@ -685,7 +726,7 @@ function runOnboard(rest) {
     process.stdout.write(renderOnboardingPreview(preview));
     console.log("");
     process.stdout.write(result.report);
-    console.log("Run with --write to materialize this plan, or --rehearse to replay it in a disposable lab.");
+    console.log("Run with --interview to get the user-facing questions, --write to materialize this plan, or --rehearse to replay it in a disposable lab.");
     return;
   }
 
@@ -732,7 +773,7 @@ function runOnboard(rest) {
 
   process.stdout.write(result.report);
   console.log(
-    "Run with --preview to inspect the exact install plan, --write to create temper.config.json and assistant files, or --rehearse to replay it in a disposable lab."
+    "Run with --interview to ask the user the right questions in chat, --preview to inspect the exact install plan, --write to create temper.config.json and assistant files, or --rehearse to replay it in a disposable lab."
   );
 }
 
@@ -985,7 +1026,8 @@ function parseCommonArgs(args) {
     write: false,
     json: false,
     rehearse: false,
-    preview: false
+    preview: false,
+    interview: false
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -1028,6 +1070,9 @@ function parseCommonArgs(args) {
       case "dry-run":
         parsed.preview = true;
         break;
+      case "interview":
+        parsed.interview = true;
+        break;
       case "json":
         parsed.json = true;
         break;
@@ -1039,6 +1084,12 @@ function parseCommonArgs(args) {
         break;
       case "out":
         parsed.out = path.resolve(nextValue || parsed.cwd);
+        break;
+      case "beta-branch":
+        parsed.betaBranch = nextValue;
+        break;
+      case "prod-branch":
+        parsed.prodBranch = nextValue;
         break;
       default:
         break;
