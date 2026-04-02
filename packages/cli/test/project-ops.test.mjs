@@ -15,6 +15,7 @@ import { runShip } from "../src/lib/ship.mjs";
 test("analyzeProject infers a UD-like repo shape", async (t) => {
   const repoDir = createFixtureRepo(t);
   const analysis = analyzeProject({ cwd: repoDir });
+  const config = createConfigFromAnalysis(analysis);
 
   assert.equal(analysis.package_manager, "pnpm");
   assert.equal(analysis.family.id, "data-driven-progression-rpg");
@@ -22,11 +23,29 @@ test("analyzeProject infers a UD-like repo shape", async (t) => {
   assert.ok(analysis.stack.overlays.includes("mud-onchain"));
   assert.ok(analysis.surfaces.source_of_truth.includes("packages/contracts/mud.config.ts"));
   assert.ok(analysis.surfaces.source_of_truth.includes("packages/contracts/zones/start/items.json"));
+  assert.equal(analysis.surfaces.source_of_truth.some((file) => file.includes("/locales/")), false);
   assert.equal(analysis.environments.find((item) => item.id === "beta")?.branch, "dev");
   assert.equal(analysis.environments.find((item) => item.id === "prod")?.branch, "main");
+  assert.ok(config.paths.source_of_truth.includes("packages/contracts/mud.config.ts"));
+  assert.ok(config.paths.source_of_truth.includes("packages/contracts/zones/start/items.json"));
+  assert.equal(config.paths.source_of_truth.some((file) => file.includes("/locales/")), false);
   assert.ok(analysis.commands.build);
   assert.ok(analysis.commands.typecheck);
   assert.ok(analysis.commands.balance_verify);
+});
+
+test("analyzeProject reads shared workflow state when run from a git worktree", async (t) => {
+  const { repoDir, worktreeDir } = createWorktreeFixtureRepo(t);
+  const analysis = analyzeProject({ cwd: worktreeDir });
+
+  assert.equal(fs.realpathSync(analysis.repo.sharedRoot), fs.realpathSync(repoDir));
+  assert.equal(fs.realpathSync(analysis.repo.workflowFiles.session), fs.realpathSync(path.join(repoDir, "SESSION.md")));
+  assert.equal(analysis.surfaces.workflow.agents, "../../../AGENTS.md");
+  assert.equal(analysis.surfaces.workflow.session, "../../../SESSION.md");
+  assert.equal(analysis.surfaces.workflow.claude, "CLAUDE.md");
+  assert.ok(analysis.surfaces.workflow.claude_rules.includes("../../rules/deploy.md"));
+  assert.equal(analysis.environments.find((item) => item.id === "beta")?.branch, "dev");
+  assert.equal(analysis.environments.find((item) => item.id === "prod")?.branch, "main");
 });
 
 test("assistant install writes guides and Claude commands", async (t) => {
@@ -108,8 +127,47 @@ function createFixtureRepo(t) {
   write(repoDir, "packages/contracts/zones/start/items.json", "{\n  \"sword\": 1\n}\n");
   write(repoDir, "packages/contracts/zones/start/effects.json", "{\n  \"burn\": 1\n}\n");
   write(repoDir, "packages/contracts/zones/start/monsters.json", "{\n  \"slime\": 1\n}\n");
+  for (const locale of ["en", "ja", "ko", "zh", "fr"]) {
+    for (const fileName of ["classes", "effects", "items", "monsters"]) {
+      write(repoDir, `packages/client/src/i18n/locales/${locale}/${fileName}.json`, "{\n  \"fixture\": true\n}\n");
+    }
+  }
   write(repoDir, "packages/client/src/ui/onboarding.tsx", "export const onboarding = true;\n");
   return repoDir;
+}
+
+function createWorktreeFixtureRepo(t) {
+  const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "temper-worktree-"));
+  const worktreeDir = path.join(repoDir, ".claude", "worktrees", "feature");
+  t.after(() => fs.rmSync(repoDir, { recursive: true, force: true }));
+
+  write(repoDir, "package.json", JSON.stringify(rootPackageJson(), null, 2) + "\n");
+  write(repoDir, "pnpm-workspace.yaml", "packages:\n  - 'packages/*'\n");
+  write(repoDir, "tsconfig.json", "{\n  \"compilerOptions\": {\"target\": \"ES2022\"}\n}\n");
+  write(repoDir, "CLAUDE.md", "# Claude\n");
+  write(repoDir, "packages/contracts/mud.config.ts", "export default {};\n");
+  write(repoDir, "packages/contracts/package.json", JSON.stringify(contractsPackageJson(), null, 2) + "\n");
+  write(repoDir, "packages/contracts/zones/start/items.json", "{\n  \"sword\": 1\n}\n");
+
+  execFileSync("git", ["init", "-b", "main", repoDir], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "config", "user.email", "temper@example.com"], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "config", "user.name", "Temper Test"], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "add", "."], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "commit", "-m", "fixture"], { stdio: "ignore" });
+  execFileSync("git", ["-C", repoDir, "worktree", "add", "-b", "feature", worktreeDir], { stdio: "ignore" });
+
+  write(repoDir, "AGENTS.md", "# Agents\n");
+  write(repoDir, "SESSION.md", "# Session\n");
+  write(
+    repoDir,
+    ".claude/rules/deploy.md",
+    "| Branch | Target | Confirm? |\n|---|---|---|\n| `dev` | Beta | No |\n| `main` | Production | Yes |\n"
+  );
+
+  return {
+    repoDir,
+    worktreeDir
+  };
 }
 
 function write(root, relativePath, content) {

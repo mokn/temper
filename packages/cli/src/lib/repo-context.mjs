@@ -15,6 +15,9 @@ export function gatherRepoContext(options = {}) {
   }
 
   const root = gitRoot.trim();
+  const gitCommonDir = resolveGitCommonDir(root);
+  const sharedRoot = path.dirname(gitCommonDir);
+  const workflowRoots = dedupe([root, sharedRoot]);
   const branch = runGit(root, ["rev-parse", "--abbrev-ref", "HEAD"])?.trim() ?? "unknown";
   const statusOutput = runGit(root, ["status", "--short", "--branch", "--untracked-files=all"]) ?? "";
   const status = parseStatus(statusOutput);
@@ -22,17 +25,22 @@ export function gatherRepoContext(options = {}) {
   const stagedDiff =
     runGit(root, ["diff", "--cached", "--no-ext-diff", "--unified=0", "--relative"]) ?? "";
 
-  const sessionPath = path.join(root, "SESSION.md");
-  const agentsPath = path.join(root, "AGENTS.md");
-  const claudePath = path.join(root, "CLAUDE.md");
-  const handoffFiles = safeReadDir(root)
-    .filter((entry) => /^HANDOFF_.*\.md$/i.test(entry))
-    .sort();
+  const sessionPath = findWorkflowFile(workflowRoots, "SESSION.md");
+  const agentsPath = findWorkflowFile(workflowRoots, "AGENTS.md");
+  const claudePath = findWorkflowFile(workflowRoots, "CLAUDE.md");
+  const handoffFiles = workflowRoots.flatMap((candidateRoot) =>
+    safeReadDir(candidateRoot)
+      .filter((entry) => /^HANDOFF_.*\.md$/i.test(entry))
+      .sort()
+      .map((entry) => path.join(candidateRoot, entry))
+  );
 
   return {
     available: true,
     cwd,
     gitRoot: root,
+    gitCommonDir,
+    sharedRoot,
     branch,
     isDirty: status.changedFiles.length > 0,
     changedFiles: status.changedFiles,
@@ -51,7 +59,7 @@ export function gatherRepoContext(options = {}) {
       agents: fs.existsSync(agentsPath) ? agentsPath : null,
       session: fs.existsSync(sessionPath) ? sessionPath : null,
       claude: fs.existsSync(claudePath) ? claudePath : null,
-      handoffs: handoffFiles.map((file) => path.join(root, file))
+      handoffs: dedupe(handoffFiles)
     },
     sessionExcerpt: fs.existsSync(sessionPath) ? readExcerpt(sessionPath, 20) : null
   };
@@ -143,6 +151,21 @@ function safeReadDir(dirPath) {
   } catch {
     return [];
   }
+}
+
+function resolveGitCommonDir(root) {
+  const raw = runGit(root, ["rev-parse", "--git-common-dir"])?.trim() || ".git";
+  return path.resolve(root, raw);
+}
+
+function findWorkflowFile(roots, relativePath) {
+  for (const root of roots) {
+    const candidate = path.join(root, relativePath);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return path.join(roots[0], relativePath);
 }
 
 function dedupe(items) {

@@ -124,8 +124,8 @@ export function analyzeProject(options = {}) {
   const family = detectFamily(files);
   const stack = detectStack(root, files, packageScan);
   const sourceOfTruth = detectSourceOfTruth(files);
-  const workflow = detectWorkflow(root);
-  const environments = detectEnvironments(root, packageScan);
+  const workflow = detectWorkflow(root, repo);
+  const environments = detectEnvironments(root, packageScan, repo);
   const commands = inferCommands(root, packageManager, packageScan);
   const generated = GENERATED_HINTS.filter((hint) => files.some((file) => file.includes(hint)));
   const warnings = [];
@@ -168,7 +168,7 @@ export function createConfigFromAnalysis(analysis, options = {}) {
   const projectName = options.name || analysis.name;
   const familyId = options.family || analysis.family.id;
   const stackId = options.stack || analysis.stack.id;
-  const sourceOfTruth = dedupe(analysis.surfaces.source_of_truth).slice(0, 16);
+  const sourceOfTruth = dedupe(analysis.surfaces.source_of_truth);
 
   return {
     schema_version: 1,
@@ -378,36 +378,44 @@ function detectSourceOfTruth(files) {
     .filter((file) => !/\/__fixtures__\//i.test(file))
     .filter((file) => !/^packages\/guide\//i.test(file))
     .filter((file) => !/^packages\/indexer\/src\/api\//i.test(file))
-    .sort()
+    .filter((file) => !/\/(?:i18n\/)?locales?\//i.test(file))
+    .sort((left, right) => sourceOfTruthPriority(right) - sourceOfTruthPriority(left) || left.localeCompare(right))
     .slice(0, 24);
 }
 
-function detectWorkflow(root) {
-  const handoffs = fs.existsSync(root)
-    ? fs
-        .readdirSync(root)
-        .filter((entry) => /^HANDOFF_.*\.md$/i.test(entry))
-        .map((entry) => entry)
-    : [];
-
-  const rulesDir = path.join(root, ".claude", "rules");
+function detectWorkflow(projectRoot, repo) {
+  const roots = workflowRoots(projectRoot, repo);
 
   return {
-    agents: fs.existsSync(path.join(root, "AGENTS.md")) ? "AGENTS.md" : null,
-    session: fs.existsSync(path.join(root, "SESSION.md")) ? "SESSION.md" : null,
-    claude: fs.existsSync(path.join(root, "CLAUDE.md")) ? "CLAUDE.md" : null,
-    handoffs,
-    claude_rules:
-      fs.existsSync(rulesDir) && fs.statSync(rulesDir).isDirectory()
-        ? fs.readdirSync(rulesDir).filter((entry) => entry.endsWith(".md")).map((entry) => `.claude/rules/${entry}`)
-        : []
+    agents: toWorkflowPath(projectRoot, findFirstExistingFile(roots, "AGENTS.md")),
+    session: toWorkflowPath(projectRoot, findFirstExistingFile(roots, "SESSION.md")),
+    claude: toWorkflowPath(projectRoot, findFirstExistingFile(roots, "CLAUDE.md")),
+    handoffs: dedupe(
+      roots.flatMap((root) =>
+        safeReadDir(root)
+          .filter((entry) => /^HANDOFF_.*\.md$/i.test(entry))
+          .map((entry) => rel(projectRoot, path.join(root, entry)))
+      )
+    ).sort(),
+    claude_rules: dedupe(
+      roots.flatMap((root) => {
+        const rulesDir = path.join(root, ".claude", "rules");
+        if (!fs.existsSync(rulesDir) || !fs.statSync(rulesDir).isDirectory()) {
+          return [];
+        }
+        return fs
+          .readdirSync(rulesDir)
+          .filter((entry) => entry.endsWith(".md"))
+          .map((entry) => rel(projectRoot, path.join(rulesDir, entry)));
+      })
+    ).sort()
   };
 }
 
-function detectEnvironments(root, packageScan) {
+function detectEnvironments(projectRoot, packageScan, repo) {
   const environments = [{ id: "local", label: "Local", branch: "*" }];
-  const deployRulePath = path.join(root, ".claude", "rules", "deploy.md");
-  const hasDeployRule = fs.existsSync(deployRulePath);
+  const deployRulePath = findFirstExistingFile(workflowRoots(projectRoot, repo), ".claude/rules/deploy.md");
+  const hasDeployRule = Boolean(deployRulePath && fs.existsSync(deployRulePath));
 
   let betaBranch = "dev";
   let prodBranch = "main";
@@ -704,6 +712,51 @@ function simplifyPackageEntry(root, entry) {
 
 function dedupe(items) {
   return [...new Set(items.filter(Boolean))];
+}
+
+function workflowRoots(projectRoot, repo) {
+  return dedupe([projectRoot, repo?.sharedRoot].filter(Boolean));
+}
+
+function findFirstExistingFile(roots, relativePath) {
+  for (const root of roots) {
+    const candidate = path.join(root, relativePath);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+}
+
+function toWorkflowPath(projectRoot, absolutePath) {
+  return absolutePath ? rel(projectRoot, absolutePath) : null;
+}
+
+function safeReadDir(dirPath) {
+  try {
+    return fs.readdirSync(dirPath);
+  } catch {
+    return [];
+  }
+}
+
+function sourceOfTruthPriority(file) {
+  if (/^packages\/contracts\/zones\/[^/]+\/(items|effects|monsters)\.json$/i.test(file)) {
+    return 100;
+  }
+  if (/^packages\/contracts\/worlds\.json$/i.test(file)) {
+    return 90;
+  }
+  if (/^packages\/contracts\/mud\.config\.(ts|js)$/i.test(file)) {
+    return 85;
+  }
+  if (/\/(items|effects|monsters|abilities|classes)\.(json|md|ts)$/i.test(file)) {
+    return 70;
+  }
+  if (/CHANGELOG\.md$/i.test(file)) {
+    return 10;
+  }
+  return 50;
 }
 
 function asBulletLines(items) {
