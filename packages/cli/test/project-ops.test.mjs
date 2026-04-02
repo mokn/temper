@@ -217,6 +217,75 @@ test("temper session set updates the managed board and records a run artifact", 
   assert.ok(runs.some((item) => item.command === "session" && item.action === "write"));
 });
 
+test("temper eval restart passes when session and handoff are both present and structured", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  initGitRepo(repoDir, "feature/restart-pass", "fixture");
+
+  execFileSync(
+    "node",
+    [
+      CLI_PATH,
+      "session",
+      "set",
+      "--cwd",
+      repoDir,
+      "--status",
+      "active",
+      "--next",
+      "Run beta smoke.",
+      "--handoff",
+      "HANDOFF_restart-pass.md",
+      "--write"
+    ],
+    { stdio: "ignore" }
+  );
+  execFileSync(
+    "node",
+    [
+      CLI_PATH,
+      "handoff",
+      "--cwd",
+      repoDir,
+      "--slug",
+      "restart-pass",
+      "--summary",
+      "Wrapped restart hardening.",
+      "--next",
+      "Run beta smoke.",
+      "--write"
+    ],
+    { stdio: "ignore" }
+  );
+
+  const report = JSON.parse(
+    execFileSync("node", [CLI_PATH, "eval", "restart", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(report.type, "temper.eval.restart.report");
+  assert.equal(report.verdict, "pass");
+  assert.ok(report.score >= 85);
+  assert.equal(report.target_handoff.path, "HANDOFF_restart-pass.md");
+});
+
+test("temper eval restart fails when continuity artifacts are missing", async (t) => {
+  const repoDir = createFixtureRepo(t);
+
+  initGitRepo(repoDir, "feature/restart-fail", "fixture");
+
+  const report = JSON.parse(
+    execFileSync("node", [CLI_PATH, "eval", "restart", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(report.verdict, "fail");
+  assert.ok(report.findings.some((item) => item.code === "missing_session_state"));
+  assert.ok(report.findings.some((item) => item.code === "missing_handoff"));
+});
+
 function createFixtureRepo(t) {
   const repoDir = fs.mkdtempSync(path.join(os.tmpdir(), "temper-adopt-"));
   t.after(() => fs.rmSync(repoDir, { recursive: true, force: true }));

@@ -41,6 +41,7 @@ import {
 import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
+import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
 
 const capabilityCommands = new Set([
   "init",
@@ -95,6 +96,10 @@ export async function main(argv) {
     return runSession(rest);
   }
 
+  if (command === "eval") {
+    return runEval(rest);
+  }
+
   if (command === "assistant") {
     return runAssistant(rest);
   }
@@ -132,6 +137,7 @@ function showHelp() {
     "inspect [--cwd ...] [--json]",
     "runs [ls|show <id>] [--cwd ...] [--json]",
     "session [show|set] [--cwd ...] [--workstream ...] [--status ...] [--next ...] [--handoff ...] [--write]",
+    "eval restart [--cwd ...] [--json]",
     "assistant <install|show>",
     "init [--cwd ...] [--family ...] [--stack ...] [--existing]",
     "adopt [--cwd ...] [--write] [--assistant claude,codex]",
@@ -396,6 +402,23 @@ function runSession(rest) {
   console.log("");
   process.stdout.write(renderSessionPreview(plan));
   console.log("Run with --write to record this session update.");
+}
+
+function runEval(rest) {
+  const [subcommand = "restart", ...subRest] = rest;
+  if (subcommand !== "restart") {
+    throw new Error("Usage: temper eval restart [--cwd ...] [--json]");
+  }
+
+  const args = parseCommonArgs(subRest);
+  const report = evaluateRestartReadiness({ cwd: args.cwd });
+
+  if (args.json) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+
+  process.stdout.write(renderRestartEval(report));
 }
 
 function runCapability(command, rest) {

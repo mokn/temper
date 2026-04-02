@@ -60,6 +60,7 @@ Still to deepen:
 - `temper runs show <id> --cwd <repo>`
 - `temper session show --cwd <repo>`
 - `temper session set --cwd <repo> --next "<next step>" --status active --write`
+- `temper eval restart --cwd <repo>`
 - `temper init --existing --cwd <repo>` (alias)
 - `temper adopt --cwd <repo>`
 - `temper adopt --cwd <repo> --write`
@@ -179,6 +180,20 @@ For the live board itself, use `temper session` instead of hand-editing the mana
 
 - `temper session show --cwd <repo>`
 - `temper session set --cwd <repo> --workstream economy-pass --status active --next "Run beta smoke." --handoff HANDOFF_economy-pass.md --write`
+
+## Restart Eval
+
+Use `temper eval restart` to check whether a repo can be resumed cold from the continuity surfaces:
+
+- `temper eval restart --cwd <repo>`
+- `temper eval restart --cwd <repo> --json`
+
+The current eval checks:
+
+- whether `SESSION.md` has the Temper-managed session block
+- whether `.temper/workflow/session.json` has an active entry
+- whether the active entry points to a real handoff
+- whether that handoff includes restart-critical sections and numbered next steps
 
 ## Inspecting Harness State
 
