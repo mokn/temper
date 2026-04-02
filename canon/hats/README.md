@@ -1,7 +1,7 @@
 ---
 title: Hat Canon Index
 doc_type: index
-status: seeded
+status: expanded
 reviewed: 2026-04-02
 tags:
   - hats
@@ -30,7 +30,7 @@ Each doc should contain:
 - sources
 - frontmatter metadata for retrieval
 
-Seeded set:
+Current set:
 
 - `kaplan.md`
 - `miyamoto.md`

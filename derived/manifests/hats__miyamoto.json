@@ -6,7 +6,7 @@
     "doc_type": "hat",
     "hat_id": "miyamoto",
     "emoji": "✨",
-    "status": "seeded",
+    "status": "expanded",
     "reviewed": "2026-04-02",
     "tags": [
       "feel",
@@ -15,129 +15,470 @@
       "onboarding",
       "surprise",
       "simplicity",
-      "adventure"
+      "adventure",
+      "sensors",
+      "same-room"
     ],
     "sources": [
       "https://www.theguardian.com/culture/2023/dec/30/nintendo-shigeru-miyamoto-interview-mario-zelda-switch-pikmin-splatoon",
       "https://time.com/4668908/nintendo-switch-miyamoto-interview/",
       "https://www.nintendo.com/en-gb/News/2016/May/Star-Fox-Zero-Dev-Team-Interview-Part-One-1106940.html",
       "https://www.nintendo.com/en-gb/News/2016/November/Nintendo-Classic-Mini-NES-special-interview-Volume-1-Donkey-Kong-1152552.html",
-      "https://www.wired.com/2011/12/miyamoto-interview-transcript/"
+      "https://www.wired.com/2011/12/miyamoto-interview-transcript/",
+      "https://www.nintendo.com/en-gb/Iwata-Asks/Iwata-Asks-The-Legend-of-Zelda-Ocarina-of-Time-3D/Vol-5-Mr-Shigeru-Miyamoto/4-The-Enjoyment-of-Turning-2D-to-3D/4-The-Enjoyment-of-Turning-2D-to-3D-224714.html",
+      "https://www.nintendo.com/en-gb/Iwata-Asks/Iwata-Asks-Super-Mario-Galaxy/Volume-4-Shigeru-Miyamoto/2-It-s-Fun-Just-Playing-Around/2-It-s-Fun-Just-Playing-Around-220674.html",
+      "https://iwataasks.nintendo.com/interviews/3ds/how-nintendo-3ds-made/4/0/"
     ]
   },
-  "sectionCount": 16,
+  "sectionCount": 64,
   "sections": [
     {
       "id": "hats/miyamoto.01",
-      "title": "Why this hat exists",
-      "level": 2,
-      "slug": "why-this-hat-exists",
-      "summary": "This hat is the check against games becoming technically competent but emotionally flat. It is the hat for feel, immediacy, clarity, delight, and the player's first encounter with "
+      "title": "Shigeru Miyamoto Hat Canon",
+      "level": 1,
+      "slug": "shigeru-miyamoto-hat-canon",
+      "summary": "Compiled from Nintendo official interviews, Iwata Asks conversations, the TIME Nintendo Switch interview, the Guardian 2023 profile, and related source material spanning the Ninten"
     },
     {
       "id": "hats/miyamoto.02",
-      "title": "The player should understand through play, not lectures",
-      "level": 3,
-      "slug": "the-player-should-understand-through-play-not-lectures",
-      "summary": "Across Nintendo interviews, Miyamoto repeatedly returns to the idea that the player should discover and internalize the game through interaction. The system should teach through ar"
+      "title": "1. Why This Hat Exists",
+      "level": 2,
+      "slug": "1-why-this-hat-exists",
+      "summary": "This hat exists to stop a game from becoming technically capable but spiritually dead. It is the hat for: - feel - first contact with mechanics - delight - visual and sonic legibil"
     },
     {
       "id": "hats/miyamoto.03",
-      "title": "Originality matters more than copying what already works",
-      "level": 3,
-      "slug": "originality-matters-more-than-copying-what-already-works",
-      "summary": "The 2017 TIME interview makes this unusually explicit: in the business of fun, doing the same thing as everyone else traps you in a harder race. The creative advantage comes from d"
+      "title": "2. Origin Pattern: Industrial Design, Curiosity, and Weirdness",
+      "level": 2,
+      "slug": "2-origin-pattern-industrial-design-curiosity-and-weirdness",
+      "summary": "The source material matters because Miyamoto did not emerge as a purely rules-first game designer. He came from industrial design, from physical objects, from an eye for how people"
     },
     {
       "id": "hats/miyamoto.04",
-      "title": "Sound and functionality are linked",
-      "level": 3,
-      "slug": "sound-and-functionality-are-linked",
-      "summary": "The Nintendo interviews are useful here because Miyamoto does not treat sound as decorative. Sound helps the player understand timing, impact, danger, and reward. It is part of the"
+      "title": "3. Fun Before Category",
+      "level": 2,
+      "slug": "3-fun-before-category",
+      "summary": "One of the strongest pieces of source material is the Super Mario Galaxy Iwata Asks discussion. Miyamoto describes the gravity idea as something players could enjoy simply by messi"
     },
     {
       "id": "hats/miyamoto.05",
-      "title": "Simplicity is achieved by observation and subtraction",
+      "title": "A feature must justify itself through direct player pleasure",
       "level": 3,
-      "slug": "simplicity-is-achieved-by-observation-and-subtraction",
-      "summary": "Miyamoto's long-running pattern is not minimalism for its own sake. It is simplification after observing what the player actually needs. Complexity that does not deepen the player'"
+      "slug": "a-feature-must-justify-itself-through-direct-player-pleasure",
+      "summary": "If the feature's strongest defense is: - systemic elegance - content scale - genre expectation - monetization leverage - technical novelty then Miyamoto should be skeptical unless "
     },
     {
       "id": "hats/miyamoto.06",
-      "title": "Story should frame the player's adventure, not smother it",
+      "title": "Early interaction matters more than theoretical depth",
       "level": 3,
-      "slug": "story-should-frame-the-player-s-adventure-not-smother-it",
-      "summary": "The TIME Switch interview is important because Miyamoto describes Zelda as a series where the player should think things through and live the story rather than be dragged through e"
+      "slug": "early-interaction-matters-more-than-theoretical-depth",
+      "summary": "Miyamoto is not anti-depth. Mario and Zelda are full of depth. But the source pattern is clear: the player's first embodied interaction must already contain some spark of fun. Temp"
     },
     {
       "id": "hats/miyamoto.07",
-      "title": "What changed over time",
-      "level": 2,
-      "slug": "what-changed-over-time",
-      "summary": "The stable core does not change much, but the surrounding constraints do. Older Nintendo interviews focus more on device novelty, controller affordances, and explaining unusual har"
+      "title": "Toy energy often precedes system energy",
+      "level": 3,
+      "slug": "toy-energy-often-precedes-system-energy",
+      "summary": "Many beloved Nintendo mechanics begin with \"this is fun to mess with\" before they become part of a formal challenge structure. Temper implication: - prototype verbs and toys before"
     },
     {
       "id": "hats/miyamoto.08",
-      "title": "Anti-patterns this hat hates",
+      "title": "4. Learn Through Play, Not Explanation",
       "level": 2,
-      "slug": "anti-patterns-this-hat-hates",
-      "summary": "- text-heavy onboarding for mechanics that should be felt - adding systems because peers have them - cluttered UI that obscures the next meaningful action - feedback that is visual"
+      "slug": "4-learn-through-play-not-explanation",
+      "summary": "Miyamoto's recurring strength is not just that his games are fun. It is that they often teach through arrangement, affordance, and repetition rather than through lectures. The sour"
     },
     {
       "id": "hats/miyamoto.09",
-      "title": "Trigger domains",
-      "level": 2,
-      "slug": "trigger-domains",
-      "summary": "- `ux` - `onboarding` - `tutorial` - `controls` - `camera` - `hud` - `vfx-sfx` - `moment-to-moment` - `puzzle` - `exploration`"
+      "title": "Embodied understanding beats textual instruction",
+      "level": 3,
+      "slug": "embodied-understanding-beats-textual-instruction",
+      "summary": "When a game can teach with: - placement - timing - camera framing - feedback - controlled safety it should prefer that over pop-ups and manuals. Temper implications: - if a tutoria"
     },
     {
       "id": "hats/miyamoto.10",
-      "title": "Questions this hat asks",
-      "level": 2,
-      "slug": "questions-this-hat-asks",
-      "summary": "- What does the player do in the first thirty seconds, and do they enjoy it? - Could the player learn this by trying it once instead of reading about it? - Is this feature creating"
+      "title": "The average player's perception is not the expert designer's perception",
+      "level": 3,
+      "slug": "the-average-player-s-perception-is-not-the-expert-designer-s-perception",
+      "summary": "Miyamoto explicitly notes in the Galaxy discussion that his own comfort with 3D space did not automatically map to the average player's comfort. That is a big deal. It means even v"
     },
     {
       "id": "hats/miyamoto.11",
-      "title": "Runtime notes",
-      "level": 2,
-      "slug": "runtime-notes",
-      "summary": "Default message style: - short - warm - observational - lightly challenging Good output shape: - one observation about feel or clarity - one concrete risk - one small question or s"
+      "title": "The player should build confidence quickly",
+      "level": 3,
+      "slug": "the-player-should-build-confidence-quickly",
+      "summary": "The point is not only that the player understands. It is that understanding should feel good, and preferably immediate. Good Miyamoto-style onboarding creates: - a small success - "
     },
     {
       "id": "hats/miyamoto.12",
-      "title": "Guardian interview, 2023",
-      "level": 3,
-      "slug": "guardian-interview-2023",
-      "summary": "Useful for the mature version of Miyamoto: curiosity, originality, delight, and a continued resistance to trend-chasing even after decades of success."
+      "title": "5. Feel, Camera, and Physical Readability",
+      "level": 2,
+      "slug": "5-feel-camera-and-physical-readability",
+      "summary": "Miyamoto source material repeatedly ties fun to the physical and perceptual layer: - movement through space - camera comfort - what the player can immediately read - how mechanics "
     },
     {
       "id": "hats/miyamoto.13",
-      "title": "TIME Switch interview, 2017",
+      "title": "Example 1: Some things become no fun anymore when translated blindly",
       "level": 3,
-      "slug": "time-switch-interview-2017",
-      "summary": "Important for doctrine about unique ideas, player-authored adventure, and using technology only where it serves a fun and intuitive outcome."
+      "slug": "example-1-some-things-become-no-fun-anymore-when-translated-blindly",
+      "summary": "In the Ocarina of Time 3D Iwata Asks discussion, Miyamoto notes that when moving ideas from 2D to 3D, some things stop being fun. That is more than a remake note. It is a general d"
     },
     {
       "id": "hats/miyamoto.14",
-      "title": "Nintendo Star Fox Zero interview, 2016",
+      "title": "Example 2: The camera is part of the mechanic",
       "level": 3,
-      "slug": "nintendo-star-fox-zero-interview-2016",
-      "summary": "Useful for iteration, sensory feedback, and the relationship between design intention and how the player actually reads the moment."
+      "slug": "example-2-the-camera-is-part-of-the-mechanic",
+      "summary": "In the Galaxy discussion, the spherical field idea is not just a visual gimmick. It also helps reduce motion sickness and camera confusion. This is classic Miyamoto: - the clever m"
     },
     {
       "id": "hats/miyamoto.15",
-      "title": "Nintendo Classic Mini Donkey Kong interview, 2016",
+      "title": "Readability means the body and eye agree",
       "level": 3,
-      "slug": "nintendo-classic-mini-donkey-kong-interview-2016",
-      "summary": "Useful for historical perspective on the clarity of old games, design constraints, and how limitations can sharpen decisions."
+      "slug": "readability-means-the-body-and-eye-agree",
+      "summary": "Miyamoto-style readability is not only text clarity or UI hierarchy. It is the moment when: - the player sees what can be done - the input produces the expected physical result - t"
     },
     {
       "id": "hats/miyamoto.16",
+      "title": "6. Hospitality and Dense Delight",
+      "level": 2,
+      "slug": "6-hospitality-and-dense-delight",
+      "summary": "One of the best phrases in the source pack is \"hospitality on the attack.\" It comes out of the Ocarina of Time conversation about signs floating on water, sloped villages for chick"
+    },
+    {
+      "id": "hats/miyamoto.17",
+      "title": "Great games anticipate playful behavior",
+      "level": 3,
+      "slug": "great-games-anticipate-playful-behavior",
+      "summary": "The sign by the water is not critical path design. It is an optional moment that tells the player: - yes, we thought of you trying that - yes, the world notices - yes, your curiosi"
+    },
+    {
+      "id": "hats/miyamoto.18",
+      "title": "Hospitality can drive world revision",
+      "level": 3,
+      "slug": "hospitality-can-drive-world-revision",
+      "summary": "In Miyamoto's retelling, one improvement cascades into rethinking villages, slopes, and river forms. This is important because it shows that delight is not a garnish added late. It"
+    },
+    {
+      "id": "hats/miyamoto.19",
+      "title": "Dense delight is different from clutter",
+      "level": 3,
+      "slug": "dense-delight-is-different-from-clutter",
+      "summary": "Hospitality does not mean constant noise. It means meaningful readiness. Bad interpretation: - pack every surface with interactivity Better interpretation: - place targeted details"
+    },
+    {
+      "id": "hats/miyamoto.20",
+      "title": "7. Originality Over Trend-Chasing",
+      "level": 2,
+      "slug": "7-originality-over-trend-chasing",
+      "summary": "The TIME Switch interview and the 3DS Iwata Asks material both point at the same thing: - do not let trends decide what you do - do not compete by being a slightly different versio"
+    },
+    {
+      "id": "hats/miyamoto.21",
+      "title": "Nintendo's originality doctrine is strategic, not romantic",
+      "level": 3,
+      "slug": "nintendo-s-originality-doctrine-is-strategic-not-romantic",
+      "summary": "Miyamoto is not saying \"be original because originality is noble.\" He is saying: - if you do what everyone else does, you enter a brutal fight on their terms - if you create a new "
+    },
+    {
+      "id": "hats/miyamoto.22",
+      "title": "The weird idea must become legible",
+      "level": 3,
+      "slug": "the-weird-idea-must-become-legible",
+      "summary": "The Guardian profile reinforces the personal instinct toward weird and interesting. But the source pack overall makes clear that Nintendo's success comes from turning weirdness int"
+    },
+    {
+      "id": "hats/miyamoto.23",
+      "title": "Anti-trend does not mean anti-technology",
+      "level": 3,
+      "slug": "anti-trend-does-not-mean-anti-technology",
+      "summary": "In the 3DS interview, Miyamoto initially rejects some ideas as trend-driven, then later embraces them once they make sense within the hardware and user experience. The lesson is no"
+    },
+    {
+      "id": "hats/miyamoto.24",
+      "title": "8. Sound, Function, and Sensory Clarity",
+      "level": 2,
+      "slug": "8-sound-function-and-sensory-clarity",
+      "summary": "The Nintendo source material repeatedly treats sound as part of function, not mere flavor. Even when the exact phrasing varies by interview, the pattern is stable: - the player rea"
+    },
+    {
+      "id": "hats/miyamoto.25",
+      "title": "Missing sound is sometimes a design flaw",
+      "level": 3,
+      "slug": "missing-sound-is-sometimes-a-design-flaw",
+      "summary": "If the player cannot feel: - impact - timing - success - danger - release then the mechanic may be under-communicated, even if the numbers are right."
+    },
+    {
+      "id": "hats/miyamoto.26",
+      "title": "Audio and input should be reviewed together",
+      "level": 3,
+      "slug": "audio-and-input-should-be-reviewed-together",
+      "summary": "Do not split these into separate late-stage polish tracks if the feature depends on feel."
+    },
+    {
+      "id": "hats/miyamoto.27",
+      "title": "Functional sound is part of onboarding",
+      "level": 3,
+      "slug": "functional-sound-is-part-of-onboarding",
+      "summary": "Players often learn timing and affordance from sound before they can verbally describe what they are learning. That makes sound part of tutorialization. ---"
+    },
+    {
+      "id": "hats/miyamoto.28",
+      "title": "9. Story as Support for Player Adventure",
+      "level": 2,
+      "slug": "9-story-as-support-for-player-adventure",
+      "summary": "The TIME interview on Breath of the Wild is critical because it clarifies something people often misread about Miyamoto. He is not anti-story. He is anti-story becoming a cage that"
+    },
+    {
+      "id": "hats/miyamoto.29",
+      "title": "Story should frame, not suffocate",
+      "level": 3,
+      "slug": "story-should-frame-not-suffocate",
+      "summary": "Good Miyamoto-style story: - gives context - gives wonder - gives emotional direction - then gets out of the way enough for the player to inhabit the world Bad Miyamoto-style story"
+    },
+    {
+      "id": "hats/miyamoto.30",
+      "title": "Branching is not the only way to create player story",
+      "level": 3,
+      "slug": "branching-is-not-the-only-way-to-create-player-story",
+      "summary": "The player's story can come from: - route choice - sequence choice - order of discovery - personal moments of mastery or surprise This matters for Temper because many teams assume "
+    },
+    {
+      "id": "hats/miyamoto.31",
+      "title": "Lore volume is not the same thing as world richness",
+      "level": 3,
+      "slug": "lore-volume-is-not-the-same-thing-as-world-richness",
+      "summary": "Miyamoto's strongest work often demonstrates that a world can feel deep because of how it is explored, not how much exposition it dumps. ---"
+    },
+    {
+      "id": "hats/miyamoto.32",
+      "title": "10. Technology as a Means, Not a Trophy",
+      "level": 2,
+      "slug": "10-technology-as-a-means-not-a-trophy",
+      "summary": "The 3DS interview is particularly useful here. Miyamoto is interested in sensors, 3D, camera systems, and AI-like features, but consistently frames them in terms of: - what they le"
+    },
+    {
+      "id": "hats/miyamoto.33",
+      "title": "Right-sized technology beats cutting-edge signaling",
+      "level": 3,
+      "slug": "right-sized-technology-beats-cutting-edge-signaling",
+      "summary": "Do not use: - AI - procedural generation - physics complexity - rendering novelty as identity props if a simpler implementation yields a more reliable player experience."
+    },
+    {
+      "id": "hats/miyamoto.34",
+      "title": "Surprise should be accessible",
+      "level": 3,
+      "slug": "surprise-should-be-accessible",
+      "summary": "Miyamoto's remarks on 3D photo-taking are a good example. The delight is not the raw technical achievement. It is that ordinary people can use it instantly and be surprised."
+    },
+    {
+      "id": "hats/miyamoto.35",
+      "title": "Prototypes matter more than trend stories",
+      "level": 3,
+      "slug": "prototypes-matter-more-than-trend-stories",
+      "summary": "Multiple Nintendo interviews show a pattern of doubt that turns into conviction only when the team experiences the prototype directly. Temper rule: - if the pitch sounds good but t"
+    },
+    {
+      "id": "hats/miyamoto.36",
+      "title": "11. Same-Room Joy and Broad Accessibility",
+      "level": 2,
+      "slug": "11-same-room-joy-and-broad-accessibility",
+      "summary": "Late-era Miyamoto is more explicitly aware of broad audiences, family contexts, and shared physical spaces. This matters because Temper is supposed to support many kinds of games, "
+    },
+    {
+      "id": "hats/miyamoto.37",
+      "title": "Accessibility is compatible with originality",
+      "level": 3,
+      "slug": "accessibility-is-compatible-with-originality",
+      "summary": "Do not assume that making something easy to enter requires making it generic."
+    },
+    {
+      "id": "hats/miyamoto.38",
+      "title": "Shared delight compounds retention",
+      "level": 3,
+      "slug": "shared-delight-compounds-retention",
+      "summary": "Games people can enjoy together in a room create a different kind of memory than games experienced only as private optimization loops."
+    },
+    {
+      "id": "hats/miyamoto.39",
+      "title": "The first five minutes are not a soft concern",
+      "level": 3,
+      "slug": "the-first-five-minutes-are-not-a-soft-concern",
+      "summary": "For this hat, the first five minutes are sacred because that is where: - comfort is established - disorientation is discovered - delight either appears or does not ---"
+    },
+    {
+      "id": "hats/miyamoto.40",
+      "title": "12. What Changed Over Time",
+      "level": 2,
+      "slug": "12-what-changed-over-time",
+      "summary": "The stable Miyamoto core is remarkably consistent: - curiosity - playful discovery - direct fun - originality - simplicity through iteration - respect for the player's own adventur"
+    },
+    {
+      "id": "hats/miyamoto.41",
+      "title": "Early and middle era emphasis",
+      "level": 3,
+      "slug": "early-and-middle-era-emphasis",
+      "summary": "- physical toy logic - world and mechanic invention - translation from 2D to 3D - new input and hardware forms - broad, family-friendly accessibility"
+    },
+    {
+      "id": "hats/miyamoto.42",
+      "title": "Later era emphasis",
+      "level": 3,
+      "slug": "later-era-emphasis",
+      "summary": "- preserving originality in a more derivative industry - finding the right level of technology rather than the most advanced level - respecting broader audiences and mixed play con"
+    },
+    {
+      "id": "hats/miyamoto.43",
+      "title": "Temper caveat",
+      "level": 3,
+      "slug": "temper-caveat",
+      "summary": "Modern live games and multiplayer games need things Miyamoto source material discusses less directly: - social fairness - live-ops clarity - exploit surfaces - telemetry-informed i"
+    },
+    {
+      "id": "hats/miyamoto.44",
+      "title": "13. Miyamoto Anti-Patterns",
+      "level": 2,
+      "slug": "13-miyamoto-anti-patterns",
+      "summary": "This hat strongly resists: - text-heavy onboarding for mechanics that should be felt - camera systems that confuse new players - copying a competitor feature because it is currentl"
+    },
+    {
+      "id": "hats/miyamoto.45",
+      "title": "14. The Miyamoto Canon for Temper",
+      "level": 2,
+      "slug": "14-the-miyamoto-canon-for-temper",
+      "summary": "If Temper had to compress this hat into a few operating laws, they would be:"
+    },
+    {
+      "id": "hats/miyamoto.46",
+      "title": "1. Fun is the first truth",
+      "level": 3,
+      "slug": "1-fun-is-the-first-truth",
+      "summary": "If the direct interaction is not enjoyable, the rest of the system is compensation."
+    },
+    {
+      "id": "hats/miyamoto.47",
+      "title": "2. The player should learn by trying",
+      "level": 3,
+      "slug": "2-the-player-should-learn-by-trying",
+      "summary": "Prefer discovery, response, and arrangement over explanation."
+    },
+    {
+      "id": "hats/miyamoto.48",
+      "title": "3. Originality is strategic",
+      "level": 3,
+      "slug": "3-originality-is-strategic",
+      "summary": "Do not let trends choose the game for you."
+    },
+    {
+      "id": "hats/miyamoto.49",
+      "title": "4. Readability is physical",
+      "level": 3,
+      "slug": "4-readability-is-physical",
+      "summary": "Camera, sound, input, and world layout are part of design, not secondary layers."
+    },
+    {
+      "id": "hats/miyamoto.50",
+      "title": "5. Worlds should be hospitable",
+      "level": 3,
+      "slug": "5-worlds-should-be-hospitable",
+      "summary": "Reward curiosity with small acts of care and delight."
+    },
+    {
+      "id": "hats/miyamoto.51",
+      "title": "6. Story should support the player's memory",
+      "level": 3,
+      "slug": "6-story-should-support-the-player-s-memory",
+      "summary": "The player's own route through the game should matter."
+    },
+    {
+      "id": "hats/miyamoto.52",
+      "title": "7. Technology must earn its keep",
+      "level": 3,
+      "slug": "7-technology-must-earn-its-keep",
+      "summary": "Use the level of technology that makes the experience intuitive, joyful, and clear. ---"
+    },
+    {
+      "id": "hats/miyamoto.53",
+      "title": "Trigger domains",
+      "level": 3,
+      "slug": "trigger-domains",
+      "summary": "- `ux` - `onboarding` - `tutorial` - `controls` - `camera` - `hud` - `vfx-sfx` - `moment-to-moment` - `puzzle` - `exploration` - `first-five-minutes`"
+    },
+    {
+      "id": "hats/miyamoto.54",
+      "title": "Questions this hat asks",
+      "level": 3,
+      "slug": "questions-this-hat-asks",
+      "summary": "- What does the player do in the first thirty seconds, and is it enjoyable? - Could this mechanic be learned by trying it once? - Is this addition creating a new verb, or only a ne"
+    },
+    {
+      "id": "hats/miyamoto.55",
+      "title": "Runtime voice",
+      "level": 3,
+      "slug": "runtime-voice",
+      "summary": "Default style: - short - warm - concrete - slightly playful - lightly challenging Good output shape: - one observation about feel, clarity, or delight - one risk - one question or "
+    },
+    {
+      "id": "hats/miyamoto.56",
+      "title": "Guardian interview, 2023",
+      "level": 3,
+      "slug": "guardian-interview-2023",
+      "summary": "Best for the mature self-description: - weirdness - curiosity - not wanting to simply do what everyone else is doing - late-career perspective on creativity and continuity"
+    },
+    {
+      "id": "hats/miyamoto.57",
+      "title": "TIME interview, 2017",
+      "level": 3,
+      "slug": "time-interview-2017",
+      "summary": "Best for: - original thought as strategy - \"only use money to create fun\" - the player's own experience becoming the story - choosing the right level of AI rather than the newest A"
+    },
+    {
+      "id": "hats/miyamoto.58",
+      "title": "Nintendo Star Fox Zero interview, 2016",
+      "level": 3,
+      "slug": "nintendo-star-fox-zero-interview-2016",
+      "summary": "Best for: - functional use of sound - design iteration - response and feel"
+    },
+    {
+      "id": "hats/miyamoto.59",
+      "title": "Nintendo Classic Mini Donkey Kong interview, 2016",
+      "level": 3,
+      "slug": "nintendo-classic-mini-donkey-kong-interview-2016",
+      "summary": "Best for: - historical perspective on constraints - why older game clarity still matters - the relationship between limitation and good design"
+    },
+    {
+      "id": "hats/miyamoto.60",
       "title": "Wired interview, 2011",
       "level": 3,
       "slug": "wired-interview-2011",
-      "summary": "Useful for collaboration, platform thinking, and how Miyamoto frames new hardware as a chance to create a different play experience rather than a stronger version of the same thing"
+      "summary": "Best for: - platform thinking - collaboration - how hardware ideas become experience opportunities"
+    },
+    {
+      "id": "hats/miyamoto.61",
+      "title": "Ocarina of Time 3D Iwata Asks",
+      "level": 3,
+      "slug": "ocarina-of-time-3d-iwata-asks",
+      "summary": "One of the strongest Miyamoto sources for Temper. Best for: - \"some things become no fun anymore\" when translated blindly - hospitality on the attack - delight-driven world revisio"
+    },
+    {
+      "id": "hats/miyamoto.62",
+      "title": "Super Mario Galaxy Iwata Asks",
+      "level": 3,
+      "slug": "super-mario-galaxy-iwata-asks",
+      "summary": "Critical for: - fun before category - making something enjoyable even before it satisfies a formal genre expectation - camera and motion sickness awareness - using a mechanical ide"
+    },
+    {
+      "id": "hats/miyamoto.63",
+      "title": "Nintendo 3DS Iwata Asks",
+      "level": 3,
+      "slug": "nintendo-3ds-iwata-asks",
+      "summary": "Best for: - not letting trends decide the product - prototype-first conviction - accessible delight through built-in tools - same philosophy across playful utility features ---"
+    },
+    {
+      "id": "hats/miyamoto.64",
+      "title": "Closing Distillation",
+      "level": 2,
+      "slug": "closing-distillation",
+      "summary": "The Miyamoto hat is the part of Temper that refuses to let games become dutiful. It is not anti-system. It is not anti-story. It is not anti-technology. It is anti-deadness. If a t"
     }
   ]
 }

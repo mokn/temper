@@ -49,7 +49,9 @@ export function extractSections(markdown) {
     });
   }
 
-  return sections.filter((section) => section.content.length > 0);
+  return sections.filter(
+    (section) => section.content.length > 0 && section.slug !== "table-of-contents"
+  );
 }
 
 export function extractFrontmatter(markdown) {

@@ -55,7 +55,7 @@ What still needs tightening for Temper:
 Status:
 
 - source base identified
-- canonical doc seeded at `canon/hats/miyamoto.md`
+- canonical doc expanded at `canon/hats/miyamoto.md`
 
 Recommended source pack:
 
@@ -91,7 +91,7 @@ Open research gaps:
 Status:
 
 - source base identified
-- canonical doc seeded at `canon/hats/meier.md`
+- canonical doc expanded at `canon/hats/meier.md`
 
 Recommended source pack:
 
@@ -124,7 +124,7 @@ Open research gaps:
 Status:
 
 - source base identified
-- canonical doc seeded at `canon/hats/wright.md`
+- canonical doc expanded at `canon/hats/wright.md`
 
 Recommended source pack:
 
@@ -156,7 +156,7 @@ Open research gaps:
 Status:
 
 - source base partially identified
-- canonical doc seeded at `canon/hats/carmack.md`
+- canonical doc expanded at `canon/hats/carmack.md`
 
 Recommended source pack:
 
@@ -193,5 +193,5 @@ Use this source map as the research queue and promote each doc only when it has 
 Current status:
 
 - Kaplan is still the deepest imported hat canon.
-- Miyamoto, Meier, Wright, and Carmack are now seeded and retrieval-ready.
-- The next research pass should deepen each seeded hat toward Kaplan depth rather than invent new hats.
+- Miyamoto, Meier, Wright, and Carmack are now expanded and retrieval-ready.
+- The next research pass should focus on source enrichment, quote validation, and genre-specific overlays rather than basic hat scaffolding.

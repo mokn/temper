@@ -21,7 +21,7 @@
       "local-import-ud-jeff-kaplan-design-philosophy"
     ]
   },
-  "sectionCount": 82,
+  "sectionCount": 81,
   "sections": [
     {
       "id": "hats/kaplan.01",
@@ -32,566 +32,559 @@
     },
     {
       "id": "hats/kaplan.02",
-      "title": "Table of Contents",
-      "level": 2,
-      "slug": "table-of-contents",
-      "summary": "1. [Origin Story: From EverQuest Ranter to Lead Designer](#1-origin-story) 2. [WoW Era: Quest Design Principles](#2-wow-era-quest-design) 3. [WoW Era: World & Raid Design](#3-wow-e"
-    },
-    {
-      "id": "hats/kaplan.03",
       "title": "The EverQuest Foundation",
       "level": 3,
       "slug": "the-everquest-foundation",
       "summary": "Jeff Kaplan was \"Tigole\" -- guild leader of Legacy of Steel on The Nameless server in EverQuest. His guild had multiple world-first raid kills. His notorious rants on Sony Online E"
     },
     {
-      "id": "hats/kaplan.04",
+      "id": "hats/kaplan.03",
       "title": "Getting Hired at Blizzard",
       "level": 3,
       "slug": "getting-hired-at-blizzard",
       "summary": "Kaplan's guildmate in EverQuest was Rob Pardo, then lead designer on Warcraft III. > \"I got started in the industry almost by accident; I fell into it. I always thought > you had t"
     },
     {
-      "id": "hats/kaplan.05",
+      "id": "hats/kaplan.04",
       "title": "The Writing Career That Wasn't",
       "level": 3,
       "slug": "the-writing-career-that-wasn-t",
       "summary": "Before games, Kaplan tried to be a fiction writer. He received 170 rejection letters. > \"The universe was telling me it was time to give up as a writer.\" > \"I had structured my lif"
     },
     {
-      "id": "hats/kaplan.06",
+      "id": "hats/kaplan.05",
       "title": "GDC 2009: \"The Cruise Director of Azeroth\"",
       "level": 3,
       "slug": "gdc-2009-the-cruise-director-of-azeroth",
       "summary": "Kaplan's landmark GDC talk laid out his philosophy of \"directed gameplay\" and systematically catalogued WoW's quest design failures. **Core concept -- Directed Gameplay:** > \"A phr"
     },
     {
-      "id": "hats/kaplan.07",
+      "id": "hats/kaplan.06",
       "title": "The Nine Worst Quest Design Problems",
       "level": 3,
       "slug": "the-nine-worst-quest-design-problems",
       "summary": "**1. The Christmas Tree Effect** Players arrive at quest hubs where \"your minimap is lit up like a Christmas tree with quests.\" Designers lose control over guiding players through "
     },
     {
-      "id": "hats/kaplan.08",
+      "id": "hats/kaplan.07",
       "title": "Solutions Implemented in Wrath of the Lich King",
       "level": 3,
       "slug": "solutions-implemented-in-wrath-of-the-lich-king",
       "summary": "**Progressive Drop Rate System:** Rather than flat percentage chances creating frustrating streaks, WotLK implemented progressive scaling -- first kill 16% drop chance, second 32%,"
     },
     {
-      "id": "hats/kaplan.09",
+      "id": "hats/kaplan.08",
       "title": "Quest Design Evolution (EQ -> WoW)",
       "level": 3,
       "slug": "quest-design-evolution-eq-wow",
       "summary": "> \"I came from a very EverQuest mindset which was, you'll have a few quests which will > take you to an area, then once you're in that area, you'll be excited there are > creatures"
     },
     {
-      "id": "hats/kaplan.10",
+      "id": "hats/kaplan.09",
       "title": "Zone & World Design",
       "level": 3,
       "slug": "zone-world-design",
       "summary": "Kaplan was the \"medium\" between Chris Metzen's creative vision and the programmer/artist level design team. He translated lore into playable spaces. **On seamless world design:** >"
     },
     {
-      "id": "hats/kaplan.11",
+      "id": "hats/kaplan.10",
       "title": "The Horde/Alliance Split",
       "level": 3,
       "slug": "the-horde-alliance-split",
       "summary": "One of WoW's most consequential design decisions was nearly not made. > \"The Horde/Alliance decision was really controversial. Because in EverQuest it was > mixed... Rob and I came"
     },
     {
-      "id": "hats/kaplan.12",
+      "id": "hats/kaplan.11",
       "title": "Raid & Dungeon Design",
       "level": 3,
       "slug": "raid-dungeon-design",
       "summary": "**On punishing vs. hardcore:** > \"I think if your game is too punishing, and I like to separate the words 'punishing' > from 'hardcore,' I think it goes against the nature of tryin"
     },
     {
-      "id": "hats/kaplan.13",
+      "id": "hats/kaplan.12",
       "title": "WoW Accessibility Evolution",
       "level": 3,
       "slug": "wow-accessibility-evolution",
       "summary": "The biggest design philosophy change between Burning Crusade and Wrath of the Lich King: > \"An eye toward accessibility and trying to get more players to experience more of > the c"
     },
     {
-      "id": "hats/kaplan.14",
+      "id": "hats/kaplan.13",
       "title": "4. Blizzard Core Design Mantras",
       "level": 2,
       "slug": "4-blizzard-core-design-mantras",
       "summary": "These were company-wide philosophies that Kaplan worked within. Articulated primarily by Rob Pardo in GDC/AGC talks, but Kaplan embodied them in practice:"
     },
     {
-      "id": "hats/kaplan.15",
+      "id": "hats/kaplan.14",
       "title": "\"Concentrated Coolness\"",
       "level": 3,
       "slug": "concentrated-coolness",
       "summary": "> \"Rather than making as much variety and many different things as you can, make sure > the things you do make are as cool as possible.\" Applied to WoW: 9 distinct classes rather t"
     },
     {
-      "id": "hats/kaplan.16",
+      "id": "hats/kaplan.15",
       "title": "\"Easy to Learn, Difficult to Master\"",
       "level": 3,
       "slug": "easy-to-learn-difficult-to-master",
       "summary": "> \"The first thing we always do is design the depth first and the accessibility later.\" The approach ensures engaging core mechanics exist before simplifying the interface. Appeals"
     },
     {
-      "id": "hats/kaplan.17",
+      "id": "hats/kaplan.16",
       "title": "\"Killing with a Purpose\"",
       "level": 3,
       "slug": "killing-with-a-purpose",
       "summary": "Quest design philosophy providing narrative reasons for combat beyond XP. Instead of grinding: \"You're always moving around the world, seeing a new place.\""
     },
     {
-      "id": "hats/kaplan.18",
+      "id": "hats/kaplan.17",
       "title": "\"Purity in Purpose\"",
       "level": 3,
       "slug": "purity-in-purpose",
       "summary": "Maintaining design integrity by avoiding compromises. Blizzard refused creating solo dungeons despite requests, preserving group content's prestige rather than diluting both experi"
     },
     {
-      "id": "hats/kaplan.19",
+      "id": "hats/kaplan.18",
       "title": "Solo-ability as Baseline",
       "level": 3,
       "slug": "solo-ability-as-baseline",
       "summary": "A core goal for WoW: the game would be solo-able to level 60, making it available to everyone so players could experience it like a single-player game if they wanted. ---"
     },
     {
-      "id": "hats/kaplan.20",
+      "id": "hats/kaplan.19",
       "title": "What Titan Was",
       "level": 3,
       "slug": "what-titan-was",
       "summary": "> \"Project Titan was a multicomplex game where you played a normal life during daylight: > day job, build, housing, recreation, driving, etc., and at night you would do spy > agent"
     },
     {
-      "id": "hats/kaplan.21",
+      "id": "hats/kaplan.20",
       "title": "Why It Failed",
       "level": 3,
       "slug": "why-it-failed",
       "summary": "**On leadership responsibility:** > \"It was an engineering failure, an art failure, and a design failure.\" > \"The hubris of Blizzard.\" **On the team being paralyzed:** > \"Out of 40"
     },
     {
-      "id": "hats/kaplan.22",
+      "id": "hats/kaplan.21",
       "title": "The Critical Lesson: Team Size & Validation",
       "level": 3,
       "slug": "the-critical-lesson-team-size-validation",
       "summary": "**The wrong approach (what Titan did):** Hired too many people early in development. **The right approach:** > \"The right way to incubate a video game is to hire a small team and t"
     },
     {
-      "id": "hats/kaplan.23",
+      "id": "hats/kaplan.22",
       "title": "The Six-Week Pitch",
       "level": 3,
       "slug": "the-six-week-pitch",
       "summary": "After Titan's cancellation, the team had six weeks to prove themselves. > \"It was supposed to be the greatest time ever... We were probably the most > demoralised we'd ever been in"
     },
     {
-      "id": "hats/kaplan.24",
+      "id": "hats/kaplan.23",
       "title": "The Core Insight",
       "level": 3,
       "slug": "the-core-insight",
       "summary": "Kaplan wanted a game with 50 classes, each very focused -- the opposite of Titan's muddled design. > \"We really chased our hearts more than anything else.\" > \"We were looking at wh"
     },
     {
-      "id": "hats/kaplan.25",
+      "id": "hats/kaplan.24",
       "title": "The FPS Origin",
       "level": 3,
       "slug": "the-fps-origin",
       "summary": "> \"Shooters were really my first love when it comes to video games. I think of Doom, > Duke Nukem, Quake, Wolf 3D; they were really some of my biggest inspirations.\" > \"One thing t"
     },
     {
-      "id": "hats/kaplan.26",
+      "id": "hats/kaplan.25",
       "title": "Pitching to Bobby Kotick",
       "level": 3,
       "slug": "pitching-to-bobby-kotick",
       "summary": "While showing the hero lineup to Activision CEO Bobby Kotick: > \"I'm thinking 'Oh no, what was back three slides?'\" -- when Kotick asked him to go > back (Kotick was actually inter"
     },
     {
-      "id": "hats/kaplan.27",
+      "id": "hats/kaplan.26",
       "title": "Overwatch as Shared Passion",
       "level": 3,
       "slug": "overwatch-as-shared-passion",
       "summary": "> \"It's unique in the fact that it's a collaborative passion project that's shared by > the entire team. I've never been on a team that shared such a unified vision.\" > \"Closing a "
     },
     {
-      "id": "hats/kaplan.28",
+      "id": "hats/kaplan.27",
       "title": "\"A Future Worth Fighting For\"",
       "level": 3,
       "slug": "a-future-worth-fighting-for",
       "summary": "The team's guiding phrase, repurposed from Titan. A deliberate rejection of gaming's dystopia obsession. > \"Having a bright welcoming world really attracts a broader audience.\" > \""
     },
     {
-      "id": "hats/kaplan.29",
+      "id": "hats/kaplan.28",
       "title": "Inclusivity as Core Design",
       "level": 3,
       "slug": "inclusivity-as-core-design",
       "summary": "> \"Overwatch at its core is about inclusivity and the vast diversity in humanity.\" > \"A lot of us have different fantasies of who we want to be. And when you have such a > limited "
     },
     {
-      "id": "hats/kaplan.30",
+      "id": "hats/kaplan.29",
       "title": "Characters, Not Classes",
       "level": 3,
       "slug": "characters-not-classes",
       "summary": "> \"Not just giving people classes, but really developing heroes. Not only in terms of > what their gameplay abilities were, but like that Tracer was a test pilot in the RAF.\" > \"Tr"
     },
     {
-      "id": "hats/kaplan.31",
+      "id": "hats/kaplan.30",
       "title": "Accessibility Through Invitation",
       "level": 3,
       "slug": "accessibility-through-invitation",
       "summary": "> \"We try to then say: We know how to create this really fun hardcore loop in a game. > But how do you open the door and make everyone feel welcome?\" > \"You get rid of punishing el"
     },
     {
-      "id": "hats/kaplan.32",
+      "id": "hats/kaplan.31",
       "title": "Hero Swapping as Problem-Solving (The Design Intent That Failed)",
       "level": 3,
       "slug": "hero-swapping-as-problem-solving-the-design-intent-that-failed",
       "summary": "> \"We believed that with hero swapping, people would be more willing to adapt to 'solve > the problem'. We're fighting some amount of human psychology and game design, I know.\" > \""
     },
     {
-      "id": "hats/kaplan.33",
+      "id": "hats/kaplan.32",
       "title": "The Offense/Defense Merge Regret",
       "level": 3,
       "slug": "the-offense-defense-merge-regret",
       "summary": "> \"Sometimes I wish we had kept offense and defense heroes rather than merging them > into damage, and only allowing offense heroes to be played on attack, and defense > to be play"
     },
     {
-      "id": "hats/kaplan.34",
+      "id": "hats/kaplan.33",
       "title": "Progression System Iteration",
       "level": 3,
       "slug": "progression-system-iteration",
       "summary": "The team went through three progression system designs: 1. **Traditional/expected system** -- \"It was just too much to process... It just became way overwhelming.\" 2. **Hero-specif"
     },
     {
-      "id": "hats/kaplan.35",
+      "id": "hats/kaplan.34",
       "title": "The Perception Principle",
       "level": 3,
       "slug": "the-perception-principle",
       "summary": "> \"The perception of balance is more powerful than balance itself.\" > \"All heroes are affected by changes to other heroes. Even if nothing changed, players > would adapt new strate"
     },
     {
-      "id": "hats/kaplan.36",
+      "id": "hats/kaplan.35",
       "title": "Data vs. Feeling",
       "level": 3,
       "slug": "data-vs-feeling",
       "summary": "> \"Statistically, the things that are most unbalanced aren't what you think they are. > Symmetra and Torbjorn's win rates are not balanced. They are too good. But this is > why we "
     },
     {
-      "id": "hats/kaplan.37",
+      "id": "hats/kaplan.36",
       "title": "Hold Your Ground (The D.Va Case Study)",
       "level": 3,
       "slug": "hold-your-ground-the-d-va-case-study",
       "summary": "> \"A few months ago we nerfed D.Va and we faced the ire of many very upset players who > thought we 'ruined' the hero and she would never be played again.\" > \"We held our ground be"
     },
     {
-      "id": "hats/kaplan.38",
+      "id": "hats/kaplan.37",
       "title": "Aggressive Meta Targeting",
       "level": 3,
       "slug": "aggressive-meta-targeting",
       "summary": "> \"Balance more frequently, more aggressively, and be less concerned with trying > something and maybe pulling it back later.\" > \"Deliberately target the meta and move you off the "
     },
     {
-      "id": "hats/kaplan.39",
+      "id": "hats/kaplan.38",
       "title": "Iterative Confidence",
       "level": 3,
       "slug": "iterative-confidence",
       "summary": "> \"We've been a little precious with our balancing... players want newness thrust upon > them, and we can give them that.\" > \"In year four we feel like there's a maturity to the au"
     },
     {
-      "id": "hats/kaplan.40",
+      "id": "hats/kaplan.39",
       "title": "Meta Innovation",
       "level": 3,
       "slug": "meta-innovation",
       "summary": "> \"It's always fun to study how people innovate to 'break' a meta.\""
     },
     {
-      "id": "hats/kaplan.41",
+      "id": "hats/kaplan.40",
       "title": "Matchmaking Reality",
       "level": 3,
       "slug": "matchmaking-reality",
       "summary": "> \"The matchmaking systems are some of the most complex design engineering tasks you're > ever going to tackle, and they're thankless. There's gotta be winners and there's > gotta "
     },
     {
-      "id": "hats/kaplan.42",
+      "id": "hats/kaplan.41",
       "title": "The Developer Update Model",
       "level": 3,
       "slug": "the-developer-update-model",
       "summary": "Kaplan made himself the public face of Overwatch, regularly posting to forums and creating developer update videos. He became a celebrity within the community. His priority: explai"
     },
     {
-      "id": "hats/kaplan.43",
+      "id": "hats/kaplan.42",
       "title": "On Being Held to Standards",
       "level": 3,
       "slug": "on-being-held-to-standards",
       "summary": "> \"I love being held to high expectations. And part of the thrill of what we do is > trying to meet them. I know we won't always meet them.\" > \"All of the nitpicking comes from a p"
     },
     {
-      "id": "hats/kaplan.44",
+      "id": "hats/kaplan.43",
       "title": "The Toxicity Problem",
       "level": 3,
       "slug": "the-toxicity-problem",
       "summary": "> \"The community needs to take a deep look inwards, and consider: I'm playing this > game because I want to have fun, and the other people, the other team, they want to > have fun "
     },
     {
-      "id": "hats/kaplan.45",
+      "id": "hats/kaplan.44",
       "title": "On Dehumanization in Online Spaces",
       "level": 3,
       "slug": "on-dehumanization-in-online-spaces",
       "summary": "> \"People are just horrible to each other... It's because we've dehumanised the other > person and there's anonymity to it.\""
     },
     {
-      "id": "hats/kaplan.46",
+      "id": "hats/kaplan.45",
       "title": "The Developer-Community Paradox",
       "level": 3,
       "slug": "the-developer-community-paradox",
       "summary": "> \"But the second you go, 'Let's try to be a little bit cooler about what we do with > the community,' we actually get destroyed by that very community.\""
     },
     {
-      "id": "hats/kaplan.47",
+      "id": "hats/kaplan.46",
       "title": "On Critics Who Don't Play",
       "level": 3,
       "slug": "on-critics-who-don-t-play",
       "summary": "Post-Blizzard (2026), on gamers who trash games they've never played: > \"Shut the fuck up. No one cares. We don't need to hear that you weren't into it.\" He called this behavior \"n"
     },
     {
-      "id": "hats/kaplan.48",
+      "id": "hats/kaplan.47",
       "title": "Team vs. Individual Focus",
       "level": 3,
       "slug": "team-vs-individual-focus",
       "summary": "> \"One of my hindsight regrets about Overwatch, and I think we did the right thing in > the moment, I wouldn't go back and redo it, but if I was making a hero shooter from > scratc"
     },
     {
-      "id": "hats/kaplan.49",
+      "id": "hats/kaplan.48",
       "title": "Overwatch 2",
       "level": 3,
       "slug": "overwatch-2",
       "summary": "> \"Overwatch 2 is out now, but it's not the Overwatch 2 we planned and announced.\" > \"I believed in Overwatch 2. I think we could have made a great... I have a lot of > hindsight o"
     },
     {
-      "id": "hats/kaplan.50",
+      "id": "hats/kaplan.49",
       "title": "Role Queue Solving a Social Problem",
       "level": 3,
       "slug": "role-queue-solving-a-social-problem",
       "summary": "> \"Role queue automatically did that... we eliminated that conversation ever happening > again in Overwatch.\" On how maturity changes design space: > \"Now Overwatch is four years o"
     },
     {
-      "id": "hats/kaplan.51",
+      "id": "hats/kaplan.50",
       "title": "The Breaking Point",
       "level": 3,
       "slug": "the-breaking-point",
       "summary": "The CFO called Kaplan in and set revenue targets for Overwatch with a threat: > \"Overwatch has to make [bleep] in 2020, and then every year after that it needs a > recurring revenu"
     },
     {
-      "id": "hats/kaplan.52",
+      "id": "hats/kaplan.51",
       "title": "The Overwatch League Disaster",
       "level": 3,
       "slug": "the-overwatch-league-disaster",
       "summary": "> \"Overwatch League was the best intention -- my parents always say the road to Hell is > paved with good intentions, that was the Overwatch League -- and it ended up being > an al"
     },
     {
-      "id": "hats/kaplan.53",
+      "id": "hats/kaplan.52",
       "title": "On Recovery",
       "level": 3,
       "slug": "on-recovery",
       "summary": "> \"Separating from Blizzard was one of the most painful things.\" > He didn't realize \"how broken\" he was \"until recently, like the mourning, grieving > I had gone through.\""
     },
     {
-      "id": "hats/kaplan.54",
+      "id": "hats/kaplan.53",
       "title": "On Developers and Value",
       "level": 3,
       "slug": "on-developers-and-value",
       "summary": "> \"I wish game developers would know their value more and not hand over the golden > goose to people who don't deserve it.\" ---"
     },
     {
-      "id": "hats/kaplan.55",
+      "id": "hats/kaplan.54",
       "title": "New Studio: Kintsugiyama (34 developers)",
       "level": 3,
       "slug": "new-studio-kintsugiyama-34-developers",
       "summary": "> \"I don't want to crib Blizzard and make a pseudo-Blizzard game.\""
     },
     {
-      "id": "hats/kaplan.56",
+      "id": "hats/kaplan.55",
       "title": "Fast-Forwarding to Fun",
       "level": 3,
       "slug": "fast-forwarding-to-fun",
       "summary": "> \"What makes this game really unique and special in my opinion is that we sort of > fast-forward you to the cool stuff as quickly as possible.\" > Not \"starving the player out and "
     },
     {
-      "id": "hats/kaplan.57",
+      "id": "hats/kaplan.56",
       "title": "Building Philosophy",
       "level": 3,
       "slug": "building-philosophy",
       "summary": "Building is \"more built like Valheim and Subnautica, where the building is more focused on utility, progression, aesthetics, and customization, rather than defending your stuff.\" >"
     },
     {
-      "id": "hats/kaplan.58",
+      "id": "hats/kaplan.57",
       "title": "World Resets as Excitement",
       "level": 3,
       "slug": "world-resets-as-excitement",
       "summary": "> \"I love the resetting worlds. It's a great mechanic and one I want to evolve and > work upon.\" > \"The trick is coming up with not 'why am I upset that the world resets?' But 'why"
     },
     {
-      "id": "hats/kaplan.59",
+      "id": "hats/kaplan.58",
       "title": "Art as Foundation",
       "level": 3,
       "slug": "art-as-foundation",
       "summary": "The game is heavily inspired by painter Albert Bierstadt's 19th-century California landscapes. The goal: creating a beautiful, working, interesting world that players will want to "
     },
     {
-      "id": "hats/kaplan.60",
+      "id": "hats/kaplan.59",
       "title": "14. On AI",
       "level": 2,
       "slug": "14-on-ai",
       "summary": "> \"No matter how good AI gets, it's never going to draw a picture like Arnold Tsang. > It's never going to tell a story like Chris Metzen. The human spirit is irreplaceable.\" > \"No"
     },
     {
-      "id": "hats/kaplan.61",
+      "id": "hats/kaplan.60",
       "title": "15. Meta-Principles: The Jeff Kaplan Design Canon",
       "level": 2,
       "slug": "15-meta-principles-the-jeff-kaplan-design-canon",
       "summary": "Distilled from 20+ years of quotes, talks, and decisions:"
     },
     {
-      "id": "hats/kaplan.62",
+      "id": "hats/kaplan.61",
       "title": "On Making Games",
       "level": 3,
       "slug": "on-making-games",
       "summary": "1. **Chase your heart.** \"We really chased our hearts more than anything else.\" 2. **Start small, prove the idea.** \"Hire a small team and try to get the idea across with whatever "
     },
     {
-      "id": "hats/kaplan.63",
+      "id": "hats/kaplan.62",
       "title": "On Players",
       "level": 3,
       "slug": "on-players",
       "summary": "6. **Don't write a book.** Players don't read. Actions > text. 511 characters max. 7. **Clarity of action.** The mystery should never be in what the player needs to do. 8. **Respec"
     },
     {
-      "id": "hats/kaplan.64",
+      "id": "hats/kaplan.63",
       "title": "On Teams & Culture",
       "level": 3,
       "slug": "on-teams-culture",
       "summary": "13. **Unified vision matters.** The best teams share a collaborative passion. 14. **Failure can bond.** Titan's failure created Overwatch's tight-knit team. 15. **Separating \"punis"
     },
     {
-      "id": "hats/kaplan.65",
+      "id": "hats/kaplan.64",
       "title": "On Community",
       "level": 3,
       "slug": "on-community",
       "summary": "17. **Transparency builds trust.** Explain the vision as clearly as possible. Address what you're NOT changing and why. 18. **Hold your ground.** When data says the balance is righ"
     },
     {
-      "id": "hats/kaplan.66",
+      "id": "hats/kaplan.65",
       "title": "On Business",
       "level": 3,
       "slug": "on-business",
       "summary": "21. **Don't hand the golden goose to people who don't deserve it.** Protect creative work from corporate exploitation. 22. **Revenue ultimatums kill games.** The CFO meeting was th"
     },
     {
-      "id": "hats/kaplan.67",
+      "id": "hats/kaplan.66",
       "title": "GDC / DICE Talks",
       "level": 3,
       "slug": "gdc-dice-talks",
       "summary": "- [GDC 2009: Learning From WoW's Quest Design Mistakes (Gamedeveloper.com)](https://www.gamedeveloper.com/pc/gdc-learning-from-i-world-of-warcraft-i-s-quest-design-mistakes) - [DIC"
     },
     {
-      "id": "hats/kaplan.68",
+      "id": "hats/kaplan.67",
       "title": "The Lex Fridman Podcast (March 2026)",
       "level": 3,
       "slug": "the-lex-fridman-podcast-march-2026",
       "summary": "- [Lex Fridman Podcast #493 -- Official Page](https://lexfridman.com/jeff-kaplan/) - [Podscripts Transcript](https://podscripts.co/podcasts/lex-fridman-podcast/493-jeff-kaplan-worl"
     },
     {
-      "id": "hats/kaplan.69",
+      "id": "hats/kaplan.68",
       "title": "On Leaving Blizzard",
       "level": 3,
       "slug": "on-leaving-blizzard",
       "summary": "- [Kotaku: Overwatch Director Explains Why He Left](https://kotaku.com/overwatch-jeff-kaplan-blizzard-pve-leaving-2000678084) - [VGC: The Biggest F-You Moment](https://www.videogam"
     },
     {
-      "id": "hats/kaplan.70",
+      "id": "hats/kaplan.69",
       "title": "On Balance Philosophy",
       "level": 3,
       "slug": "on-balance-philosophy",
       "summary": "- [BlizzardWatch: Perception of Balance](https://blizzardwatch.com/2017/06/27/perception-kaplan-overwatch-game-balance/) - [Inven Global: Perception More Powerful Than Balance Itse"
     },
     {
-      "id": "hats/kaplan.71",
+      "id": "hats/kaplan.70",
       "title": "On Regrets",
       "level": 3,
       "slug": "on-regrets",
       "summary": "- [PC Gamer: Regrets About Team Focus](https://www.pcgamer.com/games/fps/one-of-jeff-kaplans-regrets-about-overwatch-was-making-it-so-team-orientated-i-would-downplay-the-team-fact"
     },
     {
-      "id": "hats/kaplan.72",
+      "id": "hats/kaplan.71",
       "title": "Game Informer Career Series (2016)",
       "level": 3,
       "slug": "game-informer-career-series-2016",
       "summary": "- [Part 1: Landing a Job at Blizzard](https://gameinformer.com/b/features/archive/2016/03/30/from-guild-leader-to-game-director-pt-1-landing-a-job-at-blizzard.aspx) - [Part 2: WoW'"
     },
     {
-      "id": "hats/kaplan.73",
+      "id": "hats/kaplan.72",
       "title": "On Toxicity & Community",
       "level": 3,
       "slug": "on-toxicity-community",
       "summary": "- [PC Gamer: Community Needs to Take a Deep Look Inwards](https://www.pcgamer.com/overwatchs-jeff-kaplan-on-toxic-behavior-the-community-needs-to-take-a-deep-look-inwards/) - [Fand"
     },
     {
-      "id": "hats/kaplan.74",
+      "id": "hats/kaplan.73",
       "title": "On Hero Design & Player Behavior",
       "level": 3,
       "slug": "on-hero-design-player-behavior",
       "summary": "- [Vice: In the Company of Heroes](https://www.vice.com/en/article/in-the-company-of-heroes-an-interview-with-overwatch-designer-jeff-kaplan/) - [PC Gamer: Didn't Expect Maining](h"
     },
     {
-      "id": "hats/kaplan.75",
+      "id": "hats/kaplan.74",
       "title": "On Diversity & Representation",
       "level": 3,
       "slug": "on-diversity-representation",
       "summary": "- [ESPN: The Women in Our Games Are the Ones Doing the Rescuing](https://www.espn.com/gaming/story/_/id/20695642/blizzard-overwatch-director-jeff-kaplan-talks-game-design-women-div"
     },
     {
-      "id": "hats/kaplan.76",
+      "id": "hats/kaplan.75",
       "title": "On AI & New Game",
       "level": 3,
       "slug": "on-ai-new-game",
       "summary": "- [PC Games N: Human Spirit Is Irreplaceable](https://www.pcgamesn.com/ai/jeff-kaplan-human-spirit-irreplaceable) - [GameSpot: Legend of California Won't Starve the Player](https:/"
     },
     {
-      "id": "hats/kaplan.77",
+      "id": "hats/kaplan.76",
       "title": "On WoW Design Decisions",
       "level": 3,
       "slug": "on-wow-design-decisions",
       "summary": "- [PC Gamer: Horde/Alliance Split Was Really Controversial](https://www.pcgamer.com/games/world-of-warcraft/wows-horde-alliance-split-was-really-controversial-says-jeff-kaplan-to-t"
     },
     {
-      "id": "hats/kaplan.78",
+      "id": "hats/kaplan.77",
       "title": "On Titan's Failure",
       "level": 3,
       "slug": "on-titan-s-failure",
       "summary": "- [Blizzplanet: Titan Details and Why It Failed](https://warcraft.blizzplanet.com/blog/comments/jeff-kaplan-reveals-details-of-project-titan-and-why-it-failed) - [BlizzardWatch: Ho"
     },
     {
-      "id": "hats/kaplan.79",
+      "id": "hats/kaplan.78",
       "title": "Blizzard Design Philosophy (Rob Pardo)",
       "level": 3,
       "slug": "blizzard-design-philosophy-rob-pardo",
       "summary": "- [Daniel Scrivner: Rob Pardo AGC Keynote on Blizzard Design Philosophy](https://www.danielscrivner.com/rob-pardo-agc-keynote-on-blizzard-entertainments-design-philosophy/)"
     },
     {
-      "id": "hats/kaplan.80",
+      "id": "hats/kaplan.79",
       "title": "On Matchmaking",
       "level": 3,
       "slug": "on-matchmaking",
       "summary": "- [PC Gamer: Winners and Losers](https://www.pcgamer.com/games/fps/ever-complained-about-overwatch-matchmaking-theres-a-chance-jeff-kaplan-has-checked-your-account-and-all-he-has-t"
     },
     {
-      "id": "hats/kaplan.81",
+      "id": "hats/kaplan.80",
       "title": "PCGamesN Year Four Interview",
       "level": 3,
       "slug": "pcgamesn-year-four-interview",
       "summary": "- [Four Dazzling Years of Overwatch: A Conversation with Jeff Kaplan](https://www.pcgamesn.com/overwatch/year-four-battle-pass)"
     },
     {
-      "id": "hats/kaplan.82",
+      "id": "hats/kaplan.81",
       "title": "Wikipedia",
       "level": 3,
       "slug": "wikipedia",

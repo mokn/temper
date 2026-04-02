@@ -27,7 +27,7 @@ See:
 ## Current Status
 
 - Kaplan canon imported
-- remaining top-five hats seeded into canon
+- remaining top-five hats expanded into canon
 - architecture family canon seeded across eight families
 - repo scaffold created
 - capability surface scaffolded
@@ -36,7 +36,7 @@ See:
 
 Still to deepen:
 
-- Kaplan-depth expansion for Miyamoto, Meier, Wright, and Carmack
+- source enrichment and sharper quote validation for Miyamoto, Meier, Wright, and Carmack
 - overlay canon for mobile/F2P, live-ops economy, procedural generation, and multiplayer authority
 - capability canon expansion
 - assistant adapter layer and cheap-model prompt contract
