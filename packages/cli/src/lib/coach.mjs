@@ -320,11 +320,13 @@ const GENERIC_FILE_TERMS = new Set([
   "yaml",
   "yml"
 ]);
+const IGNORED_CONTEXT_FILE_PATTERNS = [/^\.temper\//i, /^\.claude\/commands\/temper-.*\.md$/i];
 
 export function parseCoachArgs(args) {
   const flags = {
     json: false,
     repo: true,
+    dryRun: false,
     limit: 8,
     hats: [],
     capabilities: [],
@@ -349,6 +351,10 @@ export function parseCoachArgs(args) {
     }
     if (key === "no-repo") {
       flags.repo = false;
+      continue;
+    }
+    if (key === "dry-run") {
+      flags.dryRun = true;
       continue;
     }
 
@@ -790,8 +796,13 @@ function toSelectionPayload(item) {
 }
 
 function collectEffectiveFiles(explicitFiles, repo) {
-  const files = explicitFiles.length > 0 ? explicitFiles : repo?.changedFiles ?? [];
+  const files =
+    explicitFiles.length > 0 ? explicitFiles : (repo?.changedFiles ?? []).filter((file) => !isIgnoredContextFile(file));
   return dedupe(files).slice(0, 12);
+}
+
+function isIgnoredContextFile(file) {
+  return IGNORED_CONTEXT_FILE_PATTERNS.some((pattern) => pattern.test(file));
 }
 
 function summarizeRepo(repo) {

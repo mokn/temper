@@ -3,6 +3,20 @@ import path from "node:path";
 import { repoRoot, specRoot } from "./lib/paths.mjs";
 import { deriveCanonDocs, inspectDoctrine, searchDoctrine } from "./lib/doctrine.mjs";
 import { buildCoachPacket, parseCoachArgs } from "./lib/coach.mjs";
+import { installAssistantAdapters } from "./lib/assistant.mjs";
+import {
+  analyzeProject,
+  createConfigFromAnalysis,
+  renderAdoptionReport
+} from "./lib/project-analysis.mjs";
+import {
+  CONFIG_FILENAME,
+  findConfig,
+  loadProjectConfig,
+  writeProjectConfig,
+  writeProjectFile
+} from "./lib/project-config.mjs";
+import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printHeader, printList } from "./lib/output.mjs";
 
 const capabilityCommands = new Set([
@@ -46,6 +60,10 @@ export async function main(argv) {
     return runCoach(rest);
   }
 
+  if (command === "assistant") {
+    return runAssistant(rest);
+  }
+
   if (capabilityCommands.has(command)) {
     return runCapability(command, rest);
   }
@@ -63,8 +81,9 @@ function showHelp() {
     "derive",
     "query <terms>",
     "coach [--json] [--intent ...] [--hat ...] [--capability ...] [--cwd ...] [--no-repo]",
-    "init",
-    "adopt",
+    "assistant <install|show>",
+    "init [--cwd ...] [--family ...] [--stack ...]",
+    "adopt [--cwd ...] [--write] [--assistant claude,codex]",
     "ship [lite|full]",
     "hotfix",
     "review",
@@ -90,7 +109,19 @@ function runDoctor() {
   console.log(
     `Breakdown: hats ${doctrine.grouped.hats}, architecture ${doctrine.grouped.architecture}, capabilities ${doctrine.grouped.capabilities}, other ${doctrine.grouped.other}`
   );
-  printList(doctrine.canonDocs);
+
+  const configPath = findConfig(process.cwd());
+  if (configPath) {
+    const config = loadProjectConfig({ cwd: process.cwd() });
+    console.log(`Config: ${configPath}`);
+    console.log(`Project: ${config.name}`);
+    console.log(`Family: ${config.family}`);
+    console.log(`Stack: ${config.stack?.id ?? "unknown"}`);
+    console.log(`Ship lite: ${(config.ship?.lite?.steps ?? []).join(", ") || "none"}`);
+    console.log(`Ship full: ${(config.ship?.full?.steps ?? []).join(", ") || "none"}`);
+  } else {
+    console.log(`Config: none (${CONFIG_FILENAME} not found from current cwd)`);
+  }
 }
 
 function runDerive() {
@@ -151,6 +182,37 @@ function runCapability(command, rest) {
         ? "lite"
         : null;
 
+  if (command === "init") {
+    return runInit(capabilityRest);
+  }
+
+  if (command === "adopt") {
+    return runAdopt(capabilityRest);
+  }
+
+  if (command === "ship") {
+    const input = parseCoachArgs(capabilityRest);
+    input.capabilities = dedupeLocal([...(input.capabilities ?? []), command]);
+    input.event = input.event || command;
+    input.mode = input.mode || mode || "lite";
+    if (!input.intent && input.positional.length > 0) {
+      input.intent = input.positional.join(" ");
+    }
+    const report = runShip({
+      ...input,
+      mode: input.mode
+    });
+
+    if (input.json) {
+      console.log(JSON.stringify(report, null, 2));
+      return;
+    }
+
+    printHeader("Temper Ship");
+    printShipReport(report);
+    return;
+  }
+
   if (supportsCoach.has(command)) {
     const input = parseCoachArgs(capabilityRest);
     input.capabilities = dedupeLocal([...(input.capabilities ?? []), command]);
@@ -196,6 +258,120 @@ function runCapability(command, rest) {
   }
 
   console.log("Implementation note: runtime orchestration not built yet.");
+}
+
+function runInit(rest) {
+  const args = parseCommonArgs(rest);
+  const analysis = analyzeProject({ cwd: args.cwd });
+  const config = createConfigFromAnalysis(analysis, {
+    mode: "initialized",
+    family: args.family,
+    stack: args.stack,
+    name: args.name
+  });
+  const configPath = writeProjectConfig(analysis.root, config, {
+    force: args.force
+  });
+  const written = installAssistantAdapters({
+    projectRoot: analysis.root,
+    config,
+    analysis,
+    assistants: args.assistants
+  });
+
+  printHeader("Temper Init");
+  console.log(`Root: ${analysis.root}`);
+  console.log(`Config: ${configPath}`);
+  console.log(`Family: ${config.family}`);
+  console.log(`Stack: ${config.stack.id}`);
+  console.log("");
+  console.log("Generated:");
+  printList([relativize(analysis.root, configPath), ...written]);
+}
+
+function runAdopt(rest) {
+  const args = parseCommonArgs(rest);
+  const analysis = analyzeProject({ cwd: args.cwd });
+  const config = createConfigFromAnalysis(analysis, {
+    mode: "adopted",
+    family: args.family,
+    stack: args.stack,
+    name: args.name
+  });
+  const report = renderAdoptionReport(analysis, config);
+
+  if (args.json) {
+    console.log(
+      JSON.stringify(
+        {
+          analysis,
+          config,
+          report
+        },
+        null,
+        2
+      )
+    );
+    return;
+  }
+
+  if (args.write) {
+    const configPath = writeProjectConfig(analysis.root, config, {
+      force: args.force
+    });
+    const reportPath = writeProjectFile(analysis.root, ".temper/reports/adoption.md", report);
+    const written = installAssistantAdapters({
+      projectRoot: analysis.root,
+      config,
+      analysis,
+      assistants: args.assistants
+    });
+
+    printHeader("Temper Adopt");
+    console.log(`Root: ${analysis.root}`);
+    console.log(`Config: ${configPath}`);
+    console.log(`Report: ${reportPath}`);
+    console.log("");
+    console.log("Generated:");
+    printList([relativize(analysis.root, configPath), relativize(analysis.root, reportPath), ...written]);
+    return;
+  }
+
+  printHeader("Temper Adopt");
+  console.log(`Root: ${analysis.root}`);
+  console.log(`Family: ${analysis.family.label} [${analysis.family.id}]`);
+  console.log(`Stack: ${analysis.stack.label} [${analysis.stack.id}]`);
+  console.log("");
+  process.stdout.write(report);
+  console.log("Run with --write to create temper.config.json and assistant files.");
+}
+
+function runAssistant(rest) {
+  const [subcommand = "show", ...subRest] = rest;
+  const args = parseCommonArgs(subRest);
+  const config = loadProjectConfig({ cwd: args.cwd });
+  const analysis = analyzeProject({ cwd: config.__projectRoot });
+
+  if (subcommand === "install") {
+    const written = installAssistantAdapters({
+      projectRoot: config.__projectRoot,
+      config,
+      analysis,
+      assistants: args.assistants
+    });
+
+    printHeader("Temper Assistant");
+    console.log(`Root: ${config.__projectRoot}`);
+    console.log("Generated:");
+    printList(written);
+    return;
+  }
+
+  printHeader("Temper Assistant");
+  console.log(`Root: ${config.__projectRoot}`);
+  console.log(`Claude guide: .temper/assistants/claude.md`);
+  console.log(`Codex guide: .temper/assistants/codex.md`);
+  console.log(`Claude commands: .claude/commands/temper-*.md`);
 }
 
 function capitalize(input) {
@@ -254,4 +430,64 @@ function printCoachPacket(title, packet, options = {}) {
 
 function dedupeLocal(items) {
   return [...new Set(items.filter(Boolean))];
+}
+
+function parseCommonArgs(args) {
+  const parsed = {
+    cwd: process.cwd(),
+    assistants: ["claude", "codex"],
+    force: false,
+    write: false,
+    json: false
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (!arg.startsWith("--")) {
+      continue;
+    }
+
+    const [key, inlineValue] = arg.slice(2).split("=", 2);
+    const nextValue =
+      inlineValue ?? (index + 1 < args.length && !args[index + 1].startsWith("--") ? args[++index] : "");
+
+    switch (key) {
+      case "cwd":
+        parsed.cwd = path.resolve(nextValue || parsed.cwd);
+        break;
+      case "family":
+        parsed.family = nextValue;
+        break;
+      case "stack":
+        parsed.stack = nextValue;
+        break;
+      case "name":
+        parsed.name = nextValue;
+        break;
+      case "assistant":
+      case "assistants":
+        parsed.assistants = nextValue
+          .split(/[,\s]+/)
+          .map((item) => item.trim().toLowerCase())
+          .filter(Boolean);
+        break;
+      case "force":
+        parsed.force = true;
+        break;
+      case "write":
+        parsed.write = true;
+        break;
+      case "json":
+        parsed.json = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return parsed;
+}
+
+function relativize(root, absolutePath) {
+  return path.relative(root, absolutePath).replace(/\\/g, "/") || ".";
 }
