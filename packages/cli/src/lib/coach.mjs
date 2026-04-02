@@ -1,5 +1,6 @@
 import path from "node:path";
 import { searchDoctrine } from "./doctrine.mjs";
+import { gatherRepoContext } from "./repo-context.mjs";
 
 const HAT_REGISTRY = {
   kaplan: {
@@ -276,10 +277,54 @@ const FILE_HINTS = [
 ];
 
 const OPERATING_MODEL_DOC = "architecture/operating-model";
+const GENERIC_FILE_TERMS = new Set([
+  "app",
+  "apps",
+  "bin",
+  "build",
+  "canon",
+  "cli",
+  "client",
+  "components",
+  "config",
+  "configs",
+  "derived",
+  "dist",
+  "doc",
+  "docs",
+  "file",
+  "files",
+  "index",
+  "js",
+  "json",
+  "jsx",
+  "lib",
+  "md",
+  "mjs",
+  "module",
+  "package",
+  "packages",
+  "scripts",
+  "server",
+  "source",
+  "spec",
+  "specs",
+  "src",
+  "test",
+  "tests",
+  "ts",
+  "tsx",
+  "txt",
+  "util",
+  "utils",
+  "yaml",
+  "yml"
+]);
 
 export function parseCoachArgs(args) {
   const flags = {
     json: false,
+    repo: true,
     limit: 8,
     hats: [],
     capabilities: [],
@@ -300,6 +345,10 @@ export function parseCoachArgs(args) {
 
     if (key === "json") {
       flags.json = true;
+      continue;
+    }
+    if (key === "no-repo") {
+      flags.repo = false;
       continue;
     }
 
@@ -324,6 +373,9 @@ export function parseCoachArgs(args) {
         break;
       case "query":
         flags.query = nextValue;
+        break;
+      case "cwd":
+        flags.cwd = nextValue;
         break;
       case "hat":
       case "hats":
@@ -359,10 +411,18 @@ export function parseCoachArgs(args) {
 
 export function buildCoachPacket(input) {
   const normalized = normalizeInput(input);
-  const capabilitySelection = selectCapabilities(normalized);
-  const familySelection = selectFamilies(normalized);
-  const hatSelection = selectHats(normalized, capabilitySelection, familySelection);
-  const doctrineQuery = buildDoctrineQuery(normalized, capabilitySelection, familySelection, hatSelection);
+  const repo = normalized.repo ? gatherRepoContext({ cwd: normalized.cwd }) : null;
+  const effectiveFiles = collectEffectiveFiles(normalized.files, repo);
+  const routedInput = {
+    ...normalized,
+    repo,
+    files: effectiveFiles,
+    explicitFiles: normalized.files
+  };
+  const capabilitySelection = selectCapabilities(routedInput);
+  const familySelection = selectFamilies(routedInput);
+  const hatSelection = selectHats(routedInput, capabilitySelection, familySelection);
+  const doctrineQuery = buildDoctrineQuery(routedInput, capabilitySelection, familySelection, hatSelection);
   const docIds = collectSelectedDocIds(capabilitySelection, familySelection, hatSelection);
   const retrieval = retrieveDoctrine(doctrineQuery, docIds, normalized.limit);
 
@@ -376,9 +436,12 @@ export function buildCoachPacket(input) {
       event: normalized.event,
       env: normalized.env,
       mode: normalized.mode,
-      files: normalized.files,
-      positional: normalized.positional
+      files: effectiveFiles,
+      explicit_files: routedInput.explicitFiles,
+      positional: normalized.positional,
+      cwd: normalized.cwd
     },
+    repo: repo ? summarizeRepo(repo) : null,
     selection: {
       hats: hatSelection.map(toSelectionPayload),
       capabilities: capabilitySelection.map(toSelectionPayload),
@@ -395,20 +458,27 @@ export function buildCoachPacket(input) {
 }
 
 function normalizeInput(input) {
+  const positional = input.positional ?? [];
+  const queryText =
+    input.queryText?.trim() ||
+    [input.query, input.intent, input.notes, positional.join(" ")].filter(Boolean).join(" ").trim();
+
   return {
     json: Boolean(input.json),
+    repo: input.repo !== false,
     limit: clampLimit(input.limit),
     intent: input.intent?.trim() || "",
     notes: input.notes?.trim() || "",
     event: input.event?.trim() || "",
     env: input.env?.trim() || "",
     mode: input.mode?.trim() || "",
+    cwd: input.cwd?.trim() || process.cwd(),
     files: dedupe(input.files ?? []),
     hats: dedupe((input.hats ?? []).map(normalizeId)),
     capabilities: dedupe((input.capabilities ?? []).map(normalizeId)),
     families: dedupe((input.families ?? []).map(normalizeId)),
-    positional: input.positional ?? [],
-    queryText: input.queryText?.trim() || ""
+    positional,
+    queryText
   };
 }
 
@@ -442,7 +512,7 @@ function selectCapabilities(input) {
     addScore(scores, reasons, input.event, 15, `event:${input.event}`);
   }
 
-  return finalizeSelection(scores, reasons, CAPABILITY_REGISTRY, 2);
+  return finalizeSelection(scores, reasons, CAPABILITY_REGISTRY, 3);
 }
 
 function selectFamilies(input) {
@@ -526,8 +596,9 @@ function buildDoctrineQuery(input, capabilities, families, hats) {
     ...families.map((item) => item.id),
     ...hats.map((item) => item.id)
   ].join(" ");
+  const repoTerms = input.repo?.available ? [input.repo.branch, input.repo.isDirty ? "dirty" : "clean"].join(" ") : "";
 
-  return [input.queryText, input.event, input.env, input.mode, fileTerms, selectionTerms]
+  return [input.queryText, input.event, input.env, input.mode, fileTerms, selectionTerms, repoTerms]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -670,13 +741,7 @@ function addScore(scores, reasons, id, amount, reason) {
 
 function tokenizeContext(input) {
   return dedupe(
-    [
-      input.queryText,
-      input.event,
-      input.env,
-      input.mode,
-      ...input.files.map((file) => tokenizePath(file).join(" "))
-    ]
+    [input.queryText, input.event, input.env, input.mode]
       .join(" ")
       .toLowerCase()
       .split(/[^a-z0-9]+/)
@@ -688,7 +753,7 @@ function tokenizePath(file) {
   return file
     .split(/[\\/]/)
     .flatMap((segment) => segment.toLowerCase().split(/[^a-z0-9]+/))
-    .filter(Boolean);
+    .filter((term) => term && term.length > 2 && !GENERIC_FILE_TERMS.has(term));
 }
 
 function splitList(input) {
@@ -721,5 +786,33 @@ function toSelectionPayload(item) {
     doc: item.docId ?? null,
     score: item.score,
     reasons: item.reasons
+  };
+}
+
+function collectEffectiveFiles(explicitFiles, repo) {
+  const files = explicitFiles.length > 0 ? explicitFiles : repo?.changedFiles ?? [];
+  return dedupe(files).slice(0, 12);
+}
+
+function summarizeRepo(repo) {
+  if (!repo.available) {
+    return {
+      available: false,
+      cwd: repo.cwd,
+      reason: repo.reason
+    };
+  }
+
+  return {
+    available: true,
+    git_root: repo.gitRoot,
+    branch: repo.branch,
+    dirty: repo.isDirty,
+    counts: repo.counts,
+    changed_files: repo.changedFiles.slice(0, 12),
+    status_lines: repo.statusLines.slice(0, 20),
+    diff_summary: repo.diffSummary,
+    workflow_files: repo.workflowFiles,
+    session_excerpt: repo.sessionExcerpt
   };
 }

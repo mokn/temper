@@ -7,6 +7,7 @@
   "scripts": {
     "temper": "node packages/cli/bin/temper.mjs",
     "doctor": "node packages/cli/bin/temper.mjs doctor",
-    "derive": "node packages/cli/bin/temper.mjs derive"
+    "derive": "node packages/cli/bin/temper.mjs derive",
+    "test": "node --test packages/cli/test/*.test.mjs"
   }
 }

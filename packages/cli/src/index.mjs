@@ -62,7 +62,7 @@ function showHelp() {
     "doctor",
     "derive",
     "query <terms>",
-    "coach [--json] [--intent ...] [--hat ...] [--capability ...]",
+    "coach [--json] [--intent ...] [--hat ...] [--capability ...] [--cwd ...] [--no-repo]",
     "init",
     "adopt",
     "ship [lite|full]",
@@ -138,42 +138,45 @@ function runCoach(rest) {
     return;
   }
 
-  printHeader("Temper Coach");
-  console.log(`Query: ${packet.query || "(selection only)"}`);
-
-  if (packet.selection.hats.length > 0) {
-    console.log("");
-    console.log("Hats:");
-    printList(
-      packet.selection.hats.map(
-        (hat) => `${hat.emoji ?? ""} ${hat.name} [${hat.id}] :: ${hat.reasons.join(", ")}`
-      )
-    );
-  }
-
-  if (packet.selection.capabilities.length > 0) {
-    console.log("");
-    console.log("Capabilities:");
-    printList(packet.selection.capabilities.map((item) => `${item.name} [${item.id}]`));
-  }
-
-  if (packet.selection.families.length > 0) {
-    console.log("");
-    console.log("Families:");
-    printList(packet.selection.families.map((item) => `${item.name} [${item.id}]`));
-  }
-
-  console.log("");
-  console.log("Doctrine Chunks:");
-  for (const chunk of packet.retrieval.chunks) {
-    console.log(`${chunk.score.toString().padStart(2, " ")}  ${chunk.doc} :: ${chunk.title}`);
-    console.log(`    ${chunk.summary}`);
-  }
+  printCoachPacket("Temper Coach", packet);
 }
 
 function runCapability(command, rest) {
-  const detail = rest.join(" ").trim();
-  const mode = command === "ship" ? (rest[0] === "full" ? "full" : "lite") : null;
+  const supportsCoach = new Set(["ship", "hotfix", "balance", "ux", "security", "infra"]);
+  const capabilityRest = [...rest];
+  const mode =
+    command === "ship" && (capabilityRest[0] === "full" || capabilityRest[0] === "lite")
+      ? capabilityRest.shift()
+      : command === "ship"
+        ? "lite"
+        : null;
+
+  if (supportsCoach.has(command)) {
+    const input = parseCoachArgs(capabilityRest);
+    input.capabilities = dedupeLocal([...(input.capabilities ?? []), command]);
+    input.event = input.event || command;
+    if (mode) {
+      input.mode = input.mode || mode;
+    }
+    if (!input.intent && input.positional.length > 0) {
+      input.intent = input.positional.join(" ");
+      input.queryText = [input.query, input.intent, input.notes].filter(Boolean).join(" ").trim();
+    }
+
+    const packet = buildCoachPacket(input);
+
+    if (input.json) {
+      console.log(JSON.stringify(packet, null, 2));
+      return;
+    }
+
+    printCoachPacket(`Temper ${capitalize(command)}`, packet, {
+      mode
+    });
+    return;
+  }
+
+  const detail = capabilityRest.join(" ").trim();
 
   printHeader(`Temper ${capitalize(command)}`);
 
@@ -197,4 +200,58 @@ function runCapability(command, rest) {
 
 function capitalize(input) {
   return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
+function printCoachPacket(title, packet, options = {}) {
+  printHeader(title);
+  console.log(`Query: ${packet.query || "(selection only)"}`);
+
+  if (options.mode) {
+    console.log(`Mode: ${options.mode}`);
+  }
+
+  if (packet.repo?.available) {
+    console.log(
+      `Repo: ${packet.repo.branch} | ${packet.repo.dirty ? "dirty" : "clean"} | changed ${packet.repo.counts.changed}`
+    );
+  }
+
+  if (packet.selection.hats.length > 0) {
+    console.log("");
+    console.log("Hats:");
+    printList(
+      packet.selection.hats.map(
+        (hat) => `${hat.emoji ?? ""} ${hat.name} [${hat.id}] :: ${hat.reasons.join(", ")}`
+      )
+    );
+  }
+
+  if (packet.selection.capabilities.length > 0) {
+    console.log("");
+    console.log("Capabilities:");
+    printList(packet.selection.capabilities.map((item) => `${item.name} [${item.id}]`));
+  }
+
+  if (packet.selection.families.length > 0) {
+    console.log("");
+    console.log("Families:");
+    printList(packet.selection.families.map((item) => `${item.name} [${item.id}]`));
+  }
+
+  if (packet.repo?.available && packet.repo.changed_files.length > 0) {
+    console.log("");
+    console.log("Changed Files:");
+    printList(packet.repo.changed_files);
+  }
+
+  console.log("");
+  console.log("Doctrine Chunks:");
+  for (const chunk of packet.retrieval.chunks) {
+    console.log(`${chunk.score.toString().padStart(2, " ")}  ${chunk.doc} :: ${chunk.title}`);
+    console.log(`    ${chunk.summary}`);
+  }
+}
+
+function dedupeLocal(items) {
+  return [...new Set(items.filter(Boolean))];
 }
