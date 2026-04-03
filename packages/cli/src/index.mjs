@@ -44,6 +44,7 @@ import {
   writeProjectFile
 } from "./lib/project-config.mjs";
 import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
+import { materializeInitInstall, renderInitOpening, resolveFamily } from "./lib/init.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
@@ -541,6 +542,56 @@ function runInit(rest) {
   }
 
   const args = parseCommonArgs(rest);
+
+  // New-project path: no code to analyze, scaffold from flags directly
+  if (args.name) {
+    const projectRoot = path.resolve(args.cwd ?? process.cwd());
+    const result = materializeInitInstall({
+      projectRoot,
+      name: args.name,
+      family: args.family,
+      stack: args.stack,
+      assistants: args.assistants
+    });
+
+    const allGenerated = [
+      result.configPath,
+      ...result.continuity.written.map((p) => (path.isAbsolute(p) ? p : path.join(projectRoot, p))),
+      ...result.written.map((p) => (path.isAbsolute(p) ? p : path.join(projectRoot, p)))
+    ];
+
+    if (args.json) {
+      console.log(
+        JSON.stringify(
+          {
+            project_root: projectRoot,
+            name: result.config.name,
+            family: result.resolvedFamily.id,
+            family_label: result.resolvedFamily.label,
+            generated: allGenerated
+          },
+          null,
+          2
+        )
+      );
+      return;
+    }
+
+    printTemperBanner(`Initialized — ${result.config.name}`);
+    console.log("");
+    console.log(`Root: ${projectRoot}`);
+    console.log(`Name: ${result.config.name}`);
+    console.log(`Family: ${result.resolvedFamily.label}`);
+    console.log(`Stack: ${result.config.stack.id}`);
+    console.log("");
+    console.log("Generated:");
+    printList(allGenerated.map((p) => relativize(projectRoot, p)));
+    console.log("");
+    console.log("Next: run `pnpm exec temper assistant show --cwd .` to see the installed assistant surfaces.");
+    return;
+  }
+
+  // Existing-repo init: analyze and scaffold from what's there
   const analysis = analyzeProject({ cwd: args.cwd });
   const config = createConfigFromAnalysis(analysis, {
     mode: "initialized",
@@ -967,6 +1018,39 @@ function runAssistant(rest) {
   const config = loadProjectConfig({ cwd: args.cwd, required: false });
 
   if (!config) {
+    if (subcommand === "install") {
+      throw new Error(
+        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd .` to see the recommended next move."
+      );
+    }
+
+    if (isNewProject(args.cwd)) {
+      if (args.json) {
+        console.log(
+          JSON.stringify(
+            {
+              status: "needs_init",
+              next_action: "run_temper_init",
+              init_command: "pnpm exec temper init --name <name> --family <type> --cwd .",
+              opening: renderInitOpening({})
+            },
+            null,
+            2
+          )
+        );
+        return;
+      }
+
+      printHeader("Temper Assistant");
+      console.log(`Root: ${path.resolve(args.cwd)}`);
+      console.log("Status: new project");
+      console.log("");
+      process.stdout.write(renderInitOpening({}));
+      console.log("");
+      console.log("If you want the machine-readable version for an assistant integration, rerun with `--json`.");
+      return;
+    }
+
     const interview = buildOnboardingInterview({
       cwd: args.cwd,
       family: args.family,
@@ -975,12 +1059,6 @@ function runAssistant(rest) {
       betaBranch: args.betaBranch,
       prodBranch: args.prodBranch
     });
-
-    if (subcommand === "install") {
-      throw new Error(
-        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd .` to see the recommended next move."
-      );
-    }
 
     if (args.json) {
       console.log(
@@ -1054,6 +1132,20 @@ function runAssistant(rest) {
   console.log(`Claude guide: .temper/assistants/claude.md`);
   console.log(`Codex guide: .temper/assistants/codex.md`);
   console.log(`Claude commands: .claude/commands/temper-*.md`);
+}
+
+function isNewProject(cwd) {
+  const resolved = path.resolve(cwd ?? process.cwd());
+  let entries = [];
+  try {
+    entries = fs.readdirSync(resolved);
+  } catch {
+    return true;
+  }
+  const meaningful = entries.filter(
+    (entry) => !["node_modules", ".git", ".temper", ".claude", ".env", ".env.local"].includes(entry)
+  );
+  return meaningful.length === 0;
 }
 
 function capitalize(input) {
