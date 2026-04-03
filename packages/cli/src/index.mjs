@@ -423,7 +423,7 @@ function runEval(rest) {
   process.stdout.write(renderRestartEval(report));
 }
 
-function runCapability(command, rest) {
+async function runCapability(command, rest) {
   const supportsCoach = new Set(["ship", "hotfix", "balance", "ux", "security", "infra"]);
   const capabilityRest = [...rest];
   const mode =
@@ -449,15 +449,22 @@ function runCapability(command, rest) {
     if (!input.intent && input.positional.length > 0) {
       input.intent = input.positional.join(" ");
     }
-    const report = runShip({
-      ...input,
-      mode: input.mode
-    });
-
     if (input.json) {
+      const report = await runShip({
+        ...input,
+        mode: input.mode,
+        streamOutput: false
+      });
       console.log(JSON.stringify(report, null, 2));
       return;
     }
+
+    printHeader("Temper Ship");
+    const report = await runShip({
+      ...input,
+      mode: input.mode,
+      streamOutput: true
+    });
 
     const recorded =
       report.execution.dry_run === true
@@ -469,7 +476,7 @@ function runCapability(command, rest) {
             payload: report
           });
 
-    printHeader("Temper Ship");
+    console.log("");
     printShipReport(report);
     if (recorded) {
       console.log("");

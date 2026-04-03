@@ -1,13 +1,11 @@
 import fs from "node:fs";
-import { execFileSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import path from "node:path";
 import { buildCoachPacket } from "./coach.mjs";
 import { loadProjectConfig, commandCwd, rel } from "./project-config.mjs";
 import { gatherRepoContext } from "./repo-context.mjs";
 
-const COMMAND_OUTPUT_MAX_BUFFER = 64 * 1024 * 1024;
-
-export function runShip(options = {}) {
+export async function runShip(options = {}) {
   const cwd = path.resolve(options.cwd ?? process.cwd());
   const config = loadProjectConfig({ cwd });
   const projectRoot = config.__projectRoot;
@@ -42,12 +40,13 @@ export function runShip(options = {}) {
   const resurfacing = collectResurfacing(config, policy);
   warnings.push(...resurfacing.filter((item) => item.priority === "high").map((item) => item.message));
 
-  const execution = executeSteps({
+  const execution = await executeSteps({
     projectRoot,
     steps,
     dryRun: options.dryRun === true,
     repo,
-    packageManager: config.package_manager
+    packageManager: config.package_manager,
+    streamOutput: options.streamOutput === true
   });
   const patchNotes = buildPatchNotes(projectRoot, repo, coach, execution);
 
@@ -200,7 +199,7 @@ function collectResurfacing(config, policy) {
   });
 }
 
-function executeSteps({ projectRoot, steps, dryRun, repo, packageManager }) {
+async function executeSteps({ projectRoot, steps, dryRun, repo, packageManager, streamOutput }) {
   const results = [];
   let ok = true;
 
@@ -231,7 +230,11 @@ function executeSteps({ projectRoot, steps, dryRun, repo, packageManager }) {
     }
 
     const cwd = commandCwd(projectRoot, step.config);
-    const result = withWorktreeBootstrapHint(executeCommand(step.id, step.config.cmd, cwd), {
+    if (streamOutput) {
+      printStepExecution(step.id, step.config.cmd, cwd, projectRoot);
+    }
+
+    const result = withWorktreeBootstrapHint(await executeCommand(step.id, step.config.cmd, cwd, { streamOutput }), {
       projectRoot,
       repo,
       packageManager
@@ -250,47 +253,81 @@ function executeSteps({ projectRoot, steps, dryRun, repo, packageManager }) {
   };
 }
 
-function executeCommand(id, cmd, cwd) {
-  try {
-    const stdout = execFileSync(cmd[0], cmd.slice(1), {
+function executeCommand(id, cmd, cwd, options = {}) {
+  return new Promise((resolve) => {
+    const child = spawn(cmd[0], cmd.slice(1), {
       cwd,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-      maxBuffer: COMMAND_OUTPUT_MAX_BUFFER
+      stdio: ["ignore", "pipe", "pipe"]
+    });
+    let stdoutTail = "";
+    let stderrTail = "";
+    let settled = false;
+
+    child.stdout.on("data", (chunk) => {
+      const text = String(chunk);
+      stdoutTail = appendExcerptTail(stdoutTail, text);
+      if (options.streamOutput) {
+        process.stdout.write(text);
+      }
     });
 
-    return {
-      id,
-      ok: true,
-      skipped: false,
-      cmd,
-      cwd,
-      stdout_excerpt: excerpt(stdout),
-      stderr_excerpt: ""
-    };
-  } catch (error) {
-    return {
-      id,
-      ok: false,
-      skipped: false,
-      cmd,
-      cwd,
-      stdout_excerpt: excerpt(error.stdout),
-      stderr_excerpt: excerpt(describeCommandFailure(error))
-    };
-  }
+    child.stderr.on("data", (chunk) => {
+      const text = String(chunk);
+      stderrTail = appendExcerptTail(stderrTail, text);
+      if (options.streamOutput) {
+        process.stderr.write(text);
+      }
+    });
+
+    child.on("error", (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve({
+        id,
+        ok: false,
+        skipped: false,
+        cmd,
+        cwd,
+        stdout_excerpt: excerpt(stdoutTail),
+        stderr_excerpt: excerpt(describeCommandFailure(error, stderrTail))
+      });
+    });
+
+    child.on("close", (code, signal) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve({
+        id,
+        ok: code === 0,
+        skipped: false,
+        cmd,
+        cwd,
+        stdout_excerpt: excerpt(stdoutTail),
+        stderr_excerpt: code === 0 ? excerpt(stderrTail) : excerpt(describeExitFailure(code, signal, stderrTail))
+      });
+    });
+  });
 }
 
-function describeCommandFailure(error) {
-  const stderr = String(error?.stderr ?? "").trim();
+function describeCommandFailure(error, stderrTail = "") {
+  return String(stderrTail || error?.message || "").trim();
+}
 
-  if (error?.code === "ENOBUFS") {
-    const limitMiB = Math.round(COMMAND_OUTPUT_MAX_BUFFER / (1024 * 1024));
-    const hint = `command output exceeded Temper's ${limitMiB} MiB capture limit`;
-    return stderr ? `${stderr}\n${hint}` : hint;
+function describeExitFailure(code, signal, stderrTail = "") {
+  if (stderrTail.trim()) {
+    return stderrTail;
   }
-
-  return stderr || error?.message || "";
+  if (signal) {
+    return `command exited from signal ${signal}`;
+  }
+  if (typeof code === "number") {
+    return `command exited with code ${code}`;
+  }
+  return "command failed";
 }
 
 function withWorktreeBootstrapHint(result, context) {
@@ -327,6 +364,15 @@ function inferWorktreeBootstrapHint({ projectRoot, repo, packageManager }, cmd) 
   return sharedInstallPresent
     ? "worktree looks unbootstrapped: run `pnpm install` in this worktree before shipping; installs from the shared checkout do not carry over"
     : "worktree looks unbootstrapped: run `pnpm install` in this worktree before shipping";
+}
+
+function printStepExecution(id, cmd, cwd, projectRoot) {
+  const relativeCwd = rel(projectRoot, cwd);
+  console.log("");
+  console.log(`>>> ${id}`);
+  console.log(`cmd: ${cmd.join(" ")}`);
+  console.log(`cwd: ${relativeCwd}`);
+  console.log("");
 }
 
 function buildPatchNotes(projectRoot, repo, coach, execution) {
@@ -405,6 +451,12 @@ function excerpt(value) {
     return "";
   }
   return text.split(/\r?\n/).slice(-6).join(" | ");
+}
+
+function appendExcerptTail(current, chunk) {
+  const limit = 32 * 1024;
+  const next = `${current}${chunk}`;
+  return next.length <= limit ? next : next.slice(-limit);
 }
 
 function reportPrimaryHat(coach) {

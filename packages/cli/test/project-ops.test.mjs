@@ -111,7 +111,7 @@ test("runShip executes configured steps from generated config", async (t) => {
 
   initGitRepo(repoDir, "dev", "fixture");
 
-  const report = runShip({
+  const report = await runShip({
     cwd: repoDir,
     mode: "full",
     intent: "player-facing balance and onboarding pass"
@@ -138,7 +138,7 @@ test("runShip handles verbose build output without exhausting the child-process 
   writeProjectConfig(repoDir, config);
   initGitRepo(repoDir, "dev", "fixture");
 
-  const report = runShip({
+  const report = await runShip({
     cwd: repoDir,
     mode: "lite",
     intent: "verbose build pass"
@@ -190,7 +190,7 @@ test("runShip adds a bootstrap hint for failing pnpm commands in fresh worktrees
 
   writeProjectConfig(worktreeDir, config);
 
-  const report = runShip({
+  const report = await runShip({
     cwd: worktreeDir,
     mode: "lite",
     intent: "worktree bootstrap check"

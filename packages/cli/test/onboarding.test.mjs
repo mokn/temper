@@ -159,7 +159,7 @@ test("runShip respects onboarded blessed defaults and gated promotion", async (t
     stdio: "ignore"
   });
 
-  const defaultReport = runShip({
+  const defaultReport = await runShip({
     cwd: repoDir,
     mode: "full",
     intent: "release confidence pass",
@@ -169,7 +169,7 @@ test("runShip respects onboarded blessed defaults and gated promotion", async (t
   assert.equal(defaultReport.plan.steps.some((step) => step.id === "smoke"), false);
   assert.ok(defaultReport.resurfacing.some((item) => item.id === "promote-gated-full-steps"));
 
-  const promotedReport = runShip({
+  const promotedReport = await runShip({
     cwd: repoDir,
     mode: "full",
     intent: "release confidence pass",
