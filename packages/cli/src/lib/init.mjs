@@ -70,7 +70,7 @@ export function resolveFamily(input) {
   return { id: resolved, label, inferred: false };
 }
 
-export function buildInitConfig({ name, family, stack, packageManager = "pnpm", description }) {
+export function buildInitConfig({ name, family, stack, packageManager = "pnpm", description, experience }) {
   const resolvedFamily = resolveFamily(family);
   const stackId = stack || "browser-typescript-monorepo";
 
@@ -82,6 +82,7 @@ export function buildInitConfig({ name, family, stack, packageManager = "pnpm", 
     family: resolvedFamily.id,
     stack: { id: stackId, overlays: [] },
     package_manager: packageManager,
+    experience: experience || null,
     paths: {
       source_of_truth: [],
       generated: [],
@@ -126,9 +127,9 @@ function buildStubAnalysis({ name, family, stack, packageManager }) {
   };
 }
 
-export function materializeInitInstall({ projectRoot, name, family, stack, packageManager, description, assistants = ["claude", "codex"] }) {
+export function materializeInitInstall({ projectRoot, name, family, stack, packageManager, description, experience, assistants = ["claude", "codex"] }) {
   const root = path.resolve(projectRoot);
-  const config = buildInitConfig({ name, family, stack, packageManager, description });
+  const config = buildInitConfig({ name, family, stack, packageManager, description, experience });
   const analysis = buildStubAnalysis({ name, family, stack, packageManager });
 
   const configPath = writeProjectConfig(root, config);
@@ -194,7 +195,9 @@ export function renderInitOpening({ name, family }) {
     "1. What's the game called?",
     "2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.",
     "",
-    "Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim"
+    "Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim",
+    "",
+    "3. How much game dev experience do you have? (first time / some experience / shipped games before)"
   ];
 
   if (name && family) {

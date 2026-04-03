@@ -139,10 +139,12 @@ export function buildOnboardingInterview(options = {}) {
   const environments = result.config.environments ?? {};
   const findings = buildAssistantAnalysisFindings(result, environments);
   const userFacingNextMove = buildUserFacingNextMove(result, environments, findings);
+  const unreliableAnalysis = isAnalysisUnreliable(result.analysis);
   return {
     project_root: result.analysis.root,
     recommended_answers: answers,
     analysis_findings: findings,
+    unreliable_analysis: unreliableAnalysis,
     user_facing_next_move: userFacingNextMove,
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
@@ -360,6 +362,38 @@ export function renderOnboardingInterview(interview) {
 export function renderOnboardingOpening(interview) {
   const findings = interview.analysis_findings ?? { strengths: [], concerns: [] };
   const strengths = findings.strengths;
+  const concerns = findings.concerns;
+
+  // If analysis is unreliable (dir-slug name + default family with no signals),
+  // ask the three questions before running any analysis
+  if (interview.unreliable_analysis) {
+    const lines = [
+      "## Analysis Confidence: Low",
+      "The project name and game type couldn't be reliably inferred from the files here.",
+      "",
+      "## Questions to Ask First",
+      "Before running the onboarding, ask the user:",
+      "",
+      "1. What's the game called?",
+      "2. What kind of game is it? (The more detail the better — mechanics, inspiration, what makes it different.)",
+      "3. How much game dev experience do you have? (first time / some experience / shipped games before)",
+      "",
+      "## Suggested Opening Message",
+      "Okay, I poked around in here. Before I set up the operating layer, I need a couple of things from you:",
+      "",
+      "1. What's the game called?",
+      "2. What kind of game is it — mechanics, inspiration, what's the hook?",
+      "3. How much game dev experience do you have? First time, some experience, or shipped games before?",
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Ask those three questions. Wait for the user's answers.",
+      "",
+      "Then re-run with the answers:",
+      "  pnpm exec temper onboard existing --cwd . --name \"<name>\" --family <type>"
+    ];
+    return lines.join("\n") + "\n";
+  }
 
   const lines = ["## What's Already In Good Shape"];
   if (strengths.length > 0) {
@@ -376,21 +410,38 @@ export function renderOnboardingOpening(interview) {
         "",
         ...strengths.map((s) => `- ${s.text}`),
         "",
-        "There are also a couple of things worth knowing before we install anything. I'll share those next."
+        concerns.length > 0
+          ? "There are also a couple of things worth knowing before we install anything. I'll share those next."
+          : "Nothing to flag before we proceed — the repo is in clean shape. Ready to share my recommendation whenever you are."
       ].join("\n")
-    : "Okay, I looked through the repo. It's clean enough to work with. Let me flag a couple of things before we proceed.";
+    : concerns.length > 0
+      ? "Okay, I looked through the repo. It's clean enough to work with. Let me flag a couple of things before we proceed."
+      : "Okay, I looked through the repo. Nothing to flag — it's clean. Ready to share my recommendation whenever you are.";
 
   lines.push("", "## Suggested Opening Message", openingMessage);
 
-  lines.push(
-    "",
-    "---",
-    "STOP. Do not continue past this line.",
-    "Deliver the opening message above. Wait for the user to respond.",
-    "",
-    "When they are ready, run:",
-    "  pnpm exec temper onboard existing --findings --cwd ."
-  );
+  // If no concerns, collapse stages 1+2 — jump straight to recommendation
+  if (concerns.length === 0) {
+    lines.push(
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Deliver the opening message above. Wait for the user to respond.",
+      "",
+      "When they are ready, run:",
+      "  pnpm exec temper onboard existing --recommend --cwd ."
+    );
+  } else {
+    lines.push(
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Deliver the opening message above. Wait for the user to respond.",
+      "",
+      "When they are ready, run:",
+      "  pnpm exec temper onboard existing --findings --cwd ."
+    );
+  }
 
   return lines.join("\n") + "\n";
 }
@@ -1594,6 +1645,12 @@ function buildOnboardingFindingTemplate(findings) {
     lines.push(`- (worth knowing) ${c.title} ${c.impact}`);
   }
   return lines.join("\n");
+}
+
+function isAnalysisUnreliable(analysis) {
+  const nameLooksDirSlug = analysis.name === path.basename(analysis.root);
+  const familyIsDefaultFallback = analysis.family.reasons?.some((r) => r.includes("default: no strong family signal"));
+  return nameLooksDirSlug && familyIsDefaultFallback;
 }
 
 function buildAssistantAnalysisFindings(result, environments) {

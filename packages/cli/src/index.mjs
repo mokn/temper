@@ -552,6 +552,7 @@ function runInit(rest) {
       family: args.family,
       stack: args.stack,
       description: args.description,
+      experience: args.experience,
       assistants: args.assistants
     });
 
@@ -599,7 +600,7 @@ function runInit(rest) {
       });
       process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
       console.log("");
-      printCoachBrief(result.config.name, args.description, result.resolvedFamily.id, coachPacket);
+      printCoachBrief(result.config.name, args.description, result.resolvedFamily.id, coachPacket, args.experience);
     } else {
       process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
     }
@@ -1277,6 +1278,9 @@ function parseCommonArgs(args) {
         break;
       case "description":
         parsed.description = nextValue;
+        break;
+      case "experience":
+        parsed.experience = nextValue;
         break;
       case "assistant":
       case "assistants":

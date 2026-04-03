@@ -31,13 +31,14 @@ function readCanonDoc(relPath, maxChars = 6000) {
 
 // Outputs an AI-facing context block for Pablo to synthesize into advice.
 // NOT user-facing — the AI reads it and delivers in its own voice.
-export function printCoachBrief(gameName, description, familyId, packet) {
+export function printCoachBrief(gameName, description, familyId, packet, experience) {
   const hats = packet.selection.hats;
 
   console.log("## AI Context — Synthesize into your first message. Do not read this section aloud.");
   console.log("");
   console.log(`Game: ${gameName}`);
   if (description) console.log(`Description: ${description}`);
+  if (experience) console.log(`Experience level: ${experience}`);
   const familyName = packet.selection.families[0]?.name ?? familyId;
   console.log(`Family: ${familyName}`);
   if (hats.length > 0) {
@@ -65,6 +66,11 @@ export function printCoachBrief(gameName, description, familyId, packet) {
 
   console.log("## Synthesis Instructions");
   console.log("Using the doctrine above, deliver your first message in this order:");
+  if (experience === "first") {
+    console.log("  (Tone: first-time builder — go slower, explain what each piece is for, celebrate progress)");
+  } else if (experience === "experienced") {
+    console.log("  (Tone: experienced builder — move fast, skip the basics, be direct about tradeoffs)");
+  }
   console.log("  1. 2-3 sentences: what to build first and why, specific to this game");
   console.log("  2. Advisor voices — give each active advisor a line with their emoji and a specific");
   console.log("     observation about THIS game. Use their actual philosophy, not paraphrases.");
