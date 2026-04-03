@@ -102,10 +102,9 @@ test("assistant show falls back to onboarding interview when Temper is installed
   assert.ok(payload.interview);
   assert.equal(payload.interview.assistant_flow.mode, "continue_in_chat");
   assert.match(payload.interview.assistant_flow.reply_template, /start the dry run/);
-  assert.ok(payload.interview.questions.some((item) => item.id === "project_state"));
-  assert.ok(payload.interview.questions.some((item) => item.id === "existing_project_mode"));
-  assert.ok(payload.interview.analysis_findings.some((item) => item.id === "established-project"));
-  assert.match(payload.interview.new_project_command, /temper init --cwd \./);
+  assert.equal(payload.interview.questions, undefined);
+  assert.ok(payload.interview.analysis_findings.concerns.some((item) => item.id === "established-project"));
+  assert.equal(payload.interview.new_project_command, undefined);
   assert.match(payload.interview.apply_command, /temper onboard existing --write/);
 });
 
@@ -116,7 +115,7 @@ test("assistant show gives a user-facing recommended next move without json", as
   });
 
   assert.match(output, /## Recommended Next Move/);
-  assert.match(output, /safest first step is a dry run/);
+  assert.match(output, /rehearsal first/);
   assert.match(output, /temper onboard existing --rehearse --cwd \./);
   assert.match(output, /start the dry run/);
   assert.match(output, /machine-readable version/);
