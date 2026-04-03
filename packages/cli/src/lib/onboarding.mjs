@@ -385,8 +385,12 @@ export function renderOnboardingOpening(interview) {
       "",
       "If new game:",
       "  pnpm exec temper init --name \"<name>\" --family <type> --experience <level> --description \"<description>\" --cwd .",
-      "If existing game:",
-      "  pnpm exec temper onboard existing --cwd . --name \"<name>\" --family <type>"
+      "If existing game — they give you a path:",
+      "  pnpm exec temper onboard existing --cwd <path> --name \"<name>\" --family <type>",
+      "If existing game — they don't know the path:",
+      "  Search for it: grep -ril \"<game name>\" ~ --include=\"*.json\" --include=\"*.js\" --include=\"*.ts\" --include=\"*.html\" 2>/dev/null",
+      "  If found: run the onboard command above with the found path.",
+      "  If not found: tell them clearly you can't locate it, ask if they have a path or built it elsewhere."
     ];
     return lines.join("\n") + "\n";
   }
