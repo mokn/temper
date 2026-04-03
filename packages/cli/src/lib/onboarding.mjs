@@ -417,6 +417,12 @@ export function renderOnboardingOpening(interview) {
     }
   }
 
+  const designerRead = findings.designer_read ?? null;
+  if (designerRead) {
+    lines.push("", "## Designer's Read");
+    lines.push(designerRead);
+  }
+
   // Build opening message from the project summary — no duplicate warnings
   const auditLines = summary
     ? [
@@ -426,7 +432,8 @@ export function renderOnboardingOpening(interview) {
         `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo.` : "No git history yet."}`,
         `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}.` : "No CI workflows."}`,
         `- ${summary.has_source_of_truth ? "Source-of-truth paths are defined." : "No source-of-truth paths — will need to define these."}`,
-        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : [])
+        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : []),
+        ...(designerRead ? ["", designerRead] : [])
       ]
     : ["Okay, I looked through the repo."];
 
@@ -1750,7 +1757,58 @@ function buildAssistantAnalysisFindings(result, environments) {
     top_recommendations: (result.onboarding.recommendations ?? []).slice(0, 2)
   };
 
-  return { strengths, concerns, project_summary: projectSummary };
+  const designerRead = buildDesignerRead(result.analysis, result.onboarding);
+
+  return { strengths, concerns, project_summary: projectSummary, designer_read: designerRead };
+}
+
+function buildDesignerRead(analysis, onboarding) {
+  const family = analysis.family?.id;
+  const lifecycle = onboarding.lifecycle?.id;
+  const commitCount = onboarding.history?.commit_count ?? 0;
+  const hasOperatorScaffolding =
+    analysis.surfaces?.workflow?.agents &&
+    analysis.surfaces?.workflow?.session &&
+    analysis.surfaces?.workflow?.claude;
+  const hasRuleFiles = (analysis.surfaces?.workflow?.claude_rules?.length ?? 0) > 0;
+  const hasHandoffs = (analysis.surfaces?.workflow?.handoffs?.length ?? 0) > 0;
+  const hasBetaProd =
+    analysis.environments?.some((e) => e.id === "beta") &&
+    analysis.environments?.some((e) => e.id === "prod");
+
+  if (family === "data-driven-progression-rpg" && lifecycle === "live") {
+    if (commitCount >= 1000 && hasOperatorScaffolding && hasHandoffs) {
+      return "A live-service progression RPG with this level of operator tooling is rare. Most teams reconstruct this scaffolding after their first production incident. You skipped that step.";
+    }
+    if (hasBetaProd && hasRuleFiles) {
+      return "Beta/prod separation with scoped domain rules is exactly the pattern that keeps a live game shippable without a staging circus. Solid foundation.";
+    }
+    if (commitCount >= 500) {
+      return `${commitCount.toLocaleString()} commits in a browser-native RPG that still has disciplined operator context — most projects this size are running on tribal knowledge by now.`;
+    }
+  }
+
+  if (family === "competitive-server-authoritative" && lifecycle === "live" && hasOperatorScaffolding) {
+    return "Live multiplayer with this kind of operator infrastructure is hard to get right. The context scaffolding alone will save you hours every time you hand off between sessions.";
+  }
+
+  if (family === "simulation-management-sandbox" && commitCount >= 500 && hasOperatorScaffolding) {
+    return "Simulation games with this many commits usually turn into archaeology projects. The operator scaffolding here keeps that from happening.";
+  }
+
+  if (hasOperatorScaffolding && hasHandoffs && hasRuleFiles && lifecycle === "live") {
+    return "The operator infrastructure here is more thoughtful than most production repos. Explicit context files, domain rules, handoff artifacts — this is a team that's learned from restarts.";
+  }
+
+  if (commitCount >= 500 && hasOperatorScaffolding) {
+    return `A repo with ${commitCount.toLocaleString()} commits and solid operator scaffolding already — Temper has good material to work with here.`;
+  }
+
+  if (hasOperatorScaffolding && lifecycle !== "live") {
+    return "Operator scaffolding in place before the repo gets large — that's the right call. Most teams wish they'd done this earlier.";
+  }
+
+  return null;
 }
 
 function buildUserFacingNextMove(result, environments, findings = { strengths: [], concerns: [] }) {
