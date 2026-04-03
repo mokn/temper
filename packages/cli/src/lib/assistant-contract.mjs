@@ -135,6 +135,13 @@ Use Temper as the canonical operating layer for this repo.
 
 ${contract.capabilities.map((item) => `**${item.when}**\n\`${item.command}\``).join("\n\n")}
 
+## Onboarding
+
+- when a user asks to onboard this repo with Temper, or to set it up or configure it, run:
+  \`${contract.runtime.command} onboard existing --interview --cwd .\`
+- read the **Suggested Opening Message** from the output and deliver it as your own analysis — do not dump the raw CLI output
+- after the user responds, follow the **If The User Wants A Different Path** routing from the CLI output
+
 ## Advisor Voices in Conversation
 
 During design and build conversations, surface advisor voices naturally — not just on coach invocation:
