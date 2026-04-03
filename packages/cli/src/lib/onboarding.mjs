@@ -365,31 +365,27 @@ export function renderOnboardingOpening(interview) {
   const concerns = findings.concerns;
 
   // If analysis is unreliable (dir-slug name + default family with no signals),
-  // ask the three questions before running any analysis
+  // ask two questions before running any analysis — don't pretend we know anything
   if (interview.unreliable_analysis) {
     const lines = [
       "## Analysis Confidence: Low",
-      "The project name and game type couldn't be reliably inferred from the files here.",
-      "",
-      "## Questions to Ask First",
-      "Before running the onboarding, ask the user:",
-      "",
-      "1. What's the game called?",
-      "2. What kind of game is it? (The more detail the better — mechanics, inspiration, what makes it different.)",
-      "3. How much game dev experience do you have? (first time / some experience / shipped games before)",
+      "The project name and game type couldn't be reliably inferred. Ask two questions before proceeding.",
       "",
       "## Suggested Opening Message",
-      "Okay, I poked around in here. Before I set up the operating layer, I need a couple of things from you:",
+      "Before I set this up, two things I need from you:",
       "",
-      "1. What's the game called?",
-      "2. What kind of game is it — mechanics, inspiration, what's the hook?",
-      "3. How much game dev experience do you have? First time, some experience, or shipped games before?",
+      "1. Is this a new game, or something you've already started building?",
+      "   If it's new — what's it called, and what kind of game is it?",
+      "   If it already exists — point me at it and I'll take a look.",
+      "2. How much game dev experience do you have? (first time / some experience / shipped before)",
       "",
       "---",
       "STOP. Do not continue past this line.",
-      "Ask those three questions. Wait for the user's answers.",
+      "Ask those two questions. Wait for the user's answers.",
       "",
-      "Then re-run with the answers:",
+      "If new game:",
+      "  pnpm exec temper init --name \"<name>\" --family <type> --experience <level> --description \"<description>\" --cwd .",
+      "If existing game:",
       "  pnpm exec temper onboard existing --cwd . --name \"<name>\" --family <type>"
     ];
     return lines.join("\n") + "\n";
