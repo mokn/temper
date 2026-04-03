@@ -151,6 +151,29 @@ export function materializeInitInstall({ projectRoot, name, family, stack, packa
   return { configPath, continuity, written, config, resolvedFamily: resolveFamily(family) };
 }
 
+const FAMILY_FIRST_STEPS = {
+  "data-driven-progression-rpg": "character classes, stat systems, loot tables, or progression curves",
+  "deterministic-turn-based": "game board, card definitions, turn structure, or win conditions",
+  "real-time-action": "player controller, enemy AI, hitbox system, or level structure",
+  "real-time-wave-systemic": "wave spawner, tower placement, enemy pathing, or economy loop",
+  "competitive-server-authoritative": "hero roster, abilities, matchmaking, map layout, or game loop",
+  "simulation-management-sandbox": "core resource loop, building system, simulation tick, or map generation",
+  "narrative-choice-driven-puzzle": "dialogue system, choice branching, puzzle mechanics, or scene structure",
+  "social-persistent-ugc": "player identity, world persistence, creation tools, or social graph"
+};
+
+export function renderInitSuccess({ name, family }) {
+  const resolvedFamily = resolveFamily(family);
+  const firstSteps = FAMILY_FIRST_STEPS[resolvedFamily.id] ?? "core systems";
+  const lines = [
+    "## Suggested First Message",
+    `You're set up. ${name} is configured as a ${resolvedFamily.label} game.`,
+    "",
+    `To get started, tell me what you want to tackle first — ${firstSteps} — or I can suggest a good starting point.`
+  ];
+  return lines.join("\n") + "\n";
+}
+
 export function renderInitOpening({ name, family }) {
   const resolvedFamily = resolveFamily(family);
   const lines = [

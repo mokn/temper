@@ -44,7 +44,7 @@ import {
   writeProjectFile
 } from "./lib/project-config.mjs";
 import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
-import { materializeInitInstall, renderInitOpening, resolveFamily } from "./lib/init.mjs";
+import { materializeInitInstall, renderInitOpening, renderInitSuccess, resolveFamily } from "./lib/init.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
@@ -587,7 +587,7 @@ function runInit(rest) {
     console.log("Generated:");
     printList(allGenerated.map((p) => relativize(projectRoot, p)));
     console.log("");
-    console.log("Next: run `pnpm exec temper assistant show --cwd .` to see the installed assistant surfaces.");
+    process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
     return;
   }
 
