@@ -867,10 +867,13 @@ function runOnboard(rest) {
     return;
   }
 
-  process.stdout.write(result.report);
-  console.log(
-    "Run with --interview to ask the user the right questions in chat, --preview to inspect the exact install plan, --write to create temper.config.json and assistant files, or --rehearse to replay it in a disposable lab."
-  );
+  printTemperBanner("Existing project onboarding");
+  console.log("");
+  console.log(`Root: ${result.analysis.root}`);
+  console.log("");
+  process.stdout.write(renderOnboardingOpening(interview));
+  console.log("");
+  console.log("If you want the machine-readable version for an assistant integration, rerun with `--json`.");
 }
 
 function runAdopt(rest) {

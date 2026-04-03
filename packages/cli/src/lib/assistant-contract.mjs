@@ -138,9 +138,10 @@ ${contract.capabilities.map((item) => `**${item.when}**\n\`${item.command}\``).j
 ## Onboarding
 
 - when a user asks to onboard this repo with Temper, or to set it up or configure it, run:
-  \`${contract.runtime.command} onboard existing --interview --cwd .\`
+  \`${contract.runtime.command} onboard existing --cwd .\`
 - read the **Suggested Opening Message** from the output and deliver it as your own analysis — do not dump the raw CLI output
-- after the user responds, follow the **If The User Wants A Different Path** routing from the CLI output
+- follow the STOP markers — deliver one stage at a time and wait for the user to respond before running the next command
+- the CLI will tell you what to run next at each stage (\`--findings\`, \`--recommend\`, then \`--write\` or \`--rehearse\`)
 
 ## Advisor Voices in Conversation
 
