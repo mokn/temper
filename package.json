@@ -13,6 +13,6 @@
     "temper": "node packages/cli/bin/temper.mjs",
     "doctor": "node packages/cli/bin/temper.mjs doctor",
     "derive": "node packages/cli/bin/temper.mjs derive",
-    "test": "node --test packages/cli/test/*.test.mjs"
+    "test": "node --test packages/cli/test/*.test.mjs packages/mcp/test/*.test.mjs"
   }
 }
