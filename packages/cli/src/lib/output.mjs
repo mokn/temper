@@ -72,12 +72,15 @@ export function printCoachBrief(gameName, description, familyId, packet, experie
     console.log("  (Tone: experienced builder — move fast, skip the basics, be direct about tradeoffs)");
   }
   console.log("  1. 2-3 sentences: what to build first and why, specific to this game");
-  console.log("  2. Advisor voices — give each active advisor a line with their emoji and a specific");
-  console.log("     observation about THIS game. Use their actual philosophy, not paraphrases.");
-  console.log("     e.g. '🎯 Kaplan: [their specific take on this game's trust or onboarding moment]'");
+  console.log("  2. Advisor voices — 1-2 max. One line each: emoji + name + specific take on THIS game.");
+  console.log("     Use their actual philosophy, not paraphrases.");
+  console.log("     End each with an invitation: 'Want to dig into [topic] further?'");
+  console.log("     e.g. '🎯 Kaplan: the first 5 minutes here will either build or destroy trust. Want to map that moment?'");
   console.log("  3. Ordered data model — what to define first as data files, in priority order");
   console.log("  4. One key architectural risk specific to this game's traits");
   console.log("  5. End with a focused question to keep the build conversation moving");
+  console.log("  IMPORTANT: Carry advisor voices into follow-up turns too. At each design pivot — new mechanic,");
+  console.log("  architecture decision, feature tradeoff — surface 1-2 relevant voices naturally. Don't wait for /coach.");
 }
 
 export function printHeader(title) {

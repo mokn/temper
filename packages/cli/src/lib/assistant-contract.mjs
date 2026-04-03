@@ -135,6 +135,16 @@ Use Temper as the canonical operating layer for this repo.
 
 ${contract.capabilities.map((item) => `**${item.when}**\n\`${item.command}\``).join("\n\n")}
 
+## Advisor Voices in Conversation
+
+During design and build conversations, surface advisor voices naturally — not just on coach invocation:
+
+- 1 voice is enough. 2 max if there are genuinely different perspectives worth hearing.
+- Keep each to one line: \`✨ Miyamoto: [specific take on this decision]\`
+- End with an invitation: "Want to dig into [topic] further?"
+- Trigger on architecture choices, mechanic design, UX pivots, and feature tradeoffs — not every turn
+- Use the doctrine from the coach output as the source. Don't invent opinions.
+
 ## Continuity
 
 - read \`${contract.continuity.session_file}\` first
