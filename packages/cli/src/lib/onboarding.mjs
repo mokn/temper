@@ -395,28 +395,46 @@ export function renderOnboardingOpening(interview) {
     return lines.join("\n") + "\n";
   }
 
-  const lines = ["## What's Already In Good Shape"];
-  if (strengths.length > 0) {
-    for (const s of strengths) {
-      lines.push(`- ${s.text}`);
-    }
-  } else {
-    lines.push("- The repo is intelligible enough for Temper to start building a local operating contract.");
+  const summary = findings.project_summary;
+
+  // Project audit block — always shown
+  const lines = ["## What I Found"];
+  if (summary) {
+    lines.push(`- **${summary.name}** — ${summary.family}, ${summary.lifecycle}`);
+    lines.push(`- Stack: ${summary.stack}`);
+    lines.push(`- Git history: ${summary.has_git_history ? `${summary.commit_count} commits` : "none yet"}`);
+    lines.push(`- CI: ${summary.has_ci ? summary.ci_files.join(", ") : "not set up"}`);
+    lines.push(`- Source-of-truth paths: ${summary.has_source_of_truth ? "defined" : "not defined"}`);
   }
 
-  const openingMessage = strengths.length > 0
+  // Filter out filler strength — only show real computed strengths
+  const meaningfulStrengths = strengths.filter((s) => !s.text.includes("intelligible enough for Temper"));
+
+  if (meaningfulStrengths.length > 0) {
+    lines.push("", "## What's Already In Good Shape");
+    for (const s of meaningfulStrengths) {
+      lines.push(`- ${s.text}`);
+    }
+  }
+
+  // Build opening message from the project summary — no duplicate warnings
+  const auditLines = summary
     ? [
-        "Okay, I looked through the whole thing. A few things are already in good shape:",
+        `Okay, I went through ${summary.name}. Here's what I found:`,
         "",
-        ...strengths.map((s) => `- ${s.text}`),
-        "",
-        concerns.length > 0
-          ? "There are also a couple of things worth knowing before we install anything. I'll share those next."
-          : "Nothing to flag before we proceed — the repo is in clean shape. Ready to share my recommendation whenever you are."
-      ].join("\n")
-    : concerns.length > 0
-      ? "Okay, I looked through the repo. It's clean enough to work with. Let me flag a couple of things before we proceed."
-      : "Okay, I looked through the repo. Nothing to flag — it's clean. Ready to share my recommendation whenever you are.";
+        `- **${summary.family}** game, ${summary.lifecycle.toLowerCase()}.`,
+        `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo.` : "No git history yet."}`,
+        `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}.` : "No CI workflows."}`,
+        `- ${summary.has_source_of_truth ? "Source-of-truth paths are defined." : "No source-of-truth paths — will need to define these."}`,
+        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : [])
+      ]
+    : ["Okay, I looked through the repo."];
+
+  const closingLine = concerns.length > 0
+    ? "There are a couple of things worth knowing before we install anything. I'll share those next."
+    : "Nothing to flag — ready to share my recommendation whenever you are.";
+
+  const openingMessage = [...auditLines, "", closingLine].join("\n");
 
   lines.push("", "## Suggested Opening Message", openingMessage);
 
@@ -1702,7 +1720,23 @@ function buildAssistantAnalysisFindings(result, environments) {
     });
   }
 
-  return { strengths, concerns };
+  const projectSummary = {
+    name: result.analysis.name,
+    family: result.analysis.family.label,
+    family_id: result.analysis.family.id,
+    stack: result.analysis.stack.label,
+    lifecycle: result.onboarding.lifecycle?.label ?? "unknown",
+    lifecycle_habit: result.onboarding.lifecycle?.operator_habit ?? null,
+    has_git_history: (result.onboarding.history?.commit_count ?? 0) > 0,
+    commit_count: result.onboarding.history?.commit_count ?? 0,
+    has_ci: (result.onboarding.workflows?.count ?? 0) > 0,
+    ci_files: result.onboarding.workflows?.files ?? [],
+    has_source_of_truth: (result.analysis.surfaces?.source_of_truth ?? []).length > 0,
+    warnings: result.analysis.warnings ?? [],
+    top_recommendations: (result.onboarding.recommendations ?? []).slice(0, 2)
+  };
+
+  return { strengths, concerns, project_summary: projectSummary };
 }
 
 function buildUserFacingNextMove(result, environments, findings = { strengths: [], concerns: [] }) {
