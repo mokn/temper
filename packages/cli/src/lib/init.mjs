@@ -165,10 +165,19 @@ const FAMILY_FIRST_STEPS = {
 export function renderInitSuccess({ name, family }) {
   const resolvedFamily = resolveFamily(family);
   const lines = [
-    "## Suggested First Message",
-    `You're set up. ${name} is configured as a ${resolvedFamily.label} game.`,
+    "## What Just Landed",
+    `${name} is scaffolded as a ${resolvedFamily.label} game.`,
     "",
-    "Let me pull up a design brief for you."
+    "Here's what Temper installed:",
+    "- **temper.config.json** — your operating contract. Knows the game type, stack, and how to ship. Every Temper command reads this.",
+    "- **SESSION.md** — tracks what's in progress across sessions. Read this first every time you pick back up.",
+    "- **claude.md / codex.md** — assistant operating guides. Your AI reads these before giving design or build advice.",
+    "- **Slash commands** (/temper-ship, /temper-coach, /temper-balance) — available in chat now.",
+    "",
+    "This is set up for local development first — build it, get it working, then add a GitHub workflow when you're ready to collaborate or deploy.",
+    "",
+    "## Suggested First Message",
+    `${name} is ready to build. Let me show you what I'd start with.`
   ];
   return lines.join("\n") + "\n";
 }

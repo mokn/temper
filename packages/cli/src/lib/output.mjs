@@ -91,10 +91,14 @@ export function printCoachBrief(gameName, description, familyId, packet) {
     console.log("");
   }
 
-  console.log("Using the above, deliver advice specific to this game:");
-  console.log("  1. What to build first and why");
-  console.log("  2. How the game's specific traits affect the architecture");
-  console.log("  3. Any early risks worth calling out");
+  console.log("Deliver your first message in this order:");
+  console.log("  1. Brief: what to build first and why — 2-3 sentences max");
+  console.log("  2. Surface the advisors directly. Give each one a line with their emoji and a specific take on THIS game.");
+  console.log("     e.g. '🎯 Kaplan: [specific observation about this game's onboarding or trust moment]'");
+  console.log("     e.g. '♟️ Meier: [specific observation about this game's systems or tradeoffs]'");
+  console.log("  3. The ordered data model list — what to define first");
+  console.log("  4. One key risk specific to this game's traits");
+  console.log("  5. End with a question to keep the conversation going");
 }
 
 export function printHeader(title) {
