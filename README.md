@@ -2,7 +2,14 @@
 
 Temper helps an assistant understand a game repo fast, recommend the safest next move, and install a local working contract you can inspect and trust.
 
-It is built for the first five minutes of setup:
+It is built for two entry points:
+
+**New project** — scaffold the operating contract from scratch:
+
+- ask what the game is called, what kind, how much experience
+- initialize the config, session, and assistant surfaces in one command
+
+**Existing project** — inspect, recommend, and install without guessing:
 
 - look through the repo
 - recommend the safest onboarding path
@@ -36,30 +43,46 @@ Install Temper from GitHub into a target repo:
 pnpm add -D github:mokn/temper#main
 ```
 
-Then from that target repo:
+During active Temper development, `link:` gives you live updates without reinstalling:
+
+```bash
+# In your target repo's package.json devDependencies:
+"temper": "link:../temper"
+# then pnpm install
+```
+
+**New project:**
 
 ```bash
 pnpm exec temper assistant show --cwd .
-# Temper tells you what it saw and recommends the safest next move.
-# For established repos, that usually means rehearsing the install in a clean copy first.
-# After you accept the path and Temper finishes onboarding:
-pnpm exec temper inspect --cwd .
+# Temper asks what the game is, then:
+pnpm exec temper init --name "My Game" --family data-driven-progression-rpg --cwd .
 ```
 
-If you are wiring a Claude/Codex integration and want the machine-readable version of that same recommendation:
+**Existing project:**
+
+```bash
+pnpm exec temper assistant show --cwd .
+# Temper inspects the repo and recommends the safest next move.
+# For established repos, that usually means rehearsing first:
+pnpm exec temper onboard existing --cwd . --rehearse
+# Review the rehearsal output, then apply:
+pnpm exec temper onboard existing --cwd . --write
+```
+
+**Machine-readable output** for assistant integrations:
 
 ```bash
 pnpm exec temper assistant show --cwd . --json
 ```
 
-If you are onboarding manually instead of through an assistant chat:
+**Day-to-day updates** — when Temper canon changes, regenerate the repo surfaces:
 
 ```bash
-pnpm exec temper onboard existing --cwd . --preview
-pnpm exec temper onboard existing --cwd . --write
+pnpm exec temper assistant install --cwd .
 ```
 
-Other package managers work too:
+Other package managers:
 
 - `npx temper ...`
 - `yarn temper ...`
@@ -67,16 +90,25 @@ Other package managers work too:
 
 ## Core Commands
 
+**Setup**
+
+- `temper assistant show --cwd <repo>`
+  Starting point for any repo. Shows the recommended next move for unboarded repos; shows installed surfaces for boarded ones.
+- `temper init --cwd <repo> --name <name> --family <type>`
+  Initialize a new project from scratch.
+- `temper onboard existing --cwd <repo> --rehearse`
+  Rehearse onboarding in a disposable copy before touching the real repo.
 - `temper onboard existing --cwd <repo> --preview`
   Inspect the install plan without writing files.
-- `temper onboard existing --cwd <repo> --interview`
-  Emit the assistant-facing onboarding conversation plan.
 - `temper onboard existing --cwd <repo> --write`
   Install Temper into an existing repo.
-- `temper onboard existing --cwd <repo> --rehearse`
-  Rehearse onboarding in a disposable copy before you touch the real repo.
-- `temper assistant show --cwd <repo>`
-  If the repo is not onboarded yet, show the recommended next move. If it is onboarded, show the installed assistant surfaces.
+- `temper onboard existing --cwd <repo> --interview`
+  Emit the assistant-facing onboarding conversation plan (for assistant-driven flows).
+- `temper assistant install --cwd <repo>`
+  Regenerate the installed assistant surfaces from the current Temper canon. Run this after updating Temper.
+
+**Day-to-day**
+
 - `temper inspect --cwd <repo>`
   Show the installed canon, continuity, policy, and recent runs.
 - `temper session show --cwd <repo>`
@@ -91,10 +123,33 @@ Other package managers work too:
   Inspect a recorded run artifact.
 - `temper eval restart --cwd <repo>`
   Check whether the current continuity surfaces are good enough to resume cold.
+
+**Removal**
+
 - `temper uninstall --cwd <repo> --preview`
   Preview what Temper would remove.
 - `temper uninstall --cwd <repo> --write`
   Remove Temper-owned repo surfaces.
+
+## MCP Server
+
+`packages/mcp` ships a Model Context Protocol server that exposes the onboarding flow as five staged tools:
+
+```bash
+node packages/mcp/bin/temper-mcp.mjs
+```
+
+The tools follow the same staged pacing as the CLI — the LLM calls each one after the user confirms, not upfront:
+
+| Tool | Maps to |
+|---|---|
+| `temper_onboard_show` | `assistant show --json` |
+| `temper_onboard_findings` | analysis findings |
+| `temper_onboard_recommend` | recommendation |
+| `temper_onboard_preview` | `onboard existing --preview --json` |
+| `temper_onboard_apply` | `onboard existing --write` |
+
+Each tool description carries the pacing instruction so the LLM gates on user acknowledgment before advancing.
 
 ## Trust Model
 
