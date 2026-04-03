@@ -108,17 +108,43 @@ test("assistant show falls back to onboarding interview when Temper is installed
   assert.match(payload.interview.apply_command, /temper onboard existing --write/);
 });
 
-test("assistant show gives a user-facing recommended next move without json", async (t) => {
+test("assistant show delivers stage 1 only — strengths and hard stop", async (t) => {
   const repoDir = createFixtureRepo(t);
   const output = execFileSync("node", [CLI_PATH, "assistant", "show", "--cwd", repoDir], {
     encoding: "utf8"
   });
 
+  assert.match(output, /What's Already In Good Shape/);
+  assert.match(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /temper onboard existing --findings --cwd \./);
+  assert.match(output, /machine-readable version/);
+  assert.doesNotMatch(output, /## Recommended Next Move/);
+  assert.doesNotMatch(output, /Worth Knowing Before We Install/);
+});
+
+test("onboard existing --findings delivers stage 2 only — concerns and hard stop", async (t) => {
+  const repoDir = createFixtureRepo(t);
+  const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--findings"], {
+    encoding: "utf8"
+  });
+
+  assert.match(output, /Worth Knowing Before We Install/);
+  assert.match(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /temper onboard existing --recommend --cwd \./);
+  assert.doesNotMatch(output, /## Recommended Next Move/);
+  assert.doesNotMatch(output, /What's Already In Good Shape/);
+});
+
+test("onboard existing --recommend delivers stage 3 only — recommendation and no hard stop", async (t) => {
+  const repoDir = createFixtureRepo(t);
+  const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--recommend"], {
+    encoding: "utf8"
+  });
+
   assert.match(output, /## Recommended Next Move/);
   assert.match(output, /rehearsal first/);
-  assert.match(output, /temper onboard existing --rehearse --cwd \./);
   assert.match(output, /start the dry run/);
-  assert.match(output, /machine-readable version/);
+  assert.doesNotMatch(output, /STOP\. Do not continue past this line/);
 });
 
 test("assistant show returns machine-readable installed surfaces once onboarding is complete", async (t) => {

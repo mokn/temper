@@ -16,8 +16,11 @@ import {
   buildOnboardingInstallPreview,
   materializeOnboardingInstall,
   planTemperUninstall,
+  renderOnboardingFindings,
   renderOnboardingInterview,
+  renderOnboardingOpening,
   renderOnboardingPreview,
+  renderOnboardingRecommendation,
   renderTemperUninstallPreview,
   runExistingProjectOnboardingRehearsal
 } from "./lib/onboarding.mjs";
@@ -592,12 +595,14 @@ function runOnboard(rest) {
   const args = parseCommonArgs(subRest);
   const actionModes = [
     args.interview ? "interview" : null,
+    args.findings ? "findings" : null,
+    args.recommend ? "recommend" : null,
     args.preview ? "preview" : null,
     args.write ? "write" : null,
     args.rehearse ? "rehearse" : null
   ].filter(Boolean);
   if (actionModes.length > 1) {
-    throw new Error("Choose one of --interview, --preview/--dry-run, --write, or --rehearse.");
+    throw new Error("Choose one of --interview, --findings, --recommend, --preview/--dry-run, --write, or --rehearse.");
   }
 
   if (args.rehearse) {
@@ -722,6 +727,24 @@ function runOnboard(rest) {
     console.log(`Root: ${result.analysis.root}`);
     console.log("");
     process.stdout.write(renderOnboardingInterview(interview));
+    return;
+  }
+
+  if (args.findings) {
+    printTemperBanner("Onboarding — stage 2 of 3");
+    console.log("");
+    console.log(`Root: ${result.analysis.root}`);
+    console.log("");
+    process.stdout.write(renderOnboardingFindings(interview));
+    return;
+  }
+
+  if (args.recommend) {
+    printTemperBanner("Onboarding — stage 3 of 3");
+    console.log("");
+    console.log(`Root: ${result.analysis.root}`);
+    console.log("");
+    process.stdout.write(renderOnboardingRecommendation(interview));
     return;
   }
 
@@ -979,7 +1002,7 @@ function runAssistant(rest) {
     console.log(`Root: ${interview.project_root}`);
     console.log("Status: needs onboarding");
     console.log("");
-    process.stdout.write(renderOnboardingInterview(interview));
+    process.stdout.write(renderOnboardingOpening(interview));
     console.log("");
     console.log("If you want the machine-readable version for an assistant integration, rerun with `--json`.");
     return;
@@ -1100,7 +1123,9 @@ function parseCommonArgs(args) {
     json: false,
     rehearse: false,
     preview: false,
-    interview: false
+    interview: false,
+    findings: false,
+    recommend: false
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -1145,6 +1170,12 @@ function parseCommonArgs(args) {
         break;
       case "interview":
         parsed.interview = true;
+        break;
+      case "findings":
+        parsed.findings = true;
+        break;
+      case "recommend":
+        parsed.recommend = true;
         break;
       case "json":
         parsed.json = true;

@@ -357,6 +357,115 @@ export function renderOnboardingInterview(interview) {
   return lines.join("\n") + "\n";
 }
 
+export function renderOnboardingOpening(interview) {
+  const findings = interview.analysis_findings ?? { strengths: [], concerns: [] };
+  const strengths = findings.strengths;
+
+  const lines = ["## What's Already In Good Shape"];
+  if (strengths.length > 0) {
+    for (const s of strengths) {
+      lines.push(`- ${s.text}`);
+    }
+  } else {
+    lines.push("- The repo is intelligible enough for Temper to start building a local operating contract.");
+  }
+
+  const openingMessage = strengths.length > 0
+    ? [
+        "Okay, I looked through the whole thing. A few things are already in good shape:",
+        "",
+        ...strengths.map((s) => `- ${s.text}`),
+        "",
+        "There are also a couple of things worth knowing before we install anything. I'll share those next."
+      ].join("\n")
+    : "Okay, I looked through the repo. It's clean enough to work with. Let me flag a couple of things before we proceed.";
+
+  lines.push("", "## Suggested Opening Message", openingMessage);
+
+  lines.push(
+    "",
+    "---",
+    "STOP. Do not continue past this line.",
+    "Deliver the opening message above. Wait for the user to respond.",
+    "",
+    "When they are ready, run:",
+    "  pnpm exec temper onboard existing --findings --cwd ."
+  );
+
+  return lines.join("\n") + "\n";
+}
+
+export function renderOnboardingFindings(interview) {
+  const findings = interview.analysis_findings ?? { strengths: [], concerns: [] };
+  const concerns = findings.concerns;
+
+  const lines = ["## Worth Knowing Before We Install"];
+  if (concerns.length > 0) {
+    for (const c of concerns) {
+      lines.push(`- ${c.title}`);
+      lines.push(`  ${c.impact}`);
+    }
+  } else {
+    lines.push("- Nothing significant to flag. The repo is in clean enough shape to proceed.");
+  }
+
+  const findingsMessage = concerns.length > 0
+    ? [
+        "Before we go any further, a couple of things worth knowing:",
+        "",
+        ...concerns.map((c) => `- ${c.title} ${c.impact}`),
+        "",
+        "Once you've had a chance to take that in, I'll share my recommendation for how to proceed."
+      ].join("\n")
+    : "Nothing significant to flag here — the repo is in clean shape. Ready to move to the recommendation whenever you are.";
+
+  lines.push("", "## Suggested Message", findingsMessage);
+
+  lines.push(
+    "",
+    "---",
+    "STOP. Do not continue past this line.",
+    "Deliver the findings message above. Wait for the user to respond.",
+    "",
+    "When they are ready, run:",
+    "  pnpm exec temper onboard existing --recommend --cwd ."
+  );
+
+  return lines.join("\n") + "\n";
+}
+
+export function renderOnboardingRecommendation(interview) {
+  const move = interview.user_facing_next_move;
+  const lines = [
+    "## Recommended Next Move",
+    `- ${move.summary}`,
+    `- run: \`${move.command}\``,
+    `- chat reply: ${move.confirm_prompt}`,
+    ...asBulletLines(move.why.map((item) => `why: ${item}`))
+  ];
+
+  if (move.alternatives.length > 0) {
+    lines.push("", "## If The User Wants A Different Path");
+    for (const alt of move.alternatives) {
+      lines.push(`- ${alt.label} — they say ${alt.reply}`);
+      lines.push(`  run: \`${alt.command}\``);
+    }
+  }
+
+  const recommendationMessage = [
+    move.summary,
+    "",
+    move.confirm_prompt,
+    ...(move.alternatives.length > 0
+      ? ["", "Or if you want to go a different direction:", ...move.alternatives.map((alt) => `- ${alt.label} — say ${alt.reply}`)]
+      : [])
+  ].join("\n");
+
+  lines.push("", "## Suggested Message", recommendationMessage);
+
+  return lines.join("\n") + "\n";
+}
+
 export function runExistingProjectOnboardingRehearsal(options = {}) {
   const sourceRoot = path.resolve(options.cwd ?? process.cwd());
   const rehearsalRoot = resolveRehearsalRoot(sourceRoot, options);
