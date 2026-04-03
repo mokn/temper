@@ -1143,7 +1143,24 @@ function isNewProject(cwd) {
     return true;
   }
   const meaningful = entries.filter(
-    (entry) => !["node_modules", ".git", ".temper", ".claude", ".env", ".env.local"].includes(entry)
+    (entry) =>
+      ![
+        "node_modules",
+        ".git",
+        ".temper",
+        ".claude",
+        ".env",
+        ".env.local",
+        "package.json",
+        "pnpm-lock.yaml",
+        "yarn.lock",
+        "package-lock.json",
+        ".gitignore",
+        ".npmrc",
+        ".pnpmfile.cjs",
+        "README.md",
+        "readme.md"
+      ].includes(entry)
   );
   return meaningful.length === 0;
 }
