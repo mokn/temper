@@ -956,7 +956,7 @@ function runAssistant(rest) {
 
     if (subcommand === "install") {
       throw new Error(
-        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd . --json` and ask the interview questions in chat first."
+        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd . --json` and continue the onboarding chat first."
       );
     }
 
@@ -999,6 +999,29 @@ function runAssistant(rest) {
     console.log(`Root: ${config.__projectRoot}`);
     console.log("Generated:");
     printList(written);
+    return;
+  }
+
+  if (args.json) {
+    console.log(
+      JSON.stringify(
+        {
+          status: "onboarded",
+          project_root: config.__projectRoot,
+          guides: {
+            claude: ".temper/assistants/claude.md",
+            codex: ".temper/assistants/codex.md",
+            shared_canon_json: ".temper/assistants/shared-canon.json",
+            shared_canon_markdown: ".temper/assistants/shared-canon.md"
+          },
+          commands: {
+            claude: ".claude/commands/temper-*.md"
+          }
+        },
+        null,
+        2
+      )
+    );
     return;
   }
 

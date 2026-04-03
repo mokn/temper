@@ -139,62 +139,70 @@ export function buildOnboardingInterview(options = {}) {
   const environments = result.config.environments ?? {};
   const questions = [
     {
-      id: "name",
-      kind: "text",
-      prompt: "What should Temper call this repo in its operating contract?",
-      default: answers.name || result.config.name,
-      rationale: "Shows up in Temper reports and assistant-facing repo identity."
+      id: "project_state",
+      kind: "choice",
+      prompt: "Is this a new project or an existing one?",
+      default: "existing_project",
+      options: [
+        {
+          value: "existing_project",
+          label: "Existing project",
+          description: "Analyze the current repo and fit Temper around what is already here."
+        },
+        {
+          value: "new_project",
+          label: "New project",
+          description: "Use the lighter greenfield setup path instead of retrofitting an established repo."
+        }
+      ],
+      rationale: "Chooses the onboarding path before the assistant changes repo state."
     },
     {
-      id: "family",
-      kind: "text",
-      prompt: "Is the inferred repo family right, or should it use a different family id?",
-      default: answers.family || result.config.family,
-      rationale: "Controls doctrine framing and capability routing."
-    },
-    {
-      id: "stack",
-      kind: "text",
-      prompt: "Is the inferred stack right, or should it use a different stack id?",
-      default: answers.stack || result.config.stack?.id || "",
-      rationale: "Controls the repo contract Temper writes for assistants."
+      id: "existing_project_mode",
+      kind: "choice",
+      prompt: "If this is an existing project, do you want me to start with a dry run?",
+      default: result.onboarding.lifecycle?.id === "live" ? "dry_run_first" : "apply_here",
+      options: [
+        {
+          value: "dry_run_first",
+          label: "Dry run first",
+          description: "Create a clean rehearsal copy, install Temper there, and review the structure before touching this repo."
+        },
+        {
+          value: "apply_here",
+          label: "Apply here",
+          description: "Install Temper directly in this repo with the safe defaults it inferred."
+        }
+      ],
+      rationale: "Keeps onboarding reversible for an established codebase.",
+      when: {
+        project_state: "existing_project"
+      }
     }
   ];
-
-  if (environments.beta) {
-    questions.push({
-      id: "beta_branch",
-      kind: "text",
-      prompt: "Which branch should Temper treat as beta or staging?",
-      default: answers.beta_branch || environments.beta.branch,
-      rationale: "Used for environment routing and ship context."
-    });
-  }
-
-  if (environments.prod) {
-    questions.push({
-      id: "prod_branch",
-      kind: "text",
-      prompt: "Which branch should Temper treat as production?",
-      default: answers.prod_branch || environments.prod.branch,
-      rationale: "Used for environment routing and prod-sensitive confirmation."
-    });
-  }
+  const findings = buildAssistantAnalysisFindings(result, environments);
 
   return {
     project_root: result.analysis.root,
     recommended_answers: answers,
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
+    dry_run_command:
+      "temper onboard existing --rehearse --cwd . [--out <rehearsal-dir>] [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
+    preview_command:
+      "temper onboard existing --preview --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
     assistant_flow: {
       mode: "continue_in_chat",
-      opening: "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
+      opening: "Before I change this repo, I want to confirm the onboarding path.",
       style_rules: [
         "Do not dump the raw interview JSON to the user.",
         "Do not say 'Temper is asking'.",
-        "Ask the questions as a natural continuation of the current install conversation."
+        "Ask the questions as a natural continuation of the current install conversation.",
+        "Start with the human onboarding path questions before surfacing lower-level inferred config.",
+        "After the user picks a path, summarize the repo findings in plain English and explain workflow impact."
       ],
-      reply_template: buildOnboardingReplyTemplate(questions)
+      reply_template: buildOnboardingReplyTemplate(questions),
+      follow_up_template: buildOnboardingFindingTemplate(findings)
     },
     inferred: {
       name: result.analysis.name,
@@ -205,8 +213,9 @@ export function buildOnboardingInterview(options = {}) {
       )
     },
     questions,
+    analysis_findings: findings,
     next_step:
-      "Ask these questions in chat, then rerun the apply command with any overrides the user gave."
+      "Ask the starter questions in chat first. If the user wants a dry run, use the dry_run_command. If they want to apply directly, use the apply_command. After the path decision, summarize the analysis_findings in plain language."
   };
 }
 
@@ -317,19 +326,35 @@ export function renderOnboardingInterview(interview) {
   const lines = [
     "## Onboarding Interview",
     "- continue the install conversation naturally",
+    "- start with the human onboarding path questions",
     "- do not dump the raw interview JSON to the user",
-    "- when they answer, rerun `temper onboard existing --write` with any overrides",
+    "- default to the dry run path when the repo already looks live unless the user says otherwise",
+    "- only surface lower-level config ids if the user asks to customize them",
     "",
     "## Suggested Assistant Reply",
-    interview.assistant_flow?.reply_template || "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
+    interview.assistant_flow?.reply_template ||
+      "Before I change this repo, I want to confirm the onboarding path.",
     "",
-    "## Questions"
+    "## Starter Questions"
   ];
 
   for (const [index, question] of interview.questions.entries()) {
     lines.push(`${index + 1}. ${question.prompt}`);
-    lines.push(`   default: ${question.default || "none"}`);
+    lines.push(`   default: ${formatInterviewDefault(question)}`);
+    if (question.options?.length) {
+      lines.push(`   options: ${question.options.map((item) => `${item.label} (${item.description})`).join(" | ")}`);
+    }
     lines.push(`   why: ${question.rationale}`);
+  }
+
+  if (interview.analysis_findings?.length) {
+    lines.push("", "## Findings To Surface After The Path Decision");
+    for (const finding of interview.analysis_findings) {
+      lines.push(`- ${finding.title}`);
+      lines.push(`  summary: ${finding.summary}`);
+      lines.push(`  impact: ${finding.impact}`);
+      lines.push(`  default action: ${finding.default_action}`);
+    }
   }
 
   return lines.join("\n") + "\n";
@@ -1409,16 +1434,85 @@ function applyOnboardingAnswersToConfig(config, answers) {
 
 function buildOnboardingReplyTemplate(questions) {
   const lines = [
-    "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
+    "Before I change this repo, I want to confirm the onboarding path.",
+    "",
+    "Reply with any changes or say `use defaults`.",
     ""
   ];
 
   for (const [index, question] of questions.entries()) {
     lines.push(`${index + 1}. ${question.prompt}`);
-    lines.push(`Default: ${question.default || "none"}`);
+    lines.push(`Default: ${formatInterviewDefault(question)}`);
+    if (question.id === "existing_project_mode") {
+      lines.push("I can create a clean rehearsal copy, install Temper there, and if you like the structure I can apply it here afterward.");
+    }
   }
 
+  lines.push("", "After that I’ll walk you through anything I found that could affect your workflow or safety rails.");
+
   return lines.join("\n");
+}
+
+function buildOnboardingFindingTemplate(findings) {
+  if (!findings.length) {
+    return "After I confirm the path, I’ll summarize any workflow or safety issues I found before I apply anything.";
+  }
+
+  const lines = ["Once the path is clear, I should surface findings like:"];
+  for (const finding of findings) {
+    lines.push(`- ${finding.title} ${finding.impact}`);
+  }
+  return lines.join("\n");
+}
+
+function buildAssistantAnalysisFindings(result, environments) {
+  const findings = [];
+  const recurringFailureModes = result.onboarding.memory?.recurring_failure_modes ?? [];
+  const gatedFullSteps = result.onboarding.execution_policy?.lifecycle?.ship_modes?.full?.gated_steps ?? [];
+  const branchSummary = [environments.beta?.branch ? `beta on \`${environments.beta.branch}\`` : null, environments.prod?.branch ? `prod on \`${environments.prod.branch}\`` : null]
+    .filter(Boolean)
+    .join(" and ");
+
+  if (result.onboarding.lifecycle?.id === "live") {
+    findings.push({
+      id: "established-project",
+      title: "This looks like an existing project with real workflow already in place.",
+      summary: `I found established repo history${branchSummary ? `, ${branchSummary},` : ""} and automation surfaces that should stay reversible while we add Temper.`,
+      impact: "Best default is to rehearse the install in a clean copy first, then apply it here once the structure looks right.",
+      default_action: "offer_dry_run_first"
+    });
+  }
+
+  if (recurringFailureModes.some((item) => /root `test`/i.test(item))) {
+    findings.push({
+      id: "root-test-is-lint",
+      title: "The root test command looks more like lint than deep release confidence.",
+      summary: "Temper detected that the current root test path is more about validation hygiene than the full confidence story.",
+      impact: "This will not break the repo. It changes how Temper frames the default ship flow so the assistant does not overstate coverage.",
+      default_action: "keep_visible_in_ship_guidance"
+    });
+  }
+
+  if (gatedFullSteps.length > 0) {
+    findings.push({
+      id: "gated-live-verification",
+      title: "I found live-stateful verification that should stay explicit.",
+      summary: `These steps touch shared runtime surfaces or real environment credentials: ${gatedFullSteps.join(", ")}.`,
+      impact: "Temper should keep them gated by default and only run them when you explicitly promote them.",
+      default_action: "gate_by_default"
+    });
+  }
+
+  return findings;
+}
+
+function formatInterviewDefault(question) {
+  const options = question.options ?? [];
+  if (!options.length) {
+    return question.default || "none";
+  }
+
+  return options.find((item) => item.value === question.default)?.label || question.default || "none";
 }
 
 function scanPackageDefinitions(root) {

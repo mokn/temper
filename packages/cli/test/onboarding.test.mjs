@@ -110,15 +110,18 @@ test("onboard existing --interview emits assistant-facing questions and defaults
   assert.deepEqual(Object.keys(parsed), ["interview"]);
   assert.equal(fs.realpathSync(parsed.interview.project_root), fs.realpathSync(repoDir));
   assert.equal(parsed.interview.assistant_flow.mode, "continue_in_chat");
-  assert.match(parsed.interview.assistant_flow.opening, /Before I finish setup/);
+  assert.match(parsed.interview.assistant_flow.opening, /Before I change this repo/);
   assert.ok(parsed.interview.assistant_flow.style_rules.some((item) => item.includes("Do not dump the raw interview JSON")));
-  assert.ok(parsed.interview.questions.some((item) => item.id === "name"));
-  assert.ok(parsed.interview.questions.some((item) => item.id === "family"));
-  assert.ok(parsed.interview.questions.some((item) => item.id === "stack"));
-  assert.ok(parsed.interview.questions.some((item) => item.id === "beta_branch"));
-  assert.ok(parsed.interview.questions.some((item) => item.id === "prod_branch"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "project_state"));
+  assert.ok(parsed.interview.questions.some((item) => item.id === "existing_project_mode"));
+  assert.match(parsed.interview.assistant_flow.reply_template, /Is this a new project or an existing one/);
+  assert.match(parsed.interview.assistant_flow.reply_template, /dry run/);
+  assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "established-project"));
+  assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "root-test-is-lint"));
+  assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "gated-live-verification"));
   assert.match(parsed.interview.apply_command, /temper onboard existing --write/);
-  assert.match(parsed.interview.next_step, /rerun the apply command/);
+  assert.match(parsed.interview.dry_run_command, /temper onboard existing --rehearse/);
+  assert.match(parsed.interview.next_step, /Ask the starter questions in chat first/);
 });
 
 test("onboard existing --write applies chat-collected onboarding overrides", async (t) => {

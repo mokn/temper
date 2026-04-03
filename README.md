@@ -45,8 +45,10 @@ Then from that target repo:
 
 ```bash
 pnpm exec temper assistant show --cwd . --json
-# ask the interview questions in Claude/Codex chat
-# then apply the answers with temper onboard existing --write ...
+# let the assistant ask whether this is a new or existing project
+# for existing repos, choose dry run or apply-here first
+# then let the assistant summarize any workflow-impacting findings in plain English
+# and apply the chosen path with rehearse/write
 pnpm exec temper inspect --cwd .
 ```
 
@@ -68,13 +70,13 @@ Other package managers work too:
 - `temper onboard existing --cwd <repo> --preview`
   Inspect the exact install plan without writing files.
 - `temper onboard existing --cwd <repo> --interview`
-  Emit the assistant-facing onboarding questions and defaults.
+  Emit the assistant-facing onboarding conversation plan.
 - `temper onboard existing --cwd <repo> --write`
   Install Temper into an existing repo.
 - `temper onboard existing --cwd <repo> --rehearse`
   Replay onboarding in a disposable lab.
 - `temper assistant show --cwd <repo>`
-  If the repo is not onboarded yet, return the interview the assistant should run in chat. If it is onboarded, show the installed assistant surfaces.
+  If the repo is not onboarded yet, return the assistant onboarding plan for chat. If it is onboarded, show the installed assistant surfaces.
 - `temper inspect --cwd <repo>`
   Show the installed canon, continuity, policy, and recent runs.
 - `temper session show --cwd <repo>`

@@ -100,9 +100,36 @@ test("assistant show falls back to onboarding interview when Temper is installed
   assert.equal(payload.next_action, "continue_in_chat");
   assert.ok(payload.interview);
   assert.equal(payload.interview.assistant_flow.mode, "continue_in_chat");
-  assert.match(payload.interview.assistant_flow.reply_template, /Reply with any changes or say `use defaults`/);
-  assert.ok(payload.interview.questions.some((item) => item.id === "name"));
+  assert.match(payload.interview.assistant_flow.reply_template, /Is this a new project or an existing one/);
+  assert.ok(payload.interview.questions.some((item) => item.id === "project_state"));
+  assert.ok(payload.interview.questions.some((item) => item.id === "existing_project_mode"));
+  assert.ok(payload.interview.analysis_findings.some((item) => item.id === "established-project"));
   assert.match(payload.interview.apply_command, /temper onboard existing --write/);
+});
+
+test("assistant show returns machine-readable installed surfaces once onboarding is complete", async (t) => {
+  const repoDir = createFixtureRepo(t);
+  const analysis = analyzeProject({ cwd: repoDir });
+  const config = createConfigFromAnalysis(analysis);
+
+  writeProjectConfig(repoDir, config);
+  installAssistantAdapters({
+    projectRoot: repoDir,
+    config,
+    analysis,
+    assistants: ["claude", "codex"]
+  });
+
+  const payload = JSON.parse(
+    execFileSync("node", [CLI_PATH, "assistant", "show", "--cwd", repoDir, "--json"], {
+      encoding: "utf8"
+    })
+  );
+
+  assert.equal(payload.status, "onboarded");
+  assert.equal(payload.guides.claude, ".temper/assistants/claude.md");
+  assert.equal(payload.guides.codex, ".temper/assistants/codex.md");
+  assert.equal(payload.commands.claude, ".claude/commands/temper-*.md");
 });
 
 test("runShip executes configured steps from generated config", async (t) => {
