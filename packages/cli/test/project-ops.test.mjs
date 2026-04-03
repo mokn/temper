@@ -67,8 +67,7 @@ test("assistant install writes guides and Claude commands", async (t) => {
   assert.ok(written.includes(".temper/assistants/claude.md"));
   assert.ok(written.includes(".temper/assistants/codex.md"));
   assert.ok(written.includes(".temper/assistants/shared-canon.json"));
-  assert.ok(written.includes(".claude/commands/temper-ship.md"));
-  assert.equal(fs.existsSync(path.join(repoDir, ".claude/commands/temper-balance.md")), true);
+  assert.equal(written.some((f) => f.startsWith(".claude/commands/temper-")), false);
   assert.match(
     fs.readFileSync(path.join(repoDir, ".temper/assistants/codex.md"), "utf8"),
     /shared-canon\.json/

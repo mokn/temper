@@ -206,11 +206,6 @@ ${contract.resurfacing.map((item) => `- ${item.message}`).join("\n")}
 `;
 }
 
-export function renderClaudeCommand(command, contract) {
-  const commandInfo = commandSpec(command, contract);
-  return `${commandInfo.instructions}\n\nProject: \`${contract.project.name}\`\nShared canon: \`.temper/assistants/shared-canon.json\`\n`;
-}
-
 export function renderWorkflowHookBlock(contract) {
   const coach = contract.capabilities.find((item) => item.id === "coach");
   const shipLite = contract.capabilities.find((item) => item.id === "ship_lite");
@@ -328,35 +323,6 @@ function buildResurfacing(config, onboarding) {
       message: "Read `.temper/assistants/shared-canon.json` before adapting workflow guidance to Claude or Codex."
     }
   ];
-}
-
-function commandSpec(command, contract) {
-  const runtime = contract.runtime.command;
-  const map = {
-    ship: {
-      instructions: `Use Temper's shipping pipeline for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. Decide whether the work is \`lite\` or \`full\`.\n3. From the repo root, run \`${runtime} ship <lite|full> --cwd . --intent "<summary>"\`.\n4. Use the output as the operating baseline for your next response.\n\nDefault to \`full\` for player-facing, infra, economy, security, deploy, or multi-system changes.`
-    },
-    hotfix: {
-      instructions: `Use Temper's hotfix operating mode for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} hotfix --cwd . --json --env prod --intent "<incident summary>"\`.\n3. Ground your response in the returned doctrine and call out the narrowest safe fix path.`
-    },
-    ux: {
-      instructions: `Use Temper's UX routing for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} ux --cwd . --intent "<ux topic>"\`.\n3. Treat the first five minutes, readability, friction, and player trust as the core review surface.`
-    },
-    balance: {
-      instructions: `Use Temper's balance routing for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} balance --cwd . --intent "<balance topic>"\`.\n3. Use the selected hats and architecture family as the grounding for the response.`
-    },
-    security: {
-      instructions: `Use Temper's security routing for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} security --cwd . --intent "<security concern>"\`.\n3. Call out trust boundaries, exploit surfaces, and blast radius clearly.`
-    },
-    infra: {
-      instructions: `Use Temper's infra routing for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} infra --cwd . --intent "<infra change>"\`.\n3. Stay concrete about target environment, rollback, and service identity.`
-    },
-    coach: {
-      instructions: `Use Temper's doctrine router for this repo.\n\n1. Read \`.temper/assistants/shared-canon.json\`.\n2. From the repo root, run \`${runtime} coach --cwd . --json --intent "<user intent>"\`.\n3. Use the returned packet as grounding for hat-based feedback.`
-    }
-  };
-
-  return map[command];
 }
 
 function renderExecutionPolicyLines(policy) {

@@ -4,7 +4,6 @@ import { rel, writeProjectFile } from "./project-config.mjs";
 import {
   buildAssistantContract,
   renderAssistantReadme,
-  renderClaudeCommand,
   renderClaudeGuide,
   renderCodexGuide,
   renderSharedCanonMarkdown,
@@ -53,15 +52,6 @@ export function planAssistantAdapters(options) {
     files.push(
       planGeneratedFile(projectRoot, ".temper/assistants/claude.md", renderClaudeGuide(contract))
     );
-    for (const command of ["ship", "hotfix", "ux", "balance", "security", "infra", "coach"]) {
-      files.push(
-        planGeneratedFile(
-          projectRoot,
-          `.claude/commands/temper-${command}.md`,
-          renderClaudeCommand(command, contract)
-        )
-      );
-    }
   }
 
   if (assistants.includes("codex")) {

@@ -48,7 +48,8 @@ test("onboard existing --write materializes reports, config, and assistant surfa
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.json")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/shared-canon.md")));
   assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/codex.md")));
-  assert.ok(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")));
+  assert.ok(fs.existsSync(path.join(repoDir, ".temper/assistants/claude.md")));
+  assert.equal(fs.existsSync(path.join(repoDir, ".claude/commands/temper-ship.md")), false);
   assert.match(fs.readFileSync(path.join(repoDir, "SESSION.md"), "utf8"), /TEMPER_SESSION:BEGIN/);
 });
 
@@ -65,7 +66,7 @@ test("buildOnboardingInstallPreview enumerates file changes, habit changes, and 
   assert.ok(preview.file_changes.some((item) => item.path === "SESSION.md" && item.action === "update"));
   assert.ok(preview.file_changes.some((item) => item.path === ".temper/workflow/continuity.json" && item.action === "create"));
   assert.ok(preview.file_changes.some((item) => item.path === ".temper/assistants/shared-canon.json" && item.action === "create"));
-  assert.ok(preview.file_changes.some((item) => item.path === ".claude/commands/temper-ship.md" && item.action === "create"));
+  assert.equal(preview.file_changes.some((item) => item.path === ".claude/commands/temper-ship.md"), false);
   assert.ok(preview.habit_changes.some((line) => line.includes("pnpm exec temper coach --cwd . --json")));
   assert.ok(preview.habit_changes.some((line) => line.includes("handoff --cwd . --slug")));
   assert.ok(preview.habit_changes.some((line) => line.includes("shared-canon.json")));
@@ -215,12 +216,10 @@ test("onboard existing --rehearse replays a fresh install in a disposable lab", 
   assert.ok(!fs.existsSync(path.join(rehearsalRoot, ".temper/stale.txt")));
 
   const rehearsalAgents = fs.readFileSync(path.join(rehearsalRoot, "AGENTS.md"), "utf8");
-  const rehearsalShip = fs.readFileSync(path.join(rehearsalRoot, ".claude/commands/temper-ship.md"), "utf8");
   const rehearsalCanon = fs.readFileSync(path.join(rehearsalRoot, ".temper/assistants/shared-canon.json"), "utf8");
   assert.match(rehearsalAgents, /pnpm exec temper/);
   assert.ok(!rehearsalAgents.includes("pnpm exec old-temper"));
-  assert.match(rehearsalShip, /pnpm exec temper/);
-  assert.ok(!rehearsalShip.includes("old install"));
+  assert.equal(fs.existsSync(path.join(rehearsalRoot, ".claude/commands/temper-ship.md")), false);
   assert.match(rehearsalCanon, /shared-canon/);
   assert.match(fs.readFileSync(path.join(rehearsalRoot, "SESSION.md"), "utf8"), /TEMPER_SESSION:BEGIN/);
 });
