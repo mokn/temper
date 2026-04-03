@@ -70,7 +70,7 @@ export function resolveFamily(input) {
   return { id: resolved, label, inferred: false };
 }
 
-export function buildInitConfig({ name, family, stack, packageManager = "pnpm" }) {
+export function buildInitConfig({ name, family, stack, packageManager = "pnpm", description }) {
   const resolvedFamily = resolveFamily(family);
   const stackId = stack || "browser-typescript-monorepo";
 
@@ -104,7 +104,7 @@ export function buildInitConfig({ name, family, stack, packageManager = "pnpm" }
       install_claude_commands: true,
       install_codex_guides: true
     },
-    notes: []
+    notes: description ? [description] : []
   };
 }
 
@@ -126,9 +126,9 @@ function buildStubAnalysis({ name, family, stack, packageManager }) {
   };
 }
 
-export function materializeInitInstall({ projectRoot, name, family, stack, packageManager, assistants = ["claude", "codex"] }) {
+export function materializeInitInstall({ projectRoot, name, family, stack, packageManager, description, assistants = ["claude", "codex"] }) {
   const root = path.resolve(projectRoot);
-  const config = buildInitConfig({ name, family, stack, packageManager });
+  const config = buildInitConfig({ name, family, stack, packageManager, description });
   const analysis = buildStubAnalysis({ name, family, stack, packageManager });
 
   const configPath = writeProjectConfig(root, config);
@@ -162,14 +162,20 @@ const FAMILY_FIRST_STEPS = {
   "social-persistent-ugc": "player identity, world persistence, creation tools, or social graph"
 };
 
-export function renderInitSuccess({ name, family }) {
+export function renderInitSuccess({ name, family, description }) {
   const resolvedFamily = resolveFamily(family);
-  const firstSteps = FAMILY_FIRST_STEPS[resolvedFamily.id] ?? "core systems";
+  const intent = description || `new ${resolvedFamily.label} game called ${name}`;
   const lines = [
     "## Suggested First Message",
     `You're set up. ${name} is configured as a ${resolvedFamily.label} game.`,
     "",
-    `To get started, tell me what you want to tackle first — ${firstSteps} — or I can suggest a good starting point.`
+    "Let me pull up a design brief for you.",
+    "",
+    "---",
+    "STOP. Do not continue past this line.",
+    "Run the following and deliver the output to the user:",
+    "",
+    `  pnpm exec temper coach --cwd . --intent "${intent}"`
   ];
   return lines.join("\n") + "\n";
 }
@@ -184,7 +190,7 @@ export function renderInitOpening({ name, family }) {
     "Okay, starting from scratch. Two things I need from you:",
     "",
     "1. What's the game called?",
-    "2. What kind of game is it?",
+    "2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.",
     "",
     "Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim"
   ];

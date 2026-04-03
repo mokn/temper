@@ -551,6 +551,7 @@ function runInit(rest) {
       name: args.name,
       family: args.family,
       stack: args.stack,
+      description: args.description,
       assistants: args.assistants
     });
 
@@ -587,7 +588,7 @@ function runInit(rest) {
     console.log("Generated:");
     printList(allGenerated.map((p) => relativize(projectRoot, p)));
     console.log("");
-    process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
+    process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
     return;
   }
 
@@ -1259,6 +1260,9 @@ function parseCommonArgs(args) {
         break;
       case "name":
         parsed.name = nextValue;
+        break;
+      case "description":
+        parsed.description = nextValue;
         break;
       case "assistant":
       case "assistants":
