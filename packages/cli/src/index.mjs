@@ -64,7 +64,8 @@ const capabilityCommands = new Set([
   "balance",
   "audit",
   "ux",
-  "future"
+  "future",
+  "gamify"
 ]);
 
 export async function main(argv) {
@@ -428,7 +429,7 @@ function runEval(rest) {
 }
 
 async function runCapability(command, rest) {
-  const supportsCoach = new Set(["ship", "hotfix", "balance", "ux", "security", "infra"]);
+  const supportsCoach = new Set(["ship", "hotfix", "balance", "ux", "security", "infra", "gamify"]);
   const capabilityRest = [...rest];
   const mode =
     command === "ship" && (capabilityRest[0] === "full" || capabilityRest[0] === "lite")

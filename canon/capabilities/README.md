@@ -32,5 +32,6 @@ Seeded capabilities in this repo:
 - audit
 - ux
 - future
+- gamify
 
 More capabilities will be added as the runtime grows.

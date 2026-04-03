@@ -187,6 +187,12 @@ const CAPABILITY_REGISTRY = {
     docId: "capabilities/future",
     hats: ["wright", "carmack", "meier"],
     keywords: ["future", "roadmap", "migration", "extensibility", "longterm"]
+  },
+  gamify: {
+    id: "gamify",
+    docId: "capabilities/gamify",
+    hats: ["kaplan", "meier", "miyamoto"],
+    keywords: ["gamify", "gamification", "progression", "engagement", "retention", "streak", "mastery", "reward", "unlock"]
   }
 };
 
@@ -273,6 +279,12 @@ const FILE_HINTS = [
     hats: ["wright", "meier"],
     capabilities: ["future"],
     families: ["simulation-management-sandbox"]
+  },
+  {
+    pattern: /(streak|badge|leaderboard|achievement|xp|level|unlock|reward|gamif)/i,
+    hats: ["kaplan", "meier", "miyamoto"],
+    capabilities: ["gamify"],
+    families: []
   }
 ];
 
