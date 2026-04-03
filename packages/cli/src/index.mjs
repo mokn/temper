@@ -598,11 +598,11 @@ function runInit(rest) {
         cwd: projectRoot,
         repo: false
       });
-      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
+      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description, experience: args.experience }));
       console.log("");
       printCoachBrief(result.config.name, args.description, result.resolvedFamily.id, coachPacket, args.experience);
     } else {
-      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
+      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, experience: args.experience }));
     }
     return;
   }
@@ -717,15 +717,12 @@ function runOnboard(rest) {
     console.log("");
     console.log(`Source: ${rehearsal.sourceRoot}`);
     console.log(`Rehearsal: ${rehearsal.rehearsalRoot}`);
-    console.log(`Onboarding Report: ${rehearsal.generated.onboardingPath}`);
-    console.log(`Adoption Report: ${rehearsal.generated.adoptionPath}`);
-    console.log(`Replay Manifest: ${rehearsal.generated.rehearsalPath}`);
     console.log("");
     console.log("Reset:");
     printList(rehearsal.reset.length > 0 ? rehearsal.reset : ["no prior Temper install artifacts found"]);
     console.log("");
     console.log("Generated:");
-    printList([
+    printAnnotatedList(rehearsal.rehearsalRoot, [
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.configPath),
       ...rehearsal.generated.continuity.written,
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.onboardingPath),
@@ -734,6 +731,18 @@ function runOnboard(rest) {
       relativize(rehearsal.rehearsalRoot, rehearsal.generated.rehearsalPath),
       ...rehearsal.generated.written
     ]);
+    console.log("");
+    console.log("## Suggested Message");
+    console.log("Here's what Temper generated in the clean copy. Nothing was touched in your real repo.");
+    console.log("");
+    console.log("The key files:");
+    console.log("- temper.config.json — the operating contract. Every Temper command reads this.");
+    console.log("- .temper/assistants/claude.md — what I read at the start of every session in this repo.");
+    console.log("- SESSION.md — the active work board.");
+    console.log("- .claude/commands/temper-*.md — the slash commands (/temper-ship, /temper-coach, etc.).");
+    console.log("- .temper/reports/onboarding.md — the full analysis report.");
+    console.log("");
+    console.log("Want to review any of those before we apply it? Or say `apply it` and I'll write it to the real repo.");
     return;
   }
 
@@ -755,7 +764,8 @@ function runOnboard(rest) {
     stack: args.stack,
     name: args.name,
     betaBranch: args.betaBranch,
-    prodBranch: args.prodBranch
+    prodBranch: args.prodBranch,
+    experience: args.experience
   });
 
   if (args.json) {
@@ -849,12 +859,9 @@ function runOnboard(rest) {
     printTemperBanner("Existing project onboarding complete");
     console.log("");
     console.log(`Root: ${result.analysis.root}`);
-    console.log(`Config: ${generated.configPath}`);
-    console.log(`Onboarding Report: ${generated.onboardingPath}`);
-    console.log(`Adoption Report: ${generated.adoptionPath}`);
     console.log("");
     console.log("Generated:");
-    printList([
+    printAnnotatedList(result.analysis.root, [
       relativize(result.analysis.root, generated.configPath),
       ...generated.continuity.written,
       relativize(result.analysis.root, generated.onboardingPath),
@@ -864,6 +871,19 @@ function runOnboard(rest) {
     ]);
     console.log("");
     console.log(`Run Artifact: ${recorded.relativePath}`);
+    console.log("");
+    const lifecycle = result.onboarding?.lifecycle?.id ?? "";
+    const isLiveService = lifecycle.includes("live") || lifecycle.includes("existing");
+    console.log("## Suggested Message");
+    if (isLiveService) {
+      console.log("You're set up. Before your next feature, run:");
+      console.log(`  pnpm exec temper coach --cwd . --intent "<what you're about to build>"`);
+      console.log("That's how I understand the shape of new work before you start — so design and build advice is grounded in this project, not generic patterns.");
+    } else {
+      console.log("You're set up. When you're ready to start building, run:");
+      console.log(`  pnpm exec temper coach --cwd . --intent "<what you're starting>"`);
+      console.log("That's your entry point for design and build guidance that's specific to this game.");
+    }
     return;
   }
 
@@ -1186,6 +1206,35 @@ function isNewProject(cwd) {
 
 function capitalize(input) {
   return input.charAt(0).toUpperCase() + input.slice(1);
+}
+
+function printAnnotatedList(root, items) {
+  const annotations = {
+    "temper.config.json": "the operating contract — every Temper command reads this",
+    "SESSION.md": "the active work board",
+    ".temper/assistants/claude.md": "what I read at the start of every session",
+    ".temper/assistants/shared-canon.json": "machine-readable operating contract for assistant integrations",
+    ".temper/assistants/shared-canon.md": "human-readable version of the shared canon",
+    ".temper/assistants/README.md": "assistant surface index",
+    ".temper/assistants/codex.md": "Codex operating guide",
+    ".temper/reports/onboarding.md": "full analysis report",
+    ".temper/reports/onboarding.json": "machine-readable analysis report",
+    ".temper/reports/adoption.md": "migration guidance",
+    ".temper/reports/rehearsal.json": "replay manifest for this rehearsal",
+    ".temper/workflow/continuity.json": "machine-readable continuity state",
+    ".temper/workflow/session.json": "machine-readable session state",
+    ".temper/workflow/HANDOFF_TEMPLATE.md": "handoff document template"
+  };
+  for (const item of items) {
+    const rel = item.startsWith(root) ? item.slice(root.length + 1) : item;
+    const isCommand = rel.startsWith(".claude/commands/temper-");
+    if (isCommand) {
+      console.log(`  - ${rel}  (slash command)`);
+    } else {
+      const note = annotations[rel];
+      console.log(note ? `  - ${rel}  (${note})` : `  - ${rel}`);
+    }
+  }
 }
 
 function printCoachPacket(title, packet, options = {}) {

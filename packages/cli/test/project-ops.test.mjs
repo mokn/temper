@@ -135,7 +135,7 @@ test("onboard existing --findings delivers stage 2 only — concerns and hard st
   assert.doesNotMatch(output, /What's Already In Good Shape/);
 });
 
-test("onboard existing --recommend delivers stage 3 only — recommendation and no hard stop", async (t) => {
+test("onboard existing --recommend delivers stage 3 only — recommendation with hard stop and pre-action briefing", async (t) => {
   const repoDir = createFixtureRepo(t);
   const output = execFileSync("node", [CLI_PATH, "onboard", "existing", "--cwd", repoDir, "--recommend"], {
     encoding: "utf8"
@@ -144,7 +144,8 @@ test("onboard existing --recommend delivers stage 3 only — recommendation and 
   assert.match(output, /## Recommended Next Move/);
   assert.match(output, /rehearsal first/);
   assert.match(output, /start the dry run/);
-  assert.doesNotMatch(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /copy your repo into a clean environment/);
 });
 
 test("assistant show returns machine-readable installed surfaces once onboarding is complete", async (t) => {

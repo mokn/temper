@@ -145,6 +145,7 @@ export function buildOnboardingInterview(options = {}) {
     recommended_answers: answers,
     analysis_findings: findings,
     unreliable_analysis: unreliableAnalysis,
+    experience: options.experience ?? null,
     user_facing_next_move: userFacingNextMove,
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
@@ -372,7 +373,9 @@ export function renderOnboardingOpening(interview) {
       "The project name and game type couldn't be reliably inferred. Ask two questions before proceeding.",
       "",
       "## Suggested Opening Message",
-      "Before I set this up, two things I need from you:",
+      "Before we get started — Temper installs a local operating contract your AI reads at the start of every session. It's how I know what this project is, what's safe to ship, and how to hand off work without losing context.",
+      "",
+      "Two things I need from you first:",
       "",
       "1. Is this a new game, or something you've already started building?",
       "   If it's new — what's it called, and what kind of game is it?",
@@ -385,8 +388,10 @@ export function renderOnboardingOpening(interview) {
       "",
       "If new game:",
       "  pnpm exec temper init --name \"<name>\" --family <type> --experience <level> --description \"<description>\" --cwd .",
+      "If existing game — it's in this directory:",
+      "  pnpm exec temper onboard existing --cwd . --name \"<name>\" --family <type> --experience <level>",
       "If existing game — they give you a path:",
-      "  pnpm exec temper onboard existing --cwd <path> --name \"<name>\" --family <type>",
+      "  pnpm exec temper onboard existing --cwd <path> --name \"<name>\" --family <type> --experience <level>",
       "If existing game — they don't know the path:",
       "  Search for it: grep -ril \"<game name>\" ~ --include=\"*.json\" --include=\"*.js\" --include=\"*.ts\" --include=\"*.html\" 2>/dev/null",
       "  If found: run the onboard command above with the found path.",
@@ -424,14 +429,39 @@ export function renderOnboardingOpening(interview) {
   }
 
   // Build opening message from the project summary — no duplicate warnings
+  const isPrototype = summary?.lifecycle?.toLowerCase().includes("prototype") || summary?.lifecycle?.toLowerCase().includes("early");
+  const isLive = summary?.lifecycle?.toLowerCase().includes("live");
+
+  const lifecycleCoach = isLive
+    ? " — every ship decision is potentially player-facing"
+    : isPrototype
+      ? " — early enough to set up good habits from the start"
+      : " — still in structured development";
+
+  const commitCoach = summary?.has_git_history
+    ? summary.commit_count >= 500
+      ? ` — enough history to understand your release patterns without guessing`
+      : summary.commit_count >= 100
+        ? ` — good signal to work with`
+        : ""
+    : "";
+
+  const ciCoach = summary?.has_ci
+    ? " — Temper hooks into your existing release process instead of inventing one"
+    : " — we'll set up the workflow contract; add CI when you're ready to collaborate";
+
+  const sotCoach = summary?.has_source_of_truth
+    ? " — assistants can find canonical data without searching"
+    : " — we'll define these so assistants always know where to look";
+
   const auditLines = summary
     ? [
         `Okay, I went through ${summary.name}. Here's what I found:`,
         "",
-        `- **${summary.family}** game, ${summary.lifecycle.toLowerCase()}.`,
-        `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo.` : "No git history yet."}`,
-        `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}.` : "No CI workflows."}`,
-        `- ${summary.has_source_of_truth ? "Source-of-truth paths are defined." : "No source-of-truth paths — will need to define these."}`,
+        `- **${summary.family}** game, ${summary.lifecycle.toLowerCase()}${lifecycleCoach}.`,
+        `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo${commitCoach}.` : "No git history yet."}`,
+        `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}${ciCoach}.` : `No CI workflows${ciCoach}.`}`,
+        `- ${summary.has_source_of_truth ? `Source-of-truth paths are defined${sotCoach}.` : `No source-of-truth paths${sotCoach}.`}`,
         ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : []),
         ...(designerRead ? ["", designerRead] : [])
       ]
@@ -453,6 +483,7 @@ export function renderOnboardingOpening(interview) {
 
     const openingMessage = [...auditLines, "", ...recommendationLines].join("\n");
     lines.push("", "## Suggested Opening Message", openingMessage);
+    const experienceFlag = interview.experience ? ` --experience ${interview.experience}` : "";
     lines.push(
       "",
       "---",
@@ -461,9 +492,11 @@ export function renderOnboardingOpening(interview) {
       "Wait for the user to confirm or redirect.",
       "",
       "If they say apply it:",
-      "  pnpm exec temper onboard existing --write --cwd .",
+      "  Say: \"I'm going to write the operating contract into this repo now — a few new files, nothing destructive.\"",
+      `  Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`,
       "If they want a dry run first:",
-      "  pnpm exec temper onboard existing --rehearse --cwd ."
+      "  Say: \"I'm going to copy your repo into a clean environment and install Temper there, so you can see exactly what it would generate without touching your real project.\"",
+      `  Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`
     );
     return lines.join("\n") + "\n";
   }
@@ -472,6 +505,7 @@ export function renderOnboardingOpening(interview) {
   const openingMessage = [...auditLines, "", closingLine].join("\n");
 
   lines.push("", "## Suggested Opening Message", openingMessage);
+  const experienceFlag = interview.experience ? ` --experience ${interview.experience}` : "";
   lines.push(
     "",
     "---",
@@ -479,7 +513,7 @@ export function renderOnboardingOpening(interview) {
     "Deliver the opening message above. Wait for the user to respond.",
     "",
     "When they are ready, run:",
-    "  pnpm exec temper onboard existing --findings --cwd ."
+    `  pnpm exec temper onboard existing --findings --cwd .${experienceFlag}`
   );
 
   return lines.join("\n") + "\n";
@@ -499,11 +533,14 @@ export function renderOnboardingFindings(interview) {
     lines.push("- Nothing significant to flag. The repo is in clean enough shape to proceed.");
   }
 
+  const isFirstTimer = interview.experience === "first" || interview.experience === "first-time";
   const findingsMessage = concerns.length > 0
     ? [
-        "Before we go any further, a couple of things worth knowing:",
+        isFirstTimer
+          ? "Before we go any further, a couple of things worth knowing — and I'll explain what Temper does about each one:"
+          : "Before we go any further, a couple of things worth knowing:",
         "",
-        ...concerns.map((c) => `- ${c.title} ${c.impact}`),
+        ...concerns.flatMap((c) => [`- **${c.title}**`, `  ${c.impact}`]),
         "",
         "Once you've had a chance to take that in, I'll share my recommendation for how to proceed."
       ].join("\n")
@@ -511,6 +548,7 @@ export function renderOnboardingFindings(interview) {
 
   lines.push("", "## Suggested Message", findingsMessage);
 
+  const experienceFlag = interview.experience ? ` --experience ${interview.experience}` : "";
   lines.push(
     "",
     "---",
@@ -518,7 +556,7 @@ export function renderOnboardingFindings(interview) {
     "Deliver the findings message above. Wait for the user to respond.",
     "",
     "When they are ready, run:",
-    "  pnpm exec temper onboard existing --recommend --cwd ."
+    `  pnpm exec temper onboard existing --recommend --cwd .${experienceFlag}`
   );
 
   return lines.join("\n") + "\n";
@@ -552,6 +590,22 @@ export function renderOnboardingRecommendation(interview) {
   ].join("\n");
 
   lines.push("", "## Suggested Message", recommendationMessage);
+
+  const experienceFlag = interview.experience ? ` --experience ${interview.experience}` : "";
+  lines.push(
+    "",
+    "---",
+    "STOP. Do not continue past this line.",
+    "Deliver the recommendation message above. Wait for the user to confirm.",
+    "",
+    "When they confirm (e.g. 'start the dry run', 'yes', 'go ahead', 'apply it'):",
+    "  If dry run:",
+    "    Say: \"I'm going to copy your repo into a clean environment and install Temper there, so you can see exactly what it would generate without touching your real project. Give me a moment.\"",
+    `    Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`,
+    "  If applying directly:",
+    "    Say: \"I'm going to write the operating contract into this repo now — a few new files, nothing destructive.\"",
+    `    Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`
+  );
 
   return lines.join("\n") + "\n";
 }

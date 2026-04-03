@@ -152,6 +152,17 @@ export function materializeInitInstall({ projectRoot, name, family, stack, packa
   return { configPath, continuity, written, config, resolvedFamily: resolveFamily(family) };
 }
 
+const FAMILY_DESIGNER_READ = {
+  "data-driven-progression-rpg": "Progression games live and die by number feel. Get the economy right before you build art around it — a broken XP curve or stat cliff will undermine everything else.",
+  "deterministic-turn-based": "Turn-based games are puzzles with personality. Rules need to be learnable and consistent before anything else — players can't strategize through ambiguity.",
+  "real-time-action": "Action games are input-feel first. Everything else is secondary until movement feels right — if the controller doesn't feel good, no amount of content will save it.",
+  "real-time-wave-systemic": "Wave games live in the first 60 seconds. The core loop needs to be satisfying immediately or players won't stay long enough to find the depth.",
+  "competitive-server-authoritative": "Competitive games are trust machines. Every match outcome needs to feel earned — perceived fairness matters more than actual fairness at launch.",
+  "simulation-management-sandbox": "Sim games are about interesting decisions, not correct ones. If every player converges on the same optimal path, the design space is too narrow.",
+  "narrative-choice-driven-puzzle": "Narrative games make promises with every choice. If decisions don't feel like they matter, the story collapses — even great writing can't recover from that.",
+  "social-persistent-ugc": "Social games depend on player investment, not designer investment. Build tools that let players make things they're proud of before you build content."
+};
+
 const FAMILY_FIRST_STEPS = {
   "data-driven-progression-rpg": "character classes, stat systems, loot tables, or progression curves",
   "deterministic-turn-based": "game board, card definitions, turn structure, or win conditions",
@@ -163,23 +174,47 @@ const FAMILY_FIRST_STEPS = {
   "social-persistent-ugc": "player identity, world persistence, creation tools, or social graph"
 };
 
-export function renderInitSuccess({ name, family }) {
+export function renderInitSuccess({ name, family, experience }) {
   const resolvedFamily = resolveFamily(family);
+  const firstSteps = FAMILY_FIRST_STEPS[resolvedFamily.id] ?? "core game loop";
+  const designerRead = FAMILY_DESIGNER_READ[resolvedFamily.id] ?? null;
+  const isFirstTimer = experience === "first" || experience === "first-time";
+
   const lines = [
     "## What Just Landed",
     `${name} is scaffolded as a ${resolvedFamily.label} game.`,
     "",
     "Here's what Temper installed:",
-    "- **temper.config.json** — your operating contract. Knows the game type, stack, and how to ship. Every Temper command reads this.",
+    "- **temper.config.json** — the operating contract. Every Temper command reads this to know what kind of game this is and how to ship it.",
     "- **SESSION.md** — tracks what's in progress across sessions. Read this first every time you pick back up.",
     "- **claude.md / codex.md** — assistant operating guides. Your AI reads these before giving design or build advice.",
     "- **Slash commands** (/temper-ship, /temper-coach, /temper-balance) — available in chat now.",
     "",
-    "This is set up for local development first — build it, get it working, then add a GitHub workflow when you're ready to collaborate or deploy.",
-    "",
-    "## Suggested First Message",
-    `${name} is ready to build. Let me show you what I'd start with.`
+    "This is set up for local development first — build it, get it working, then add a GitHub workflow when you're ready to collaborate or deploy."
   ];
+
+  if (designerRead) {
+    lines.push("", "## Designer's Take", designerRead);
+  }
+
+  const firstMoveCommand = `pnpm exec temper coach --cwd . --intent "starting ${firstSteps}"`;
+
+  if (isFirstTimer) {
+    lines.push(
+      "",
+      "## Suggested First Message",
+      `${name} is ready. Before you write any code, run this — it'll tell you exactly where to start and what to watch out for with a ${resolvedFamily.label} game:`,
+      "",
+      `\`${firstMoveCommand}\``
+    );
+  } else {
+    lines.push(
+      "",
+      "## Suggested First Message",
+      `${name} is ready. First move: \`${firstMoveCommand}\``
+    );
+  }
+
   return lines.join("\n") + "\n";
 }
 
@@ -190,7 +225,9 @@ export function renderInitOpening({ name, family }) {
     "Looks like a new project — nothing here yet to analyze.",
     "",
     "## Suggested Opening Message",
-    "Okay, starting from scratch. Two things I need from you:",
+    "Before we get started — Temper installs a local operating contract your AI reads at the start of every session. It's how I know what this project is, what's safe to ship, and how to hand off work without losing context. Takes about 30 seconds to set up.",
+    "",
+    "Three things I need from you:",
     "",
     "1. What's the game called?",
     "2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.",
