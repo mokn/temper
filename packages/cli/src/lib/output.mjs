@@ -15,26 +15,24 @@ export function printTemperBanner(subtitle) {
   }
 }
 
-// Reads a named section from a family canon file directly.
-// Returns the section text or null if not found.
-function readFamilySection(familyId, sectionHeading) {
-  const filePath = path.join(canonRoot, "architecture", "families", `${familyId}.md`);
-  let content;
+// Reads a full canon doc and returns its content trimmed to maxChars.
+// Returns null if the file doesn't exist.
+function readCanonDoc(relPath, maxChars = 6000) {
+  const filePath = path.join(canonRoot, relPath);
   try {
-    content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(filePath, "utf8");
+    // Strip YAML frontmatter
+    const stripped = content.replace(/^---[\s\S]*?---\n/, "").trim();
+    return stripped.length > maxChars ? stripped.slice(0, maxChars).trimEnd() + "\n[...truncated]" : stripped;
   } catch {
     return null;
   }
-  const pattern = new RegExp(`## ${sectionHeading}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
-  const match = content.match(pattern);
-  return match ? match[1].trim() : null;
 }
 
 // Outputs an AI-facing context block for Pablo to synthesize into advice.
-// This is NOT user-facing — the AI reads it and delivers in its own voice.
+// NOT user-facing — the AI reads it and delivers in its own voice.
 export function printCoachBrief(gameName, description, familyId, packet) {
   const hats = packet.selection.hats;
-  const chunks = packet.retrieval.chunks;
 
   console.log("## AI Context — Synthesize into your first message. Do not read this section aloud.");
   console.log("");
@@ -47,58 +45,33 @@ export function printCoachBrief(gameName, description, familyId, packet) {
   }
   console.log("");
 
-  // Core structural principle — from retrieval or direct file read
-  const coreChunk = chunks.find((c) => c.title.toLowerCase().includes("core structural"));
-  const coreText = coreChunk
-    ? coreChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
-    : readFamilySection(familyId, "Core structural rule");
-  if (coreText) {
-    console.log(`Core principle: ${coreText}`);
+  // Full family doctrine — small files, load completely
+  const familyDoc = readCanonDoc(`architecture/families/${familyId}.md`);
+  if (familyDoc) {
+    console.log("## Family Doctrine");
+    console.log(familyDoc);
     console.log("");
   }
 
-  // Source-of-truth — from retrieval or direct file read
-  const sotChunk = chunks.find((c) => c.title.toLowerCase().includes("source-of-truth"));
-  const sotText = sotChunk
-    ? sotChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
-    : readFamilySection(familyId, "Source-of-truth boundaries");
-  if (sotText) {
-    console.log(`Source-of-truth boundaries:\n${sotText}`);
-    console.log("");
-  }
-
-  // Failure modes — from retrieval or direct file read
-  const failureChunk = chunks.find((c) => c.title.toLowerCase().includes("failure"));
-  const failureText = failureChunk
-    ? failureChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
-    : readFamilySection(familyId, "Failure modes");
-  if (failureText) {
-    console.log(`Key failure modes:\n${failureText}`);
-    console.log("");
-  }
-
-  // Advisor notes from hat chunks
-  const hatChunks = chunks.filter((c) => c.doc.startsWith("hats/"));
-  if (hatChunks.length > 0) {
-    console.log("Advisor doctrine:");
-    for (const hat of hats) {
-      const hc = hatChunks.filter((c) => c.doc === `hats/${hat.id}`);
-      if (hc.length > 0) {
-        const text = hc[0].summary.replace(/>/g, "").replace(/"/g, "").replace(/\s+/g, " ").trim().slice(0, 200);
-        console.log(`  ${hat.emoji} ${hat.name}: ${text}`);
-      }
+  // Hat doctrine — first 4K chars covers core philosophy without blowing context
+  for (const hat of hats) {
+    const hatDoc = readCanonDoc(`hats/${hat.id}.md`, 4000);
+    if (hatDoc) {
+      console.log(`## ${hat.emoji} ${hat.name} Doctrine`);
+      console.log(hatDoc);
+      console.log("");
     }
-    console.log("");
   }
 
-  console.log("Deliver your first message in this order:");
-  console.log("  1. Brief: what to build first and why — 2-3 sentences max");
-  console.log("  2. Surface the advisors directly. Give each one a line with their emoji and a specific take on THIS game.");
-  console.log("     e.g. '🎯 Kaplan: [specific observation about this game's onboarding or trust moment]'");
-  console.log("     e.g. '♟️ Meier: [specific observation about this game's systems or tradeoffs]'");
-  console.log("  3. The ordered data model list — what to define first");
-  console.log("  4. One key risk specific to this game's traits");
-  console.log("  5. End with a question to keep the conversation going");
+  console.log("## Synthesis Instructions");
+  console.log("Using the doctrine above, deliver your first message in this order:");
+  console.log("  1. 2-3 sentences: what to build first and why, specific to this game");
+  console.log("  2. Advisor voices — give each active advisor a line with their emoji and a specific");
+  console.log("     observation about THIS game. Use their actual philosophy, not paraphrases.");
+  console.log("     e.g. '🎯 Kaplan: [their specific take on this game's trust or onboarding moment]'");
+  console.log("  3. Ordered data model — what to define first as data files, in priority order");
+  console.log("  4. One key architectural risk specific to this game's traits");
+  console.log("  5. End with a focused question to keep the build conversation moving");
 }
 
 export function printHeader(title) {

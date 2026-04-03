@@ -127,13 +127,13 @@ Use Temper as the canonical operating layer for this repo.
 
 ## Claude Workflow
 
-1. read \`.temper/assistants/shared-canon.json\`
-2. run the relevant Temper capability from the repo root
-3. use Temper's output as the operating baseline instead of replacing it with generic advice
+1. Read \`.temper/assistants/shared-canon.json\` — this is the operating contract for this project
+2. Run the relevant Temper capability at the right moment (see triggers below)
+3. Synthesize Temper's output into your response — do not dump it verbatim
 
-## Capability Defaults
+## When to Use Each Command
 
-${contract.capabilities.map((item) => `- ${item.when}: \`${item.command}\``).join("\n")}
+${contract.capabilities.map((item) => `**${item.when}**\n\`${item.command}\``).join("\n\n")}
 
 ## Continuity
 
@@ -219,31 +219,31 @@ function buildCapabilities(runtimeCommand) {
   return [
     {
       id: "coach",
-      when: "before major design or release guidance",
-      command: `${runtimeCommand} coach --cwd . --json --intent "<user intent>"`,
+      when: "before designing a new system, feature, or data model — run this first, not after",
+      command: `${runtimeCommand} coach --cwd . --json --intent "<what you're designing>"`,
       result: "fetch doctrine and routing before you answer"
     },
     {
       id: "ship_lite",
-      when: "narrow implementation confidence",
-      command: `${runtimeCommand} ship lite --cwd . --intent "<summary>"`,
+      when: "after the first working version of a feature is done — before moving to the next thing",
+      command: `${runtimeCommand} ship lite --cwd . --intent "<what you just built>"`,
       result: "run the default low-risk ship path"
     },
     {
       id: "ship_full",
-      when: "player-facing, infra, economy, security, or multi-system work",
+      when: "before sharing with anyone, or when touching player-facing, economy, or multi-system code",
       command: `${runtimeCommand} ship full --cwd . --intent "<summary>"`,
       result: "run the deeper blessed ship path and surface any gated follow-ups"
     },
     {
       id: "hotfix",
-      when: "incident response or rollback planning",
-      command: `${runtimeCommand} hotfix --cwd . --json --env prod --intent "<incident summary>"`,
+      when: "something is broken in a live environment and you need a recovery plan",
+      command: `${runtimeCommand} hotfix --cwd . --json --env prod --intent "<what broke>"`,
       result: "route the response through the hotfix doctrine surface"
     },
     {
       id: "handoff",
-      when: "pausing or transferring a workstream",
+      when: "ending a session, switching to a different workstream, or handing work to another agent",
       command: `${runtimeCommand} handoff --cwd . --slug <slug> --summary "<summary>" --next "<next step>"`,
       result: "write a canonical restart artifact and update SESSION.md"
     }
