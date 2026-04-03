@@ -430,36 +430,50 @@ export function renderOnboardingOpening(interview) {
       ]
     : ["Okay, I looked through the repo."];
 
-  const closingLine = concerns.length > 0
-    ? "There are a couple of things worth knowing before we install anything. I'll share those next."
-    : "Nothing to flag — ready to share my recommendation whenever you are.";
+  // For clean projects (no concerns): give the recommendation inline — don't gate it
+  if (concerns.length === 0) {
+    const move = interview.user_facing_next_move;
+    const recommendationLines = move
+      ? [
+          move.summary,
+          "",
+          move.confirm_prompt,
+          ...(move.alternatives?.length > 0
+            ? ["", "Or:", ...move.alternatives.map((a) => `- ${a.label} — say ${a.reply}`)]
+            : [])
+        ]
+      : [];
 
+    const openingMessage = [...auditLines, "", ...recommendationLines].join("\n");
+    lines.push("", "## Suggested Opening Message", openingMessage);
+    lines.push(
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Deliver the full message above — audit findings and recommendation together.",
+      "Wait for the user to confirm or redirect.",
+      "",
+      "If they say apply it:",
+      "  pnpm exec temper onboard existing --write --cwd .",
+      "If they want a dry run first:",
+      "  pnpm exec temper onboard existing --rehearse --cwd ."
+    );
+    return lines.join("\n") + "\n";
+  }
+
+  const closingLine = "There are a couple of things worth knowing before we install anything. I'll share those next.";
   const openingMessage = [...auditLines, "", closingLine].join("\n");
 
   lines.push("", "## Suggested Opening Message", openingMessage);
-
-  // If no concerns, collapse stages 1+2 — jump straight to recommendation
-  if (concerns.length === 0) {
-    lines.push(
-      "",
-      "---",
-      "STOP. Do not continue past this line.",
-      "Deliver the opening message above. Wait for the user to respond.",
-      "",
-      "When they are ready, run:",
-      "  pnpm exec temper onboard existing --recommend --cwd ."
-    );
-  } else {
-    lines.push(
-      "",
-      "---",
-      "STOP. Do not continue past this line.",
-      "Deliver the opening message above. Wait for the user to respond.",
-      "",
-      "When they are ready, run:",
-      "  pnpm exec temper onboard existing --findings --cwd ."
-    );
-  }
+  lines.push(
+    "",
+    "---",
+    "STOP. Do not continue past this line.",
+    "Deliver the opening message above. Wait for the user to respond.",
+    "",
+    "When they are ready, run:",
+    "  pnpm exec temper onboard existing --findings --cwd ."
+  );
 
   return lines.join("\n") + "\n";
 }
