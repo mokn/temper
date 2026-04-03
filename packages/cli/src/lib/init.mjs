@@ -162,20 +162,13 @@ const FAMILY_FIRST_STEPS = {
   "social-persistent-ugc": "player identity, world persistence, creation tools, or social graph"
 };
 
-export function renderInitSuccess({ name, family, description }) {
+export function renderInitSuccess({ name, family }) {
   const resolvedFamily = resolveFamily(family);
-  const intent = description || `new ${resolvedFamily.label} game called ${name}`;
   const lines = [
     "## Suggested First Message",
     `You're set up. ${name} is configured as a ${resolvedFamily.label} game.`,
     "",
-    "Let me pull up a design brief for you.",
-    "",
-    "---",
-    "STOP. Do not continue past this line.",
-    "Run the following and deliver the output to the user:",
-    "",
-    `  pnpm exec temper coach --cwd . --intent "${intent}"`
+    "Let me pull up a design brief for you."
   ];
   return lines.join("\n") + "\n";
 }

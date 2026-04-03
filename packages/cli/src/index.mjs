@@ -46,7 +46,7 @@ import {
 import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
 import { materializeInitInstall, renderInitOpening, renderInitSuccess, resolveFamily } from "./lib/init.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
-import { printHeader, printList, printTemperBanner } from "./lib/output.mjs";
+import { printCoachBrief, printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
 
 const capabilityCommands = new Set([
@@ -588,7 +588,21 @@ function runInit(rest) {
     console.log("Generated:");
     printList(allGenerated.map((p) => relativize(projectRoot, p)));
     console.log("");
-    process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
+
+    // If description provided, run coach inline — one stream, no split
+    if (args.description) {
+      const coachPacket = buildCoachPacket({
+        intent: args.description,
+        family: result.resolvedFamily.id,
+        cwd: projectRoot,
+        repo: false
+      });
+      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
+      console.log("");
+      printCoachBrief(result.config.name, coachPacket);
+    } else {
+      process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
+    }
     return;
   }
 
