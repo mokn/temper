@@ -211,10 +211,10 @@ export function renderInitOpening({ name, family }) {
       "",
       "---",
       "STOP. Do not continue past this line.",
-      "Ask the two questions above. Wait for the user's answers.",
+      "Ask the three questions above. Wait for the user's answers.",
       "",
       "Then run:",
-      `  pnpm exec temper init --name "<name>" --family <type> --cwd .`
+      `  pnpm exec temper init --name "<name>" --family <type> --experience <first|experienced> --cwd .`
     );
   }
 
