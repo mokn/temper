@@ -599,7 +599,7 @@ function runInit(rest) {
       });
       process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family, description: args.description }));
       console.log("");
-      printCoachBrief(result.config.name, coachPacket);
+      printCoachBrief(result.config.name, args.description, result.resolvedFamily.id, coachPacket);
     } else {
       process.stdout.write(renderInitSuccess({ name: result.config.name, family: args.family }));
     }

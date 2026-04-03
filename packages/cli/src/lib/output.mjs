@@ -1,14 +1,10 @@
-export const TEMPER_SWORD_ART = String.raw`
-      *
-     /|\
-    / | \
-   /  |  \
-  ====+====
-      |
-     [_]
+import fs from "node:fs";
+import path from "node:path";
+import { canonRoot } from "./paths.mjs";
 
-   T E M P E R
-Heat. Hammer. Quench. Ship.
+export const TEMPER_SWORD_ART = String.raw`
+  ()==========>  T E M P E R
+  Heat. Hammer. Quench. Ship.
 `.trim();
 
 export function printTemperBanner(subtitle) {
@@ -19,61 +15,86 @@ export function printTemperBanner(subtitle) {
   }
 }
 
-export function printCoachBrief(gameName, packet) {
+// Reads a named section from a family canon file directly.
+// Returns the section text or null if not found.
+function readFamilySection(familyId, sectionHeading) {
+  const filePath = path.join(canonRoot, "architecture", "families", `${familyId}.md`);
+  let content;
+  try {
+    content = fs.readFileSync(filePath, "utf8");
+  } catch {
+    return null;
+  }
+  const pattern = new RegExp(`## ${sectionHeading}\\s*\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
+  const match = content.match(pattern);
+  return match ? match[1].trim() : null;
+}
+
+// Outputs an AI-facing context block for Pablo to synthesize into advice.
+// This is NOT user-facing — the AI reads it and delivers in its own voice.
+export function printCoachBrief(gameName, description, familyId, packet) {
   const hats = packet.selection.hats;
   const chunks = packet.retrieval.chunks;
-  const hatChunks = chunks.filter((c) => c.doc.startsWith("hats/"));
-  const structuralChunks = chunks.filter((c) => !c.doc.startsWith("hats/"));
 
-  // Intro line
+  console.log("## AI Context — Synthesize into your first message. Do not read this section aloud.");
+  console.log("");
+  console.log(`Game: ${gameName}`);
+  if (description) console.log(`Description: ${description}`);
+  const familyName = packet.selection.families[0]?.name ?? familyId;
+  console.log(`Family: ${familyName}`);
   if (hats.length > 0) {
-    const hatNames = hats.map((h) => `${h.emoji} ${h.name}`).join(" and ");
-    console.log(`I pulled in ${hatNames} for this one. Here's their take on ${gameName}:`);
-    console.log("");
+    console.log(`Advisors: ${hats.map((h) => `${h.emoji} ${h.name}`).join(" · ")}`);
+  }
+  console.log("");
 
+  // Core structural principle — from retrieval or direct file read
+  const coreChunk = chunks.find((c) => c.title.toLowerCase().includes("core structural"));
+  const coreText = coreChunk
+    ? coreChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
+    : readFamilySection(familyId, "Core structural rule");
+  if (coreText) {
+    console.log(`Core principle: ${coreText}`);
+    console.log("");
+  }
+
+  // Source-of-truth — from retrieval or direct file read
+  const sotChunk = chunks.find((c) => c.title.toLowerCase().includes("source-of-truth"));
+  const sotText = sotChunk
+    ? sotChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
+    : readFamilySection(familyId, "Source-of-truth boundaries");
+  if (sotText) {
+    console.log(`Source-of-truth boundaries:\n${sotText}`);
+    console.log("");
+  }
+
+  // Failure modes — from retrieval or direct file read
+  const failureChunk = chunks.find((c) => c.title.toLowerCase().includes("failure"));
+  const failureText = failureChunk
+    ? failureChunk.summary.replace(/>/g, "").replace(/\s+/g, " ").trim()
+    : readFamilySection(familyId, "Failure modes");
+  if (failureText) {
+    console.log(`Key failure modes:\n${failureText}`);
+    console.log("");
+  }
+
+  // Advisor notes from hat chunks
+  const hatChunks = chunks.filter((c) => c.doc.startsWith("hats/"));
+  if (hatChunks.length > 0) {
+    console.log("Advisor doctrine:");
     for (const hat of hats) {
       const hc = hatChunks.filter((c) => c.doc === `hats/${hat.id}`);
       if (hc.length > 0) {
-        const raw = hc[0].summary.replace(/>/g, "").replace(/"/g, "").replace(/\s+/g, " ").trim();
-        const capped = raw.length > 200 ? raw.slice(0, 200) : raw;
-        const lastSentence = capped.match(/(.*[.!?])/s)?.[1]?.trim() ?? capped.trimEnd() + "...";
-        console.log(`${hat.emoji} ${hat.name}`);
-        console.log(`"${lastSentence}"`);
-        console.log("");
+        const text = hc[0].summary.replace(/>/g, "").replace(/"/g, "").replace(/\s+/g, " ").trim().slice(0, 200);
+        console.log(`  ${hat.emoji} ${hat.name}: ${text}`);
       }
     }
+    console.log("");
   }
 
-  // Where to start — prefer source-of-truth boundaries or core structural rule
-  const guidanceChunk =
-    structuralChunks.find((c) => c.title.toLowerCase().includes("source-of-truth")) ||
-    structuralChunks.find((c) => c.title.toLowerCase().includes("core structural")) ||
-    structuralChunks.find((c) => c.title.toLowerCase().includes("project structure"));
-
-  const whyChunk = structuralChunks.find((c) => c.title.toLowerCase().includes("core structural"));
-
-  if (guidanceChunk) {
-    console.log("⚒ Where to Start");
-    console.log("");
-
-    if (whyChunk) {
-      console.log(whyChunk.summary.trim());
-      console.log("");
-    }
-
-    console.log("Define the data model first, in this order:");
-    console.log("");
-
-    // Parse "- item - item" format from summary
-    const items = guidanceChunk.summary
-      .split(/ - /)
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.toLowerCase().startsWith("canonical"));
-
-    items.forEach((item, i) => console.log(`${i + 1}. ${item}`));
-    console.log("");
-    console.log("Get these into data files before writing game logic. Everything else builds on top cleanly.");
-  }
+  console.log("Using the above, deliver advice specific to this game:");
+  console.log("  1. What to build first and why");
+  console.log("  2. How the game's specific traits affect the architecture");
+  console.log("  3. Any early risks worth calling out");
 }
 
 export function printHeader(title) {
