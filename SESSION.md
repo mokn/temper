@@ -10,29 +10,28 @@ Repo contract:
 
 Last Updated: 2026-04-03
 
-Branch: main
+Branch: main (ahead 1 of origin/main — not pushed)
 
 ## What Just Happened
 
-Enriched the onboarding flow across all paths — coaching, designer's take, experience-awareness, pre-action briefings.
+MCP server extended with 8 day-to-day operational tools (0d88e3b). Wired into both Claude Code and Codex CLI globally.
 
-- **Multi-step flow is now default** — `onboard existing` with no flags triggers `renderOnboardingOpening` → `--findings` → `--recommend` instead of dumping a raw report. (50a8b53)
-- **Coaching annotations** on all analysis findings — lifecycle, commit history, CI, source-of-truth each get a plain-English explanation of what they mean for the user. (32caccd)
-- **Designer's Take** added to init success via `FAMILY_DESIGNER_READ` — family-specific design wisdom. (32caccd)
-- **Pre-action briefings** before rehearsal and direct apply — LLM explains what it's about to do before running the command. (32caccd)
-- **STOP marker** added to `--recommend` stage — was the only stage without one. (32caccd)
-- **Experience flag** threads through all stages via STOP marker next-command lines. (32caccd)
-- **Annotated file lists** in rehearsal and `--write` output — each file gets a one-line explanation. (32caccd)
-- **Completion moment** after `--write` with first-move coaching keyed to lifecycle. (32caccd)
-- **`FAMILY_FIRST_STEPS` wired** into `renderInitSuccess` — concrete first move, not generic. (32caccd)
-- **Temper explanation** added to new project and unreliable analysis openings. (32caccd)
-- **UD assistant contract updated** with onboarding section in `claude.md`. (28e0cda)
-- **All 33 tests green.**
+- `temper_coach` (universal doctrine router with capability param: balance, ux, infra, security, gamify)
+- `temper_hotfix` (incident response, pre-scoped to prod)
+- `temper_ship` (shipping pipeline, defaults dry_run=true)
+- `temper_handoff_preview` / `temper_handoff_apply` (preview/write pattern)
+- `temper_session_show` / `temper_session_set` (read/update session board)
+- `temper_inspect` (health check)
+- New tools shell out to CLI binary (avoids stdout corruption, picks up live code changes)
+- Existing 5 onboarding tools preserved as-is (direct import)
+- 12 new MCP tests, 45 total tests pass
+- Registered in `~/.claude/.mcp.json` (already existed) + `~/.codex/config.toml` (new)
 
 ## Pending
 
-- Push these 3 commits to GitHub
-- Reinstall UD assistant contract (already done locally, UD needs git add/commit)
-- Day-to-day use of Temper in UD — observe, adjust canon or config as needed
-- MCP: wire `temper-mcp` into Claude Desktop when ready to test that flow
-- Eventual npm publish path (currently `github:mokn/temper#main` or `link:`)
+- UD Temper regeneration not pushed (864d7f5b on UD main)
+- Add `gamify` capability to CLI + write `canon/capabilities/gamify.md` doctrine doc
+- Stop generating per-project `.claude/commands/temper-*.md` in `assistant.mjs`
+- Delete existing temper slash commands from UD `.claude/commands/`
+- Push temper main to origin
+- Eventual npm publish path
