@@ -186,6 +186,16 @@ export function buildOnboardingInterview(options = {}) {
     recommended_answers: answers,
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
+    assistant_flow: {
+      mode: "continue_in_chat",
+      opening: "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
+      style_rules: [
+        "Do not dump the raw interview JSON to the user.",
+        "Do not say 'Temper is asking'.",
+        "Ask the questions as a natural continuation of the current install conversation."
+      ],
+      reply_template: buildOnboardingReplyTemplate(questions)
+    },
     inferred: {
       name: result.analysis.name,
       family: result.analysis.family.id,
@@ -306,8 +316,12 @@ export function renderOnboardingPreview(preview) {
 export function renderOnboardingInterview(interview) {
   const lines = [
     "## Onboarding Interview",
-    "- ask the user these questions in chat",
+    "- continue the install conversation naturally",
+    "- do not dump the raw interview JSON to the user",
     "- when they answer, rerun `temper onboard existing --write` with any overrides",
+    "",
+    "## Suggested Assistant Reply",
+    interview.assistant_flow?.reply_template || "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
     "",
     "## Questions"
   ];
@@ -1391,6 +1405,20 @@ function applyOnboardingAnswersToConfig(config, answers) {
     },
     environments
   };
+}
+
+function buildOnboardingReplyTemplate(questions) {
+  const lines = [
+    "Before I finish setup, I need a few repo settings. Reply with any changes or say `use defaults`.",
+    ""
+  ];
+
+  for (const [index, question] of questions.entries()) {
+    lines.push(`${index + 1}. ${question.prompt}`);
+    lines.push(`Default: ${question.default || "none"}`);
+  }
+
+  return lines.join("\n");
 }
 
 function scanPackageDefinitions(root) {

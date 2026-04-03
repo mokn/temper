@@ -109,6 +109,9 @@ test("onboard existing --interview emits assistant-facing questions and defaults
 
   assert.deepEqual(Object.keys(parsed), ["interview"]);
   assert.equal(fs.realpathSync(parsed.interview.project_root), fs.realpathSync(repoDir));
+  assert.equal(parsed.interview.assistant_flow.mode, "continue_in_chat");
+  assert.match(parsed.interview.assistant_flow.opening, /Before I finish setup/);
+  assert.ok(parsed.interview.assistant_flow.style_rules.some((item) => item.includes("Do not dump the raw interview JSON")));
   assert.ok(parsed.interview.questions.some((item) => item.id === "name"));
   assert.ok(parsed.interview.questions.some((item) => item.id === "family"));
   assert.ok(parsed.interview.questions.some((item) => item.id === "stack"));

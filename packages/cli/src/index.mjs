@@ -965,6 +965,7 @@ function runAssistant(rest) {
         JSON.stringify(
           {
             status: "needs_onboarding",
+            next_action: "continue_in_chat",
             interview
           },
           null,

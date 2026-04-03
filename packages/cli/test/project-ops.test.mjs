@@ -97,7 +97,10 @@ test("assistant show falls back to onboarding interview when Temper is installed
   );
 
   assert.equal(payload.status, "needs_onboarding");
+  assert.equal(payload.next_action, "continue_in_chat");
   assert.ok(payload.interview);
+  assert.equal(payload.interview.assistant_flow.mode, "continue_in_chat");
+  assert.match(payload.interview.assistant_flow.reply_template, /Reply with any changes or say `use defaults`/);
   assert.ok(payload.interview.questions.some((item) => item.id === "name"));
   assert.match(payload.interview.apply_command, /temper onboard existing --write/);
 });
