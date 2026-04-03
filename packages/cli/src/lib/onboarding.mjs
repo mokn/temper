@@ -1751,7 +1751,7 @@ function buildAssistantAnalysisFindings(result, environments) {
     has_git_history: (result.onboarding.history?.commit_count ?? 0) > 0,
     commit_count: result.onboarding.history?.commit_count ?? 0,
     has_ci: (result.onboarding.workflows?.count ?? 0) > 0,
-    ci_files: result.onboarding.workflows?.files ?? [],
+    ci_files: (result.onboarding.workflows?.files ?? []).map((f) => f.path),
     has_source_of_truth: (result.analysis.surfaces?.source_of_truth ?? []).length > 0,
     warnings: result.analysis.warnings ?? [],
     top_recommendations: (result.onboarding.recommendations ?? []).slice(0, 2)
