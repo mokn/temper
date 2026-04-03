@@ -10,26 +10,23 @@ Repo contract:
 
 Last Updated: 2026-04-03
 
-Branch: feat/assistant-onboarding-flow (worktree: ~/temper-worktrees/ud-operator)
+Branch: main (feat/assistant-onboarding-flow merged and pushed)
 
 ## What Just Happened
 
-Walked path 4 (UD) live with Michael. Full onboarding flow works end-to-end against a real project.
+Completed the full onboarding + install session. Feature branch merged. Temper live in UD.
 
-Key changes shipped this session (fe7c37f):
-- Designer's read: `buildDesignerRead()` generates a short project-specific compliment surfaced as `## Designer's Read` in `assistant show` output and woven into the suggested opening message
-- designer_read field added to `buildAssistantAnalysisFindings` return value
-- Fires on family + lifecycle + commit depth + scaffolding signal combinations — silent when no good signal
-
-Design decision: MCP layer should keep staged tools (show → findings → recommend), not collapse to one call. The staged pacing is deliberate UX, not a CLI workaround. MCP difference is only who calls them (LLM vs user running commands).
+- **CI render bug fixed** — `ci_files` was `{path,...}` objects; `.join()` produced `[object Object]`. Mapped to paths at source. (a349db9)
+- **All 33 tests green** — stale `temper.config.json` at tmpdir root poisoned `findConfig` walk for all fixtures. Deleted it.
+- **MCP package shipped** — `packages/mcp/` with 5 staged tools wrapping CLI lib functions directly. (f052909)
+- **README updated** — new project path, MCP section, update workflow, `link:` dep pattern. (cca2da4)
+- **feat/assistant-onboarding-flow merged to main and pushed.** (d4809c7)
+- **All onboarding paths rehearsed** — new project init, prototype (fond), live (UD). UD rehearsal inspected and approved.
+- **Temper installed in UD** — live install via `--write`. `link:../temper` dep in UD `package.json`. UD pushed to GitHub. (f66aca17)
 
 ## Pending
 
-- UD install: run `--rehearse` first, review AGENTS.md/CLAUDE.md injection, then `--write`
-- Branch merge decision: path 4 complete, designer's read shipped, CI fix and MCP done — ready to merge
-
-## Done This Session
-
-- fix: CI render bug — ci_files was array of objects, .join() produced [object Object]; mapped to paths at source (a349db9)
-- fix: test 4-33 — stale temper.config.json at /T/ poisoned findConfig walk; removed it; all 33 tests green
-- feat: packages/mcp/ — 5 staged MCP tools (show→findings→recommend→preview→apply) wrapping CLI lib functions directly (f052909)
+- Day-to-day use of Temper in UD — observe, adjust canon or config as needed
+- Run `pnpm exec temper assistant install --cwd ~/ultimate-dominion` if canon or command templates change and snapshots go stale
+- MCP: wire `temper-mcp` into Claude Desktop when ready to test that flow
+- Eventual npm publish path (currently `github:mokn/temper#main` or `link:`)
