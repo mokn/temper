@@ -733,16 +733,18 @@ function runOnboard(rest) {
     ]);
     console.log("");
     console.log("## Suggested Message");
-    console.log("Here's what Temper generated in the clean copy. Nothing was touched in your real repo.");
+    console.log("Rehearsal complete — your real repo was not touched. Everything is in the clean copy.");
     console.log("");
-    console.log("The key files:");
-    console.log("- temper.config.json — the operating contract. Every Temper command reads this.");
-    console.log("- .temper/assistants/claude.md — what I read at the start of every session in this repo.");
-    console.log("- SESSION.md — the active work board.");
-    console.log("- .claude/commands/temper-*.md — the slash commands (/temper-ship, /temper-coach, etc.).");
-    console.log("- .temper/reports/onboarding.md — the full analysis report.");
+    console.log("What Temper generated:");
+    console.log("- **temper.config.json** — the operating contract. Every Temper command reads this to know what game this is and how to ship it.");
+    console.log("- **.temper/assistants/claude.md** — what your AI reads at the start of every session. This is how it knows your project without you explaining.");
+    console.log("- **SESSION.md** — the active work board. Tracks what's in progress across sessions.");
+    console.log("- **.claude/commands/temper-*.md** — slash commands: `/temper-ship`, `/temper-coach`, `/temper-balance`.");
+    console.log("- **.temper/reports/onboarding.md** — the full analysis report.");
     console.log("");
-    console.log("Want to review any of those before we apply it? Or say `apply it` and I'll write it to the real repo.");
+    console.log(`You can inspect these at: ${rehearsal.rehearsalRoot}`);
+    console.log("");
+    console.log("Say `apply it` to write this to your real repo, or ask me to open any file for review.");
     return;
   }
 
@@ -872,18 +874,21 @@ function runOnboard(rest) {
     console.log("");
     console.log(`Run Artifact: ${recorded.relativePath}`);
     console.log("");
-    const lifecycle = result.onboarding?.lifecycle?.id ?? "";
-    const isLiveService = lifecycle.includes("live") || lifecycle.includes("existing");
+    const familyLabel = result.analysis?.family?.label ?? "this game";
     console.log("## Suggested Message");
-    if (isLiveService) {
-      console.log("You're set up. Before your next feature, run:");
-      console.log(`  pnpm exec temper coach --cwd . --intent "<what you're about to build>"`);
-      console.log("That's how I understand the shape of new work before you start — so design and build advice is grounded in this project, not generic patterns.");
-    } else {
-      console.log("You're set up. When you're ready to start building, run:");
-      console.log(`  pnpm exec temper coach --cwd . --intent "<what you're starting>"`);
-      console.log("That's your entry point for design and build guidance that's specific to this game.");
-    }
+    console.log("## What's Different Now");
+    console.log("");
+    console.log("Your next session opens with full project context — no re-explaining.");
+    console.log("");
+    console.log("Here's how Temper works day-to-day:");
+    console.log(`- **Before designing something new** → \`/temper-coach\` — routes advice through ${familyLabel}-specific doctrine and game design advisors`);
+    console.log("- **After building a feature** → `/temper-ship` — runs your build + test pipeline with safety gating for live-service steps");
+    console.log("- **When touching economy or progression** → `/temper-balance` — checks changes against your game's balance model");
+    console.log("- **When switching workstreams or ending a session** → `temper handoff` — writes a restart artifact so the next session picks up clean");
+    console.log("");
+    console.log("First move: `/temper-coach --intent \"<what you're building next>\"`");
+    console.log("");
+    console.log("To undo everything Temper just wrote: `temper uninstall --preview --cwd .`");
     return;
   }
 

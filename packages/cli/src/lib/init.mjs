@@ -181,16 +181,22 @@ export function renderInitSuccess({ name, family, experience }) {
   const isFirstTimer = experience === "first" || experience === "first-time";
 
   const lines = [
-    "## What Just Landed",
-    `${name} is scaffolded as a ${resolvedFamily.label} game.`,
+    "## What's Different Now",
+    `${name} is set up as a ${resolvedFamily.label} game. Your next session opens with full project context instead of starting from scratch.`,
     "",
-    "Here's what Temper installed:",
-    "- **temper.config.json** — the operating contract. Every Temper command reads this to know what kind of game this is and how to ship it.",
-    "- **SESSION.md** — tracks what's in progress across sessions. Read this first every time you pick back up.",
-    "- **claude.md / codex.md** — assistant operating guides. Your AI reads these before giving design or build advice.",
-    "- **Slash commands** (/temper-ship, /temper-coach, /temper-balance) — available in chat now.",
+    "What Temper installed:",
+    "- **temper.config.json** — the operating contract. Every Temper command reads this.",
+    "- **SESSION.md** — tracks what's in progress across sessions.",
+    "- **claude.md / codex.md** — assistant guides. Your AI reads these at the start of every session.",
+    "- **Slash commands** — `/temper-ship`, `/temper-coach`, `/temper-balance`.",
     "",
-    "This is set up for local development first — build it, get it working, then add a GitHub workflow when you're ready to collaborate or deploy."
+    `Here's how Temper works day-to-day:`,
+    `- **Before designing something new** → \`/temper-coach\` — routes advice through ${resolvedFamily.label}-specific doctrine`,
+    "- **After building a feature** → `/temper-ship` — runs your build + test pipeline",
+    "- **When touching economy or progression** → `/temper-balance` — checks against your game's balance model",
+    "- **Ending a session** → `temper handoff` — writes a restart artifact so the next session picks up clean",
+    "",
+    "To undo everything: `temper uninstall --preview --cwd .`"
   ];
 
   if (designerRead) {
@@ -202,16 +208,16 @@ export function renderInitSuccess({ name, family, experience }) {
   if (isFirstTimer) {
     lines.push(
       "",
-      "## Suggested First Message",
-      `${name} is ready. Before you write any code, run this — it'll tell you exactly where to start and what to watch out for with a ${resolvedFamily.label} game:`,
+      "## First Move",
+      `Before you write any code, run this — it'll tell you exactly where to start and what to watch out for with a ${resolvedFamily.label} game:`,
       "",
       `\`${firstMoveCommand}\``
     );
   } else {
     lines.push(
       "",
-      "## Suggested First Message",
-      `${name} is ready. First move: \`${firstMoveCommand}\``
+      "## First Move",
+      `\`${firstMoveCommand}\``
     );
   }
 
@@ -225,16 +231,16 @@ export function renderInitOpening({ name, family }) {
     "Looks like a new project — nothing here yet to analyze.",
     "",
     "## Suggested Opening Message",
-    "Before we get started — Temper installs a local operating contract your AI reads at the start of every session. It's how I know what this project is, what's safe to ship, and how to hand off work without losing context. Takes about 30 seconds to set up.",
+    "Temper installs an operating contract your AI reads every session — it's how I know what this project is, how to ship safely, and how to hand off work without losing context. Takes about 30 seconds.",
     "",
-    "Three things I need from you:",
+    "Three things I need:",
     "",
     "1. What's the game called?",
     "2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.",
     "",
     "Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim",
     "",
-    "3. How much game dev experience do you have? (first time / some experience / shipped games before)"
+    "3. How much game dev experience do you have? (first time / some experience / shipped before)"
   ];
 
   if (name && family) {
@@ -247,11 +253,12 @@ export function renderInitOpening({ name, family }) {
     lines.push(
       "",
       "---",
-      "STOP. Do not continue past this line.",
-      "Ask the three questions above. Wait for the user's answers.",
+      "STOP. Deliver the message above in your own voice. Ask the three questions. Wait for the user's answers.",
+      "Do not run any commands. Do not guess the answers. Do not offer to skip ahead.",
       "",
-      "Then run:",
-      `  pnpm exec temper init --name "<name>" --family <type> --experience <first|experienced> --cwd .`
+      "When you have all three answers, run:",
+      `  pnpm exec temper init --name "<name>" --family <type> --experience <first|experienced> --cwd .`,
+      "After init completes, deliver the **Suggested Message** from its output — it includes the capability preview."
     );
   }
 

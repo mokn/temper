@@ -119,8 +119,8 @@ test("onboard existing --interview emits assistant-facing recommendation and fin
   assert.ok(parsed.interview.assistant_flow.style_rules.some((item) => item.includes("Do not dump the raw interview JSON")));
   assert.equal(parsed.interview.user_facing_next_move.id, "existing_project_dry_run_first");
   assert.equal(parsed.interview.questions, undefined);
-  assert.match(parsed.interview.assistant_flow.reply_template, /start the dry run/);
-  assert.match(parsed.interview.assistant_flow.reply_template, /skip the rehearsal/);
+  assert.match(parsed.interview.assistant_flow.reply_template, /Say `start`/);
+  assert.match(parsed.interview.assistant_flow.reply_template, /Apply directly/);
   assert.ok(parsed.interview.analysis_findings.concerns.some((item) => item.id === "established-project"));
   assert.ok(parsed.interview.analysis_findings.concerns.some((item) => item.id === "root-test-is-lint"));
   assert.ok(parsed.interview.analysis_findings.concerns.some((item) => item.id === "gated-live-verification"));

@@ -373,18 +373,18 @@ export function renderOnboardingOpening(interview) {
       "The project name and game type couldn't be reliably inferred. Ask two questions before proceeding.",
       "",
       "## Suggested Opening Message",
-      "Before we get started — Temper installs a local operating contract your AI reads at the start of every session. It's how I know what this project is, what's safe to ship, and how to hand off work without losing context.",
+      "Temper installs an operating contract your AI reads every session — it's how I know what this project is, how to ship safely, and how to hand off work without losing context.",
       "",
-      "Two things I need from you first:",
+      "Two things I need first:",
       "",
       "1. Is this a new game, or something you've already started building?",
-      "   If it's new — what's it called, and what kind of game is it?",
-      "   If it already exists — point me at it and I'll take a look.",
+      "   New — what's it called, and what kind of game?",
+      "   Existing — point me at it and I'll analyze it.",
       "2. How much game dev experience do you have? (first time / some experience / shipped before)",
       "",
       "---",
-      "STOP. Do not continue past this line.",
-      "Ask those two questions. Wait for the user's answers.",
+      "STOP. Deliver the message above in your own voice. Ask those two questions. Wait for the user's answers.",
+      "Do not run any commands. Do not offer to skip ahead. Do not guess the answers.",
       "",
       "If new game:",
       "  pnpm exec temper init --name \"<name>\" --family <type> --experience <level> --description \"<description>\" --cwd .",
@@ -395,7 +395,8 @@ export function renderOnboardingOpening(interview) {
       "If existing game — they don't know the path:",
       "  Search for it: grep -ril \"<game name>\" ~ --include=\"*.json\" --include=\"*.js\" --include=\"*.ts\" --include=\"*.html\" 2>/dev/null",
       "  If found: run the onboard command above with the found path.",
-      "  If not found: tell them clearly you can't locate it, ask if they have a path or built it elsewhere."
+      "  If not found: tell them clearly you can't locate it, ask if they have a path or built it elsewhere.",
+      "After the init or onboard command completes, deliver the **Suggested Message** from its output."
     ];
     return lines.join("\n") + "\n";
   }
@@ -422,50 +423,46 @@ export function renderOnboardingOpening(interview) {
     }
   }
 
+  // Designer's Read saved for Stage 2 (findings) — lands harder after specifics
   const designerRead = findings.designer_read ?? null;
-  if (designerRead) {
-    lines.push("", "## Designer's Read");
-    lines.push(designerRead);
-  }
 
-  // Build opening message from the project summary — no duplicate warnings
+  // Build opening message — coaching annotations tell user what Temper does differently
   const isPrototype = summary?.lifecycle?.toLowerCase().includes("prototype") || summary?.lifecycle?.toLowerCase().includes("early");
   const isLive = summary?.lifecycle?.toLowerCase().includes("live");
 
   const lifecycleCoach = isLive
-    ? " — every ship decision is potentially player-facing"
+    ? " — so Temper routes ship, balance, and design advice through live-service doctrine, not generic patterns"
     : isPrototype
-      ? " — early enough to set up good habits from the start"
-      : " — still in structured development";
+      ? " — Temper sets up the operating contract now so good habits are baked in from the start"
+      : " — Temper calibrates the ship flow for structured development pace";
 
   const commitCoach = summary?.has_git_history
     ? summary.commit_count >= 500
-      ? ` — enough history to understand your release patterns without guessing`
+      ? ` — Temper reads your release cadence and failure patterns from this history, not from you describing them`
       : summary.commit_count >= 100
-        ? ` — good signal to work with`
+        ? ` — enough for Temper to infer your patterns instead of guessing`
         : ""
     : "";
 
   const ciCoach = summary?.has_ci
-    ? " — Temper hooks into your existing release process instead of inventing one"
-    : " — we'll set up the workflow contract; add CI when you're ready to collaborate";
+    ? " — Temper's ship flow hooks into this directly, no parallel pipeline to maintain"
+    : " — Temper sets up the workflow contract now; add CI when you're ready to collaborate";
 
   const sotCoach = summary?.has_source_of_truth
-    ? " — assistants can find canonical data without searching"
-    : " — we'll define these so assistants always know where to look";
+    ? " — when an assistant needs canonical data, it goes straight there instead of searching"
+    : " — Temper will define these so assistants always know where to look";
 
   const auditLines = summary
     ? [
-        `Okay, I went through ${summary.name}. Here's what I found:`,
+        `I went through ${summary.name}. Here's what I found:`,
         "",
         `- **${summary.family}** game, ${summary.lifecycle.toLowerCase()}${lifecycleCoach}.`,
-        `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo${commitCoach}.` : "No git history yet."}`,
-        `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}${ciCoach}.` : `No CI workflows${ciCoach}.`}`,
-        `- ${summary.has_source_of_truth ? `Source-of-truth paths are defined${sotCoach}.` : `No source-of-truth paths${sotCoach}.`}`,
-        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : []),
-        ...(designerRead ? ["", designerRead] : [])
+        `- ${summary.has_git_history ? `**${summary.commit_count} commits**${commitCoach}.` : "No git history yet."}`,
+        `- ${summary.has_ci ? `**CI: ${summary.ci_files.join(", ")}**${ciCoach}.` : `No CI workflows${ciCoach}.`}`,
+        `- ${summary.has_source_of_truth ? `**Source-of-truth paths defined**${sotCoach}.` : `No source-of-truth paths${sotCoach}.`}`,
+        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : [])
       ]
-    : ["Okay, I looked through the repo."];
+    : ["I looked through the repo."];
 
   // For clean projects (no concerns): give the recommendation inline — don't gate it
   if (concerns.length === 0) {
@@ -487,21 +484,23 @@ export function renderOnboardingOpening(interview) {
     lines.push(
       "",
       "---",
-      "STOP. Do not continue past this line.",
-      "Deliver the full message above — audit findings and recommendation together.",
-      "Wait for the user to confirm or redirect.",
+      "STOP. Deliver everything above as your own analysis — rewrite it in your voice, do not paste this output.",
+      "Do not run the next command. Do not preview what comes next. Do not offer to skip ahead.",
+      "Do not summarize or abbreviate the findings — deliver them fully.",
+      "The user is deciding whether to proceed. Wait for their response.",
       "",
-      "If they say apply it:",
-      "  Say: \"I'm going to write the operating contract into this repo now — a few new files, nothing destructive.\"",
+      "If they confirm (apply, go ahead, do it):",
+      "  First say: \"Writing the operating contract now — config, assistant guides, session board, and slash commands.\"",
       `  Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`,
-      "If they want a dry run first:",
-      "  Say: \"I'm going to copy your repo into a clean environment and install Temper there, so you can see exactly what it would generate without touching your real project.\"",
-      `  Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`
+      "If they want a rehearsal first (dry run, try it, show me):",
+      "  First say: \"Cloning your repo into a clean copy and installing there. You can inspect every file, run tests against it, and diff it before applying.\"",
+      `  Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`,
+      "After the command completes, deliver the **Suggested Message** from the output — it includes the capability preview."
     );
     return lines.join("\n") + "\n";
   }
 
-  const closingLine = "There are a couple of things worth knowing before we install anything. I'll share those next.";
+  const closingLine = "Here's what I'd adjust for in your setup — say `next` when you're ready.";
   const openingMessage = [...auditLines, "", closingLine].join("\n");
 
   lines.push("", "## Suggested Opening Message", openingMessage);
@@ -509,10 +508,13 @@ export function renderOnboardingOpening(interview) {
   lines.push(
     "",
     "---",
-    "STOP. Do not continue past this line.",
-    "Deliver the opening message above. Wait for the user to respond.",
+    "STOP. Deliver everything above as your own analysis — rewrite it in your voice, do not paste this output.",
+    "Do not run the next command. Do not preview what comes next. Do not offer to skip ahead.",
+    "Do not summarize or abbreviate the findings — deliver them fully.",
+    "Do not offer alternatives the user did not ask about.",
+    "The user is deciding whether to continue. Wait for their response.",
     "",
-    "When they are ready, run:",
+    "When they say next (or ready, continue, go ahead), run:",
     `  pnpm exec temper onboard existing --findings --cwd .${experienceFlag}`
   );
 
@@ -522,40 +524,56 @@ export function renderOnboardingOpening(interview) {
 export function renderOnboardingFindings(interview) {
   const findings = interview.analysis_findings ?? { strengths: [], concerns: [] };
   const concerns = findings.concerns;
+  const designerRead = findings.designer_read ?? null;
 
-  const lines = ["## Worth Knowing Before We Install"];
+  const lines = ["## What I'd Adjust For"];
   if (concerns.length > 0) {
     for (const c of concerns) {
       lines.push(`- ${c.title}`);
       lines.push(`  ${c.impact}`);
     }
   } else {
-    lines.push("- Nothing significant to flag. The repo is in clean enough shape to proceed.");
+    lines.push("- Nothing significant to flag. The repo is in clean shape to proceed.");
+  }
+
+  if (designerRead) {
+    lines.push("", "## Designer's Read");
+    lines.push(designerRead);
   }
 
   const isFirstTimer = interview.experience === "first" || interview.experience === "first-time";
-  const findingsMessage = concerns.length > 0
-    ? [
-        isFirstTimer
-          ? "Before we go any further, a couple of things worth knowing — and I'll explain what Temper does about each one:"
-          : "Before we go any further, a couple of things worth knowing:",
-        "",
-        ...concerns.flatMap((c) => [`- **${c.title}**`, `  ${c.impact}`]),
-        "",
-        "Once you've had a chance to take that in, I'll share my recommendation for how to proceed."
-      ].join("\n")
-    : "Nothing significant to flag here — the repo is in clean shape. Ready to move to the recommendation whenever you are.";
+  const findingsLines = [];
+  if (concerns.length > 0) {
+    findingsLines.push(
+      isFirstTimer
+        ? "Here's what I'd adjust for — and what Temper does about each one:"
+        : "Here's what I'd adjust for:"
+    );
+    findingsLines.push("");
+    findingsLines.push(...concerns.flatMap((c) => [`- **${c.title}**`, `  ${c.impact}`]));
+  } else {
+    findingsLines.push("Nothing significant to flag — the repo is in clean shape.");
+  }
 
-  lines.push("", "## Suggested Message", findingsMessage);
+  if (designerRead) {
+    findingsLines.push("", designerRead);
+  }
+
+  findingsLines.push("", "Say `next` when you're ready for my recommendation.");
+
+  lines.push("", "## Suggested Message", findingsLines.join("\n"));
 
   const experienceFlag = interview.experience ? ` --experience ${interview.experience}` : "";
   lines.push(
     "",
     "---",
-    "STOP. Do not continue past this line.",
-    "Deliver the findings message above. Wait for the user to respond.",
+    "STOP. Deliver everything above as your own analysis — rewrite it in your voice, do not paste this output.",
+    "Do not run the next command. Do not preview what comes next. Do not offer to skip ahead.",
+    "Do not summarize or abbreviate the findings — deliver them fully, including the Designer's Read.",
+    "Do not offer alternatives the user did not ask about.",
+    "The user is deciding whether to continue. Wait for their response.",
     "",
-    "When they are ready, run:",
+    "When they say next (or ready, continue, go ahead), run:",
     `  pnpm exec temper onboard existing --recommend --cwd .${experienceFlag}`
   );
 
@@ -585,7 +603,7 @@ export function renderOnboardingRecommendation(interview) {
     "",
     move.confirm_prompt,
     ...(move.alternatives.length > 0
-      ? ["", "Or if you want to go a different direction:", ...move.alternatives.map((alt) => `- ${alt.label} — say ${alt.reply}`)]
+      ? ["", "Or:", ...move.alternatives.map((alt) => `- ${alt.label} — say ${alt.reply}`)]
       : [])
   ].join("\n");
 
@@ -595,16 +613,18 @@ export function renderOnboardingRecommendation(interview) {
   lines.push(
     "",
     "---",
-    "STOP. Do not continue past this line.",
-    "Deliver the recommendation message above. Wait for the user to confirm.",
+    "STOP. Deliver the recommendation above as your own judgment — rewrite it in your voice, do not paste this output.",
+    "Do not run the next command. Do not preview what comes next.",
+    "Do not offer alternatives beyond what's listed above. The user is deciding how to proceed.",
+    "Wait for their response.",
     "",
-    "When they confirm (e.g. 'start the dry run', 'yes', 'go ahead', 'apply it'):",
-    "  If dry run:",
-    "    Say: \"I'm going to copy your repo into a clean environment and install Temper there, so you can see exactly what it would generate without touching your real project. Give me a moment.\"",
-    `    Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`,
-    "  If applying directly:",
-    "    Say: \"I'm going to write the operating contract into this repo now — a few new files, nothing destructive.\"",
-    `    Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`
+    "When they confirm (rehearsal, dry run, try it, start):",
+    "  First say: \"Cloning your repo into a clean copy and installing there. You can inspect every file, run tests against it, and diff it before applying here.\"",
+    `  Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`,
+    "When they say apply directly (apply it, just do it, write it):",
+    "  First say: \"Writing the operating contract now — config, assistant guides, session board, and slash commands.\"",
+    `  Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`,
+    "After the command completes, deliver the **Suggested Message** from the output — it includes the capability preview."
   );
 
   return lines.join("\n") + "\n";
@@ -1686,21 +1706,20 @@ function buildOnboardingReplyTemplate(userFacingNextMove, findings) {
   const { strengths, concerns } = findings;
   const lines = [];
 
-  // Lead with what we found before the recommendation
+  // Lead with what we found
   if (strengths.length > 0) {
-    lines.push("Okay, I looked through the whole thing. A few things worth noting before we start:");
+    lines.push("I went through the whole thing. Here’s what stands out:");
     lines.push("");
-    lines.push("**What’s already in good shape:**");
     for (const s of strengths) {
       lines.push(`- ${s.text}`);
     }
   } else {
-    lines.push("Okay, I looked through the whole thing.");
+    lines.push("I went through the whole thing.");
   }
 
   if (concerns.length > 0) {
     lines.push("");
-    lines.push("**A couple of things to keep in mind:**");
+    lines.push("What I’d adjust for:");
     for (const c of concerns) {
       lines.push(`- ${c.title} ${c.impact}`);
     }
@@ -1715,7 +1734,7 @@ function buildOnboardingReplyTemplate(userFacingNextMove, findings) {
   // Alternatives
   if (userFacingNextMove.alternatives.length > 0) {
     lines.push("");
-    lines.push("Or if you want to go a different direction:");
+    lines.push("Or:");
     for (const alt of userFacingNextMove.alternatives) {
       lines.push(`- ${alt.label} — say ${alt.reply}`);
     }
@@ -1765,22 +1784,14 @@ function buildAssistantAnalysisFindings(result, environments) {
     .filter(Boolean)
     .join(" and ");
 
-  if (result.onboarding.lifecycle?.id === "live") {
-    concerns.push({
-      id: "established-project",
-      title: "This is a live project with real release infrastructure.",
-      summary: `Found established repo history${branchSummary ? `, ${branchSummary},` : ""} and automation surfaces. That's worth protecting.`,
-      impact: "Worth doing the rehearsal first so you can review exactly what Temper generates before it touches this repo.",
-      default_action: "offer_dry_run_first"
-    });
-  }
-
+  // Most actionable concerns first — test suite gap and gated steps prove Temper read the repo.
+  // The generic "live project" concern comes last since the user already knows that.
   if (recurringFailureModes.some((item) => /root `test`/i.test(item))) {
     concerns.push({
       id: "root-test-is-lint",
-      title: "The root test command is closer to lint than real release confidence.",
-      summary: "The current root test path is mostly validation hygiene, not the full coverage story.",
-      impact: "Temper will frame the ship flow accordingly — the assistant won't overstate what the test suite actually covers.",
+      title: "Your test command is closer to lint than release confidence.",
+      summary: "The root test path is mostly validation hygiene, not full coverage.",
+      impact: "Temper's ship flow accounts for this — the assistant won't overstate what `test` actually covers.",
       default_action: "keep_visible_in_ship_guidance"
     });
   }
@@ -1792,6 +1803,17 @@ function buildAssistantAnalysisFindings(result, environments) {
       summary: `These need to stay intentional: ${gatedFullSteps.join(", ")}.`,
       impact: "Temper keeps them gated by default — you promote them explicitly when you're ready to run them.",
       default_action: "gate_by_default"
+    });
+  }
+
+  // Generic "live project" concern last — user already knows this
+  if (result.onboarding.lifecycle?.id === "live") {
+    concerns.push({
+      id: "established-project",
+      title: "Live project with real release infrastructure.",
+      summary: `Established repo history${branchSummary ? `, ${branchSummary},` : ""} and automation surfaces.`,
+      impact: "Temper generates into a clean copy first — you review the output, run your tests against it, then apply when it looks right.",
+      default_action: "offer_dry_run_first"
     });
   }
 
@@ -1878,33 +1900,33 @@ function buildUserFacingNextMove(result, environments, findings = { strengths: [
   if (hasRealInfra) {
     const why = [
       branchNotes.length > 0
-        ? `You have real release surfaces already in place — ${branchNotes.join(" and ")}. Worth keeping that intact.`
-        : "This is an established project — not a blank slate — so it deserves a careful approach.",
+        ? `Real release surfaces in place — ${branchNotes.join(" and ")}. Rehearsal lets you verify Temper respects these.`
+        : "Established project with real infrastructure — rehearsal verifies the operating contract before anything changes.",
       gatedFullSteps.length > 0
-        ? `Some verification steps touch live credentials or shared state (${gatedFullSteps.join(", ")}) — those should stay under your explicit control.`
-        : "A rehearsal lets you see exactly what Temper would generate before anything is written to this repo.",
-      "We go in stages: review the rehearsal, make sure it looks right, then apply it here when you're ready."
+        ? `Verification steps that touch live credentials or shared state (${gatedFullSteps.join(", ")}) stay gated by default — you promote them explicitly.`
+        : "Rehearsal gives you the full install in a clean copy — inspect every file, run your tests, diff against your real repo.",
+      "Nothing here changes until you say `apply it`."
     ];
 
     return {
       id: "existing_project_dry_run_first",
       title: "Recommended next move",
       summary:
-        "Okay, I looked through everything. This is a real working project and I don't want to write files into it until you've seen exactly what I'd generate. My recommendation is a rehearsal first — a clean copy where I install Temper and you can inspect the output before committing to anything here.",
+        "My recommendation: rehearsal first. Temper clones your repo into a clean copy, installs the full operating contract there, and you get to inspect every file, run your tests against it, even diff it against your real repo. Nothing here changes until you say `apply it`.",
       command: "temper onboard existing --rehearse --cwd .",
-      confirm_prompt: "Want to start there? Say `start the dry run` and I'll run it.",
+      confirm_prompt: "Say `start` and I'll run the rehearsal.",
       why,
       alternatives: [
         {
           id: "apply_here",
-          label: "Skip the rehearsal and apply directly",
-          reply: "`skip the rehearsal, apply it here`",
+          label: "Apply directly",
+          reply: "`apply it`",
           command: "temper onboard existing --write --cwd ."
         },
         {
           id: "preview_only",
-          label: "Just show me what would change, no install yet",
-          reply: "`just show me the preview`",
+          label: "Show me a preview first",
+          reply: "`show me the preview`",
           command: "temper onboard existing --preview --cwd ."
         }
       ],
@@ -1916,18 +1938,18 @@ function buildUserFacingNextMove(result, environments, findings = { strengths: [
     id: "existing_project_apply_here",
     title: "Recommended next move",
     summary:
-      "Looked through the repo — it's a clean enough starting point that I'm comfortable applying Temper directly. Nothing here looks like it needs the extra caution of a rehearsal copy first.",
+      "Clean enough to apply directly. Temper writes the operating contract — config, assistant guides, session board, and slash commands. All reversible with `temper uninstall`.",
     command: "temper onboard existing --write --cwd .",
-    confirm_prompt: "Ready to go? Say `apply it` and I'll write the install.",
+    confirm_prompt: "Say `apply it` and I'll write the install.",
     why: [
-      "The repo shape is simple enough that direct install is the right call here.",
-      "You can always do a rehearsal first if you'd rather inspect before committing — just say `start with a dry run`."
+      "The repo is straightforward enough for direct install.",
+      "If you'd rather inspect first, say `rehearsal` — Temper will install into a clean copy you can review."
     ],
     alternatives: [
       {
         id: "dry_run_first",
-        label: "Start with a rehearsal copy anyway",
-        reply: "`start with a dry run instead`",
+        label: "Run a rehearsal first",
+        reply: "`rehearsal`",
         command: "temper onboard existing --rehearse --cwd ."
       }
     ],

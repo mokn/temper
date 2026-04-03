@@ -101,7 +101,7 @@ test("assistant show falls back to onboarding interview when Temper is installed
   assert.equal(payload.user_facing_next_move.id, "existing_project_dry_run_first");
   assert.ok(payload.interview);
   assert.equal(payload.interview.assistant_flow.mode, "continue_in_chat");
-  assert.match(payload.interview.assistant_flow.reply_template, /start the dry run/);
+  assert.match(payload.interview.assistant_flow.reply_template, /Say `start`/);
   assert.equal(payload.interview.questions, undefined);
   assert.ok(payload.interview.analysis_findings.concerns.some((item) => item.id === "established-project"));
   assert.equal(payload.interview.new_project_command, undefined);
@@ -115,11 +115,11 @@ test("assistant show delivers stage 1 only — strengths and hard stop", async (
   });
 
   assert.match(output, /What's Already In Good Shape/);
-  assert.match(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /STOP\. Deliver everything above/);
   assert.match(output, /temper onboard existing --findings --cwd \./);
   assert.match(output, /machine-readable version/);
   assert.doesNotMatch(output, /## Recommended Next Move/);
-  assert.doesNotMatch(output, /Worth Knowing Before We Install/);
+  assert.doesNotMatch(output, /What I'd Adjust For/);
 });
 
 test("onboard existing --findings delivers stage 2 only — concerns and hard stop", async (t) => {
@@ -128,8 +128,8 @@ test("onboard existing --findings delivers stage 2 only — concerns and hard st
     encoding: "utf8"
   });
 
-  assert.match(output, /Worth Knowing Before We Install/);
-  assert.match(output, /STOP\. Do not continue past this line/);
+  assert.match(output, /What I'd Adjust For/);
+  assert.match(output, /STOP\. Deliver everything above/);
   assert.match(output, /temper onboard existing --recommend --cwd \./);
   assert.doesNotMatch(output, /## Recommended Next Move/);
   assert.doesNotMatch(output, /What's Already In Good Shape/);
@@ -143,9 +143,9 @@ test("onboard existing --recommend delivers stage 3 only — recommendation with
 
   assert.match(output, /## Recommended Next Move/);
   assert.match(output, /rehearsal first/);
-  assert.match(output, /start the dry run/);
-  assert.match(output, /STOP\. Do not continue past this line/);
-  assert.match(output, /copy your repo into a clean environment/);
+  assert.match(output, /Say `start`/);
+  assert.match(output, /STOP\. Deliver the recommendation above/);
+  assert.match(output, /Cloning your repo into a clean copy/);
 });
 
 test("assistant show returns machine-readable installed surfaces once onboarding is complete", async (t) => {

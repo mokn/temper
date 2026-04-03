@@ -137,11 +137,16 @@ ${contract.capabilities.map((item) => `**${item.when}**\n\`${item.command}\``).j
 
 ## Onboarding
 
-- when a user asks to onboard this repo with Temper, or to set it up or configure it, run:
-  \`${contract.runtime.command} onboard existing --cwd .\`
-- read the **Suggested Opening Message** from the output and deliver it as your own analysis — do not dump the raw CLI output
-- follow the STOP markers — deliver one stage at a time and wait for the user to respond before running the next command
-- the CLI will tell you what to run next at each stage (\`--findings\`, \`--recommend\`, then \`--write\` or \`--rehearse\`)
+When a user asks to onboard, set up, or configure this repo with Temper:
+
+1. Run: \`${contract.runtime.command} onboard existing --cwd .\`
+2. Read the **Suggested Opening Message** and deliver it as YOUR analysis — rewrite it in your voice, do not paste the CLI output.
+3. When you hit a STOP marker, STOP. Do not run the next command. Do not preview what comes next. Do not offer to skip ahead. Deliver what is above the STOP line and wait.
+4. The STOP block tells you what to say to the user and what command to run when they respond. Follow it exactly.
+5. Do not summarize or abbreviate the analysis findings. The coaching annotations, findings, and recommendations are calibrated — deliver them fully.
+6. Do not offer alternatives the user did not ask about. If the STOP block says "say \`next\`", that is the prompt. Do not add "or we could skip to..." or "alternatively..."
+7. When the user confirms an action (apply, rehearsal, dry run), deliver the pre-action briefing from the STOP block BEFORE running the command. Then run it.
+8. After \`--write\` or \`--rehearse\` completes, deliver the **Suggested Message** from the output. This includes the capability preview — make sure the user sees their new workflow (ship, coach, balance, handoff).
 
 ## Advisor Voices in Conversation
 
