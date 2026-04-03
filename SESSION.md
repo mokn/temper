@@ -25,8 +25,11 @@ Design decision: MCP layer should keep staged tools (show → findings → recom
 
 ## Pending
 
-- Fix CI rendering bug: `[object Object]` in human-readable output (JSON is correct; text formatter bug in workflow files section)
-- Pre-existing test failures: tests 4-20 (fixture lifecycle misdetection, write path, install path) — not caused this session, need separate investigation
-- MCP layer: design + implement staged tool wrappers around existing --json output
 - UD install: run `--rehearse` first, review AGENTS.md/CLAUDE.md injection, then `--write`
-- Branch merge decision: path 4 complete, designer's read shipped — branch is ready to merge after CI render fix
+- Branch merge decision: path 4 complete, designer's read shipped, CI fix and MCP done — ready to merge
+
+## Done This Session
+
+- fix: CI render bug — ci_files was array of objects, .join() produced [object Object]; mapped to paths at source (a349db9)
+- fix: test 4-33 — stale temper.config.json at /T/ poisoned findConfig walk; removed it; all 33 tests green
+- feat: packages/mcp/ — 5 staged MCP tools (show→findings→recommend→preview→apply) wrapping CLI lib functions directly (f052909)
