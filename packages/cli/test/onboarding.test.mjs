@@ -119,9 +119,10 @@ test("onboard existing --interview emits assistant-facing questions and defaults
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "established-project"));
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "root-test-is-lint"));
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "gated-live-verification"));
+  assert.match(parsed.interview.new_project_command, /temper init --cwd \./);
   assert.match(parsed.interview.apply_command, /temper onboard existing --write/);
   assert.match(parsed.interview.dry_run_command, /temper onboard existing --rehearse/);
-  assert.match(parsed.interview.next_step, /Ask the starter questions in chat first/);
+  assert.match(parsed.interview.next_step, /If the user says this is a new project/);
 });
 
 test("onboard existing --write applies chat-collected onboarding overrides", async (t) => {

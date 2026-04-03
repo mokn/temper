@@ -104,6 +104,7 @@ test("assistant show falls back to onboarding interview when Temper is installed
   assert.ok(payload.interview.questions.some((item) => item.id === "project_state"));
   assert.ok(payload.interview.questions.some((item) => item.id === "existing_project_mode"));
   assert.ok(payload.interview.analysis_findings.some((item) => item.id === "established-project"));
+  assert.match(payload.interview.new_project_command, /temper init --cwd \./);
   assert.match(payload.interview.apply_command, /temper onboard existing --write/);
 });
 

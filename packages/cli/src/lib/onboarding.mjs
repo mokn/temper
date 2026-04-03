@@ -185,6 +185,8 @@ export function buildOnboardingInterview(options = {}) {
   return {
     project_root: result.analysis.root,
     recommended_answers: answers,
+    new_project_command:
+      "temper init --cwd . [--name <name>] [--family <id>] [--stack <id>]",
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
     dry_run_command:
@@ -215,7 +217,7 @@ export function buildOnboardingInterview(options = {}) {
     questions,
     analysis_findings: findings,
     next_step:
-      "Ask the starter questions in chat first. If the user wants a dry run, use the dry_run_command. If they want to apply directly, use the apply_command. After the path decision, summarize the analysis_findings in plain language."
+      "Ask the starter questions in chat first. If the user says this is a new project, use the new_project_command. If they want a dry run for an existing repo, use the dry_run_command. If they want to apply directly, use the apply_command. After the path decision, summarize the analysis_findings in plain language."
   };
 }
 
