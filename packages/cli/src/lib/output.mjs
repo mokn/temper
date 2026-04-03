@@ -1,22 +1,10 @@
-export const TEMPER_SWORD_ART = String.raw`
-                 (  )
-                )    (
-               (  /\  )
-                \/  \/
-                  /\
-                 /  \
-                / /\ \
-               / /  \ \
-              /_/____\_\
-                  ||
-                  ||
-                  ||
-               ___||___
-              /___==___\
-                 /__\
+import fs from "node:fs";
+import path from "node:path";
+import { canonRoot } from "./paths.mjs";
 
-              T E M P E R
-      Heat. Hammer. Quench. Ship.
+export const TEMPER_SWORD_ART = String.raw`
+  ()==========>  T E M P E R
+  Heat. Hammer. Quench. Ship.
 `.trim();
 
 export function printTemperBanner(subtitle) {
@@ -25,6 +13,74 @@ export function printTemperBanner(subtitle) {
     console.log("");
     console.log(subtitle);
   }
+}
+
+// Reads a full canon doc and returns its content trimmed to maxChars.
+// Returns null if the file doesn't exist.
+function readCanonDoc(relPath, maxChars = 6000) {
+  const filePath = path.join(canonRoot, relPath);
+  try {
+    const content = fs.readFileSync(filePath, "utf8");
+    // Strip YAML frontmatter
+    const stripped = content.replace(/^---[\s\S]*?---\n/, "").trim();
+    return stripped.length > maxChars ? stripped.slice(0, maxChars).trimEnd() + "\n[...truncated]" : stripped;
+  } catch {
+    return null;
+  }
+}
+
+// Outputs an AI-facing context block for Pablo to synthesize into advice.
+// NOT user-facing — the AI reads it and delivers in its own voice.
+export function printCoachBrief(gameName, description, familyId, packet, experience) {
+  const hats = packet.selection.hats;
+
+  console.log("## AI Context — Synthesize into your first message. Do not read this section aloud.");
+  console.log("");
+  console.log(`Game: ${gameName}`);
+  if (description) console.log(`Description: ${description}`);
+  if (experience) console.log(`Experience level: ${experience}`);
+  const familyName = packet.selection.families[0]?.name ?? familyId;
+  console.log(`Family: ${familyName}`);
+  if (hats.length > 0) {
+    console.log(`Advisors: ${hats.map((h) => `${h.emoji} ${h.name}`).join(" · ")}`);
+  }
+  console.log("");
+
+  // Full family doctrine — small files, load completely
+  const familyDoc = readCanonDoc(`architecture/families/${familyId}.md`);
+  if (familyDoc) {
+    console.log("## Family Doctrine");
+    console.log(familyDoc);
+    console.log("");
+  }
+
+  // Hat doctrine — first 4K chars covers core philosophy without blowing context
+  for (const hat of hats) {
+    const hatDoc = readCanonDoc(`hats/${hat.id}.md`, 4000);
+    if (hatDoc) {
+      console.log(`## ${hat.emoji} ${hat.name} Doctrine`);
+      console.log(hatDoc);
+      console.log("");
+    }
+  }
+
+  console.log("## Synthesis Instructions");
+  console.log("Using the doctrine above, deliver your first message in this order:");
+  if (experience === "first") {
+    console.log("  (Tone: first-time builder — go slower, explain what each piece is for, celebrate progress)");
+  } else if (experience === "experienced") {
+    console.log("  (Tone: experienced builder — move fast, skip the basics, be direct about tradeoffs)");
+  }
+  console.log("  1. 2-3 sentences: what to build first and why, specific to this game");
+  console.log("  2. Advisor voices — 1-2 max. One line each: emoji + name + specific take on THIS game.");
+  console.log("     Use their actual philosophy, not paraphrases.");
+  console.log("     End each with an invitation: 'Want to dig into [topic] further?'");
+  console.log("     e.g. '🎯 Kaplan: the first 5 minutes here will either build or destroy trust. Want to map that moment?'");
+  console.log("  3. Ordered data model — what to define first as data files, in priority order");
+  console.log("  4. One key architectural risk specific to this game's traits");
+  console.log("  5. End with a focused question to keep the build conversation moving");
+  console.log("  IMPORTANT: Carry advisor voices into follow-up turns too. At each design pivot — new mechanic,");
+  console.log("  architecture decision, feature tradeoff — surface 1-2 relevant voices naturally. Don't wait for /coach.");
 }
 
 export function printHeader(title) {

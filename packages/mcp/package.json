@@ -1,0 +1,14 @@
+{
+  "name": "temper-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Temper MCP server — staged onboarding tools for AI assistants",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "temper-mcp": "./bin/temper-mcp.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.10.2"
+  }
+}

@@ -8,12 +8,28 @@ Repo contract:
 - private design docs live in `~/Documents/temper/docs/`
 - local handoffs stay in ignored `HANDOFF_<slug>.md` files and in `~/Documents/temper/docs/handoffs/`
 
-Current focus:
-1. The canonical user path is a plain clone, not a worktree-first setup.
-2. Fix Temper ship execution for verbose repos like UD (`spawnSync pnpm ENOBUFS` on `pnpm build`).
-3. Improve advanced-mode worktree diagnostics without making worktrees part of the base product story.
+Last Updated: 2026-04-03
 
-Next:
-1. Resume from the fresh-clone test shape and rerun `ship lite` after fixing output handling.
-2. Re-check `ship full --dry-run` and promoted `smoke` on the plain UD clone.
-3. Decide whether to keep/apply Temper to a real UD branch after the ship path is stable.
+Branch: feat/assistant-onboarding-flow (worktree: ~/temper-worktrees/ud-operator)
+
+## What Just Happened
+
+Walked path 4 (UD) live with Michael. Full onboarding flow works end-to-end against a real project.
+
+Key changes shipped this session (fe7c37f):
+- Designer's read: `buildDesignerRead()` generates a short project-specific compliment surfaced as `## Designer's Read` in `assistant show` output and woven into the suggested opening message
+- designer_read field added to `buildAssistantAnalysisFindings` return value
+- Fires on family + lifecycle + commit depth + scaffolding signal combinations — silent when no good signal
+
+Design decision: MCP layer should keep staged tools (show → findings → recommend), not collapse to one call. The staged pacing is deliberate UX, not a CLI workaround. MCP difference is only who calls them (LLM vs user running commands).
+
+## Pending
+
+- UD install: run `--rehearse` first, review AGENTS.md/CLAUDE.md injection, then `--write`
+- Branch merge decision: path 4 complete, designer's read shipped, CI fix and MCP done — ready to merge
+
+## Done This Session
+
+- fix: CI render bug — ci_files was array of objects, .join() produced [object Object]; mapped to paths at source (a349db9)
+- fix: test 4-33 — stale temper.config.json at /T/ poisoned findConfig walk; removed it; all 33 tests green
+- feat: packages/mcp/ — 5 staged MCP tools (show→findings→recommend→preview→apply) wrapping CLI lib functions directly (f052909)

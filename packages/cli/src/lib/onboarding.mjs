@@ -139,10 +139,12 @@ export function buildOnboardingInterview(options = {}) {
   const environments = result.config.environments ?? {};
   const findings = buildAssistantAnalysisFindings(result, environments);
   const userFacingNextMove = buildUserFacingNextMove(result, environments, findings);
+  const unreliableAnalysis = isAnalysisUnreliable(result.analysis);
   return {
     project_root: result.analysis.root,
     recommended_answers: answers,
     analysis_findings: findings,
+    unreliable_analysis: unreliableAnalysis,
     user_facing_next_move: userFacingNextMove,
     apply_command:
       "temper onboard existing --write --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
@@ -360,28 +362,116 @@ export function renderOnboardingInterview(interview) {
 export function renderOnboardingOpening(interview) {
   const findings = interview.analysis_findings ?? { strengths: [], concerns: [] };
   const strengths = findings.strengths;
+  const concerns = findings.concerns;
 
-  const lines = ["## What's Already In Good Shape"];
-  if (strengths.length > 0) {
-    for (const s of strengths) {
-      lines.push(`- ${s.text}`);
-    }
-  } else {
-    lines.push("- The repo is intelligible enough for Temper to start building a local operating contract.");
+  // If analysis is unreliable (dir-slug name + default family with no signals),
+  // ask two questions before running any analysis — don't pretend we know anything
+  if (interview.unreliable_analysis) {
+    const lines = [
+      "## Analysis Confidence: Low",
+      "The project name and game type couldn't be reliably inferred. Ask two questions before proceeding.",
+      "",
+      "## Suggested Opening Message",
+      "Before I set this up, two things I need from you:",
+      "",
+      "1. Is this a new game, or something you've already started building?",
+      "   If it's new — what's it called, and what kind of game is it?",
+      "   If it already exists — point me at it and I'll take a look.",
+      "2. How much game dev experience do you have? (first time / some experience / shipped before)",
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Ask those two questions. Wait for the user's answers.",
+      "",
+      "If new game:",
+      "  pnpm exec temper init --name \"<name>\" --family <type> --experience <level> --description \"<description>\" --cwd .",
+      "If existing game — they give you a path:",
+      "  pnpm exec temper onboard existing --cwd <path> --name \"<name>\" --family <type>",
+      "If existing game — they don't know the path:",
+      "  Search for it: grep -ril \"<game name>\" ~ --include=\"*.json\" --include=\"*.js\" --include=\"*.ts\" --include=\"*.html\" 2>/dev/null",
+      "  If found: run the onboard command above with the found path.",
+      "  If not found: tell them clearly you can't locate it, ask if they have a path or built it elsewhere."
+    ];
+    return lines.join("\n") + "\n";
   }
 
-  const openingMessage = strengths.length > 0
+  const summary = findings.project_summary;
+
+  // Project audit block — always shown
+  const lines = ["## What I Found"];
+  if (summary) {
+    lines.push(`- **${summary.name}** — ${summary.family}, ${summary.lifecycle}`);
+    lines.push(`- Stack: ${summary.stack}`);
+    lines.push(`- Git history: ${summary.has_git_history ? `${summary.commit_count} commits` : "none yet"}`);
+    lines.push(`- CI: ${summary.has_ci ? summary.ci_files.join(", ") : "not set up"}`);
+    lines.push(`- Source-of-truth paths: ${summary.has_source_of_truth ? "defined" : "not defined"}`);
+  }
+
+  // Filter out filler strength — only show real computed strengths
+  const meaningfulStrengths = strengths.filter((s) => !s.text.includes("intelligible enough for Temper"));
+
+  if (meaningfulStrengths.length > 0) {
+    lines.push("", "## What's Already In Good Shape");
+    for (const s of meaningfulStrengths) {
+      lines.push(`- ${s.text}`);
+    }
+  }
+
+  const designerRead = findings.designer_read ?? null;
+  if (designerRead) {
+    lines.push("", "## Designer's Read");
+    lines.push(designerRead);
+  }
+
+  // Build opening message from the project summary — no duplicate warnings
+  const auditLines = summary
     ? [
-        "Okay, I looked through the whole thing. A few things are already in good shape:",
+        `Okay, I went through ${summary.name}. Here's what I found:`,
         "",
-        ...strengths.map((s) => `- ${s.text}`),
-        "",
-        "There are also a couple of things worth knowing before we install anything. I'll share those next."
-      ].join("\n")
-    : "Okay, I looked through the repo. It's clean enough to work with. Let me flag a couple of things before we proceed.";
+        `- **${summary.family}** game, ${summary.lifecycle.toLowerCase()}.`,
+        `- ${summary.has_git_history ? `${summary.commit_count} commits in the repo.` : "No git history yet."}`,
+        `- ${summary.has_ci ? `CI is set up: ${summary.ci_files.join(", ")}.` : "No CI workflows."}`,
+        `- ${summary.has_source_of_truth ? "Source-of-truth paths are defined." : "No source-of-truth paths — will need to define these."}`,
+        ...(meaningfulStrengths.length > 0 ? ["", ...meaningfulStrengths.map((s) => `- ${s.text}`)] : []),
+        ...(designerRead ? ["", designerRead] : [])
+      ]
+    : ["Okay, I looked through the repo."];
+
+  // For clean projects (no concerns): give the recommendation inline — don't gate it
+  if (concerns.length === 0) {
+    const move = interview.user_facing_next_move;
+    const recommendationLines = move
+      ? [
+          move.summary,
+          "",
+          move.confirm_prompt,
+          ...(move.alternatives?.length > 0
+            ? ["", "Or:", ...move.alternatives.map((a) => `- ${a.label} — say ${a.reply}`)]
+            : [])
+        ]
+      : [];
+
+    const openingMessage = [...auditLines, "", ...recommendationLines].join("\n");
+    lines.push("", "## Suggested Opening Message", openingMessage);
+    lines.push(
+      "",
+      "---",
+      "STOP. Do not continue past this line.",
+      "Deliver the full message above — audit findings and recommendation together.",
+      "Wait for the user to confirm or redirect.",
+      "",
+      "If they say apply it:",
+      "  pnpm exec temper onboard existing --write --cwd .",
+      "If they want a dry run first:",
+      "  pnpm exec temper onboard existing --rehearse --cwd ."
+    );
+    return lines.join("\n") + "\n";
+  }
+
+  const closingLine = "There are a couple of things worth knowing before we install anything. I'll share those next.";
+  const openingMessage = [...auditLines, "", closingLine].join("\n");
 
   lines.push("", "## Suggested Opening Message", openingMessage);
-
   lines.push(
     "",
     "---",
@@ -1596,6 +1686,12 @@ function buildOnboardingFindingTemplate(findings) {
   return lines.join("\n");
 }
 
+function isAnalysisUnreliable(analysis) {
+  const nameLooksDirSlug = analysis.name === path.basename(analysis.root);
+  const familyIsDefaultFallback = analysis.family.reasons?.some((r) => r.includes("default: no strong family signal"));
+  return nameLooksDirSlug && familyIsDefaultFallback;
+}
+
 function buildAssistantAnalysisFindings(result, environments) {
   const strengths = [];
   const concerns = [];
@@ -1645,7 +1741,74 @@ function buildAssistantAnalysisFindings(result, environments) {
     });
   }
 
-  return { strengths, concerns };
+  const projectSummary = {
+    name: result.analysis.name,
+    family: result.analysis.family.label,
+    family_id: result.analysis.family.id,
+    stack: result.analysis.stack.label,
+    lifecycle: result.onboarding.lifecycle?.label ?? "unknown",
+    lifecycle_habit: result.onboarding.lifecycle?.operator_habit ?? null,
+    has_git_history: (result.onboarding.history?.commit_count ?? 0) > 0,
+    commit_count: result.onboarding.history?.commit_count ?? 0,
+    has_ci: (result.onboarding.workflows?.count ?? 0) > 0,
+    ci_files: (result.onboarding.workflows?.files ?? []).map((f) => f.path),
+    has_source_of_truth: (result.analysis.surfaces?.source_of_truth ?? []).length > 0,
+    warnings: result.analysis.warnings ?? [],
+    top_recommendations: (result.onboarding.recommendations ?? []).slice(0, 2)
+  };
+
+  const designerRead = buildDesignerRead(result.analysis, result.onboarding);
+
+  return { strengths, concerns, project_summary: projectSummary, designer_read: designerRead };
+}
+
+function buildDesignerRead(analysis, onboarding) {
+  const family = analysis.family?.id;
+  const lifecycle = onboarding.lifecycle?.id;
+  const commitCount = onboarding.history?.commit_count ?? 0;
+  const hasOperatorScaffolding =
+    analysis.surfaces?.workflow?.agents &&
+    analysis.surfaces?.workflow?.session &&
+    analysis.surfaces?.workflow?.claude;
+  const hasRuleFiles = (analysis.surfaces?.workflow?.claude_rules?.length ?? 0) > 0;
+  const hasHandoffs = (analysis.surfaces?.workflow?.handoffs?.length ?? 0) > 0;
+  const hasBetaProd =
+    analysis.environments?.some((e) => e.id === "beta") &&
+    analysis.environments?.some((e) => e.id === "prod");
+
+  if (family === "data-driven-progression-rpg" && lifecycle === "live") {
+    if (commitCount >= 1000 && hasOperatorScaffolding && hasHandoffs) {
+      return "A live-service progression RPG with this level of operator tooling is rare. Most teams reconstruct this scaffolding after their first production incident. You skipped that step.";
+    }
+    if (hasBetaProd && hasRuleFiles) {
+      return "Beta/prod separation with scoped domain rules is exactly the pattern that keeps a live game shippable without a staging circus. Solid foundation.";
+    }
+    if (commitCount >= 500) {
+      return `${commitCount.toLocaleString()} commits in a browser-native RPG that still has disciplined operator context — most projects this size are running on tribal knowledge by now.`;
+    }
+  }
+
+  if (family === "competitive-server-authoritative" && lifecycle === "live" && hasOperatorScaffolding) {
+    return "Live multiplayer with this kind of operator infrastructure is hard to get right. The context scaffolding alone will save you hours every time you hand off between sessions.";
+  }
+
+  if (family === "simulation-management-sandbox" && commitCount >= 500 && hasOperatorScaffolding) {
+    return "Simulation games with this many commits usually turn into archaeology projects. The operator scaffolding here keeps that from happening.";
+  }
+
+  if (hasOperatorScaffolding && hasHandoffs && hasRuleFiles && lifecycle === "live") {
+    return "The operator infrastructure here is more thoughtful than most production repos. Explicit context files, domain rules, handoff artifacts — this is a team that's learned from restarts.";
+  }
+
+  if (commitCount >= 500 && hasOperatorScaffolding) {
+    return `A repo with ${commitCount.toLocaleString()} commits and solid operator scaffolding already — Temper has good material to work with here.`;
+  }
+
+  if (hasOperatorScaffolding && lifecycle !== "live") {
+    return "Operator scaffolding in place before the repo gets large — that's the right call. Most teams wish they'd done this earlier.";
+  }
+
+  return null;
 }
 
 function buildUserFacingNextMove(result, environments, findings = { strengths: [], concerns: [] }) {
