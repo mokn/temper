@@ -1,8 +1,13 @@
 # Temper
 
-Temper is a repo-local operating system for AI-assisted game teams.
+Temper helps an assistant understand a game repo fast, recommend the safest next move, and install a local working contract you can inspect and trust.
 
-It installs a shared canon, continuity layer, run artifacts, and eval surfaces into an existing repository so Claude, Codex, and human operators are working from the same local contract instead of chat history and ad hoc prompts.
+It is built for the first five minutes of setup:
+
+- look through the repo
+- recommend the safest onboarding path
+- let you rehearse the install in a clean copy if the repo already matters
+- write the assistant surfaces and workflow files once you approve it
 
 ## Public Alpha
 
@@ -14,42 +19,37 @@ Temper is in an early public alpha.
 - no telemetry is implemented in this repo yet
 - npm publish is not configured yet
 
-## What It Does
+## First Win
 
-- onboards an existing repo with a repo-local Temper contract
-- generates shared Claude/Codex assistant surfaces from the same canon
-- installs a short `SESSION.md` board plus structured handoff files
-- records machine-readable run artifacts under `.temper/runs/`
-- evaluates whether a repo can be resumed cold with `temper eval restart`
+For an existing repo, Temper should get you to one clean outcome fast:
 
-## Why It Exists
-
-Most agent workflows still depend on prompt state and session memory. Temper pushes the important operating state into the repo itself:
-
-- canon in `.temper/assistants/`
-- continuity in `SESSION.md` and `HANDOFF_<slug>.md`
-- run history in `.temper/runs/`
-- onboarding and policy reports in `.temper/reports/`
-
-That makes the workflow cheaper to resume, easier to inspect, and easier to trust.
+- it inspects the repo and tells you what it saw
+- it recommends the safest next move instead of making you choose blind
+- it can rehearse the install in a clean copy before touching the real repo
+- once you approve it, it writes the repo-local surfaces your assistant needs
 
 ## Quickstart
 
 Install Temper from GitHub into a target repo:
 
 ```bash
-pnpm add -D github:<owner>/temper#<sha>
+pnpm add -D github:mokn/temper#main
 ```
 
 Then from that target repo:
 
 ```bash
-pnpm exec temper assistant show --cwd . --json
-# let the assistant ask whether this is a new or existing project
-# for existing repos, choose dry run or apply-here first
-# then let the assistant summarize any workflow-impacting findings in plain English
-# and apply the chosen path with rehearse/write
+pnpm exec temper assistant show --cwd .
+# Temper tells you what it saw and recommends the safest next move.
+# For established repos, that usually means rehearsing the install in a clean copy first.
+# After you accept the path and Temper finishes onboarding:
 pnpm exec temper inspect --cwd .
+```
+
+If you are wiring a Claude/Codex integration and want the machine-readable version of that same recommendation:
+
+```bash
+pnpm exec temper assistant show --cwd . --json
 ```
 
 If you are onboarding manually instead of through an assistant chat:
@@ -68,15 +68,15 @@ Other package managers work too:
 ## Core Commands
 
 - `temper onboard existing --cwd <repo> --preview`
-  Inspect the exact install plan without writing files.
+  Inspect the install plan without writing files.
 - `temper onboard existing --cwd <repo> --interview`
   Emit the assistant-facing onboarding conversation plan.
 - `temper onboard existing --cwd <repo> --write`
   Install Temper into an existing repo.
 - `temper onboard existing --cwd <repo> --rehearse`
-  Replay onboarding in a disposable lab.
+  Rehearse onboarding in a disposable copy before you touch the real repo.
 - `temper assistant show --cwd <repo>`
-  If the repo is not onboarded yet, return the assistant onboarding plan for chat. If it is onboarded, show the installed assistant surfaces.
+  If the repo is not onboarded yet, show the recommended next move. If it is onboarded, show the installed assistant surfaces.
 - `temper inspect --cwd <repo>`
   Show the installed canon, continuity, policy, and recent runs.
 - `temper session show --cwd <repo>`

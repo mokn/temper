@@ -137,6 +137,8 @@ export function buildOnboardingInterview(options = {}) {
   const result = buildExistingProjectOnboarding(options);
   const answers = result.onboarding.operator_answers ?? {};
   const environments = result.config.environments ?? {};
+  const findings = buildAssistantAnalysisFindings(result, environments);
+  const userFacingNextMove = buildUserFacingNextMove(result, environments, findings);
   const questions = [
     {
       id: "project_state",
@@ -180,11 +182,10 @@ export function buildOnboardingInterview(options = {}) {
       }
     }
   ];
-  const findings = buildAssistantAnalysisFindings(result, environments);
-
   return {
     project_root: result.analysis.root,
     recommended_answers: answers,
+    user_facing_next_move: userFacingNextMove,
     new_project_command:
       "temper init --cwd . [--name <name>] [--family <id>] [--stack <id>]",
     apply_command:
@@ -195,15 +196,15 @@ export function buildOnboardingInterview(options = {}) {
       "temper onboard existing --preview --cwd . [--name <name>] [--family <id>] [--stack <id>] [--beta-branch <branch>] [--prod-branch <branch>]",
     assistant_flow: {
       mode: "continue_in_chat",
-      opening: "Before I change this repo, I want to confirm the onboarding path.",
+      opening: userFacingNextMove.summary,
       style_rules: [
         "Do not dump the raw interview JSON to the user.",
         "Do not say 'Temper is asking'.",
         "Ask the questions as a natural continuation of the current install conversation.",
-        "Start with the human onboarding path questions before surfacing lower-level inferred config.",
+        "Lead with the recommended next move before asking the user to choose among product modes.",
         "After the user picks a path, summarize the repo findings in plain English and explain workflow impact."
       ],
-      reply_template: buildOnboardingReplyTemplate(questions),
+      reply_template: buildOnboardingReplyTemplate(userFacingNextMove, findings),
       follow_up_template: buildOnboardingFindingTemplate(findings)
     },
     inferred: {
@@ -217,7 +218,7 @@ export function buildOnboardingInterview(options = {}) {
     questions,
     analysis_findings: findings,
     next_step:
-      "Ask the starter questions in chat first. If the user says this is a new project, use the new_project_command. If they want a dry run for an existing repo, use the dry_run_command. If they want to apply directly, use the apply_command. After the path decision, summarize the analysis_findings in plain language."
+      "Lead with the user_facing_next_move. If the user accepts it, run that command. If they say this is a new project, use the new_project_command. If they want a different existing-project path, use the dry_run_command or apply_command. After the path decision, summarize the analysis_findings in plain language."
   };
 }
 
@@ -261,6 +262,7 @@ export function materializeOnboardingInstall(options) {
 export function buildOnboardingInstallPreview(options) {
   const projectRoot = path.resolve(options.projectRoot ?? options.result.analysis.root);
   const result = options.result;
+  const environments = result.config.environments ?? {};
   const continuityPlan = planContinuityInstall({
     projectRoot,
     config: result.config,
@@ -289,14 +291,18 @@ export function buildOnboardingInstallPreview(options) {
       action
     }));
   const unchangedFiles = filePlans.filter((item) => item.action === "unchanged").map((item) => item.relativePath);
+  const findings = buildAssistantAnalysisFindings(result, environments);
 
   return {
     project_root: projectRoot,
     runtime_command: assistantPlan.runtime.command,
+    user_facing_next_move: buildUserFacingNextMove(result, environments, findings),
     file_changes: fileChanges,
     unchanged_files: unchangedFiles,
+    analysis_findings: findings,
     habit_changes: buildPreviewHabitChanges(assistantPlan.runtime.command, result.onboarding.execution_policy),
-    rollback: buildPreviewRollback(fileChanges)
+    rollback: buildPreviewRollback(fileChanges),
+    deeper_review_command: "temper onboard existing --preview --cwd . --json"
   };
 }
 
@@ -304,7 +310,12 @@ export function renderOnboardingPreview(preview) {
   const lines = [
     "## Preview",
     "- no files are written in preview mode",
-    "- use `--write` to apply this plan or `--rehearse` to replay it in a disposable lab",
+    "- this is the safe inspection pass before Temper touches the repo",
+    "",
+    "## Recommended Next Move",
+    `- ${preview.user_facing_next_move.summary}`,
+    `- run: \`${preview.user_facing_next_move.command}\``,
+    ...asBulletLines(preview.user_facing_next_move.why.map((item) => `why this is the default: ${item}`)),
     "",
     "## What Will Change",
     ...asBulletLines(
@@ -318,8 +329,17 @@ export function renderOnboardingPreview(preview) {
     lines.push("", "## Already Matches", ...asBulletLines(preview.unchanged_files));
   }
 
-  lines.push("", "## Habit Changes", ...asBulletLines(preview.habit_changes));
+  if (preview.analysis_findings.length > 0) {
+    lines.push(
+      "",
+      "## What Temper Noticed",
+      ...asBulletLines(preview.analysis_findings.map((item) => `${item.title} ${item.impact}`))
+    );
+  }
+
   lines.push("", "## Rollback", ...asBulletLines(preview.rollback));
+  lines.push("", "## After Install", ...asBulletLines(preview.habit_changes));
+  lines.push("", "## Deeper Review", `- run \`${preview.deeper_review_command}\` for the full analysis and policy report`);
 
   return lines.join("\n") + "\n";
 }
@@ -328,25 +348,25 @@ export function renderOnboardingInterview(interview) {
   const lines = [
     "## Onboarding Interview",
     "- continue the install conversation naturally",
-    "- start with the human onboarding path questions",
-    "- do not dump the raw interview JSON to the user",
-    "- default to the dry run path when the repo already looks live unless the user says otherwise",
+    "- lead with the recommended next move",
     "- only surface lower-level config ids if the user asks to customize them",
+    "",
+    "## Recommended Next Move",
+    `- ${interview.user_facing_next_move.summary}`,
+    `- run: \`${interview.user_facing_next_move.command}\``,
+    `- chat reply: ${interview.user_facing_next_move.confirm_prompt}`,
+    ...asBulletLines(interview.user_facing_next_move.why.map((item) => `why this is the default: ${item}`)),
     "",
     "## Suggested Assistant Reply",
     interview.assistant_flow?.reply_template ||
-      "Before I change this repo, I want to confirm the onboarding path.",
-    "",
-    "## Starter Questions"
+      interview.user_facing_next_move.summary
   ];
 
-  for (const [index, question] of interview.questions.entries()) {
-    lines.push(`${index + 1}. ${question.prompt}`);
-    lines.push(`   default: ${formatInterviewDefault(question)}`);
-    if (question.options?.length) {
-      lines.push(`   options: ${question.options.map((item) => `${item.label} (${item.description})`).join(" | ")}`);
+  if (interview.user_facing_next_move.alternatives.length > 0) {
+    lines.push("", "## If The User Wants A Different Path");
+    for (const alternative of interview.user_facing_next_move.alternatives) {
+      lines.push(`- ${alternative.label}: ${alternative.reply}`);
     }
-    lines.push(`   why: ${question.rationale}`);
   }
 
   if (interview.analysis_findings?.length) {
@@ -1434,23 +1454,23 @@ function applyOnboardingAnswersToConfig(config, answers) {
   };
 }
 
-function buildOnboardingReplyTemplate(questions) {
+function buildOnboardingReplyTemplate(userFacingNextMove, findings) {
   const lines = [
-    "Before I change this repo, I want to confirm the onboarding path.",
+    userFacingNextMove.summary,
     "",
-    "Reply with any changes or say `use defaults`.",
-    ""
+    userFacingNextMove.confirm_prompt
   ];
 
-  for (const [index, question] of questions.entries()) {
-    lines.push(`${index + 1}. ${question.prompt}`);
-    lines.push(`Default: ${formatInterviewDefault(question)}`);
-    if (question.id === "existing_project_mode") {
-      lines.push("I can create a clean rehearsal copy, install Temper there, and if you like the structure I can apply it here afterward.");
+  if (userFacingNextMove.alternatives.length > 0) {
+    lines.push("", "You can also tell me:");
+    for (const alternative of userFacingNextMove.alternatives) {
+      lines.push(`- ${alternative.reply}`);
     }
   }
 
-  lines.push("", "After that I’ll walk you through anything I found that could affect your workflow or safety rails.");
+  if (findings.length > 0) {
+    lines.push("", "After that I’ll point out anything I found that could affect your workflow or safety rails.");
+  }
 
   return lines.join("\n");
 }
@@ -1506,6 +1526,80 @@ function buildAssistantAnalysisFindings(result, environments) {
   }
 
   return findings;
+}
+
+function buildUserFacingNextMove(result, environments, findings = []) {
+  const lifecycle = result.onboarding.lifecycle?.id;
+  const gatedFullSteps = result.onboarding.execution_policy?.lifecycle?.ship_modes?.full?.gated_steps ?? [];
+  const branchNotes = [
+    environments.beta?.branch ? `beta on \`${environments.beta.branch}\`` : null,
+    environments.prod?.branch ? `prod on \`${environments.prod.branch}\`` : null
+  ].filter(Boolean);
+
+  if (lifecycle === "live" || branchNotes.length > 0 || gatedFullSteps.length > 0) {
+    const why = [
+      branchNotes.length > 0
+        ? `I found real release surfaces already in place: ${branchNotes.join(" and ")}.`
+        : "I found an established repo shape rather than a blank slate.",
+      gatedFullSteps.length > 0
+        ? `Some verification steps touch shared state or real credentials: ${gatedFullSteps.join(", ")}.`
+        : "A rehearsal copy lets you inspect the generated structure before anything touches this repo.",
+      "A dry run gives you a clean copy to inspect before you decide whether to apply the same structure here."
+    ];
+
+    return {
+      id: "existing_project_dry_run_first",
+      title: "Recommended next move",
+      summary:
+        "I took a look at this repo. It already has real workflow and release surfaces, so the safest first step is a dry run in a clean copy before anything touches this repo.",
+      command: "temper onboard existing --rehearse --cwd .",
+      confirm_prompt: "If that sounds right, say `start the dry run`.",
+      why,
+      alternatives: [
+        {
+          id: "apply_here",
+          label: "Apply Temper directly here",
+          reply: "`apply it here instead`",
+          command: "temper onboard existing --write --cwd ."
+        },
+        {
+          id: "new_project",
+          label: "Switch to new-project setup",
+          reply: "`this is a new project`",
+          command: "temper init --cwd ."
+        }
+      ],
+      findings
+    };
+  }
+
+  return {
+    id: "existing_project_apply_here",
+    title: "Recommended next move",
+    summary:
+      "I took a look at this repo. It does not look like it needs a heavy rehearsal path, so applying Temper here directly is a reasonable default.",
+    command: "temper onboard existing --write --cwd .",
+    confirm_prompt: "If that sounds right, say `apply it here`.",
+    why: [
+      "The repo shape looks stable enough for a direct install.",
+      "You can still ask for a dry run first if you want a reversible inspection pass."
+    ],
+    alternatives: [
+      {
+        id: "dry_run_first",
+        label: "Start with a dry run",
+        reply: "`start with a dry run instead`",
+        command: "temper onboard existing --rehearse --cwd ."
+      },
+      {
+        id: "new_project",
+        label: "Switch to new-project setup",
+        reply: "`this is a new project`",
+        command: "temper init --cwd ."
+      }
+    ],
+    findings
+  };
 }
 
 function formatInterviewDefault(question) {

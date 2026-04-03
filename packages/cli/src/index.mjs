@@ -732,8 +732,7 @@ function runOnboard(rest) {
     console.log("");
     process.stdout.write(renderOnboardingPreview(preview));
     console.log("");
-    process.stdout.write(result.report);
-    console.log("Run with --interview to get the user-facing questions, --write to materialize this plan, or --rehearse to replay it in a disposable lab.");
+    console.log("Run with --rehearse to inspect the install in a clean copy, --write to apply it here, or --preview --json for the full analysis report.");
     return;
   }
 
@@ -956,7 +955,7 @@ function runAssistant(rest) {
 
     if (subcommand === "install") {
       throw new Error(
-        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd . --json` and continue the onboarding chat first."
+        "Temper is installed but this repo is not onboarded yet. Run `temper assistant show --cwd .` to see the recommended next move."
       );
     }
 
@@ -966,6 +965,7 @@ function runAssistant(rest) {
           {
             status: "needs_onboarding",
             next_action: "continue_in_chat",
+            user_facing_next_move: interview.user_facing_next_move,
             interview
           },
           null,
@@ -981,7 +981,7 @@ function runAssistant(rest) {
     console.log("");
     process.stdout.write(renderOnboardingInterview(interview));
     console.log("");
-    console.log("Ask those questions in chat, then rerun the apply command with the user's answers.");
+    console.log("If you want the machine-readable version for an assistant integration, rerun with `--json`.");
     return;
   }
 

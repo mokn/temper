@@ -81,8 +81,12 @@ test("onboard existing --preview shows the write plan without mutating the repo"
   });
 
   assert.match(output, /## Preview/);
+  assert.match(output, /## Recommended Next Move/);
+  assert.match(output, /temper onboard existing --rehearse --cwd \./);
   assert.match(output, /create: temper\.config\.json/);
   assert.match(output, /update: AGENTS\.md/);
+  assert.doesNotMatch(output, /## Token Efficiency/);
+  assert.doesNotMatch(output, /## Policy Lifecycle/);
   assert.equal(fs.readFileSync(path.join(repoDir, "AGENTS.md"), "utf8"), agentsBefore);
   assert.equal(fs.existsSync(path.join(repoDir, "temper.config.json")), false);
 });
@@ -95,6 +99,7 @@ test("onboard existing --dry-run aliases preview in json mode", async (t) => {
   const parsed = JSON.parse(output);
 
   assert.ok(parsed.preview);
+  assert.equal(parsed.preview.user_facing_next_move.id, "existing_project_dry_run_first");
   assert.ok(parsed.preview.file_changes.some((item) => item.path === "temper.config.json" && item.action === "create"));
   assert.ok(parsed.preview.file_changes.some((item) => item.path === ".temper/assistants/shared-canon.md" && item.action === "create"));
   assert.ok(parsed.preview.file_changes.some((item) => item.path === "CLAUDE.md" && item.action === "update"));
@@ -110,19 +115,20 @@ test("onboard existing --interview emits assistant-facing questions and defaults
   assert.deepEqual(Object.keys(parsed), ["interview"]);
   assert.equal(fs.realpathSync(parsed.interview.project_root), fs.realpathSync(repoDir));
   assert.equal(parsed.interview.assistant_flow.mode, "continue_in_chat");
-  assert.match(parsed.interview.assistant_flow.opening, /Before I change this repo/);
+  assert.match(parsed.interview.assistant_flow.opening, /safest first step is a dry run/);
   assert.ok(parsed.interview.assistant_flow.style_rules.some((item) => item.includes("Do not dump the raw interview JSON")));
+  assert.equal(parsed.interview.user_facing_next_move.id, "existing_project_dry_run_first");
   assert.ok(parsed.interview.questions.some((item) => item.id === "project_state"));
   assert.ok(parsed.interview.questions.some((item) => item.id === "existing_project_mode"));
-  assert.match(parsed.interview.assistant_flow.reply_template, /Is this a new project or an existing one/);
-  assert.match(parsed.interview.assistant_flow.reply_template, /dry run/);
+  assert.match(parsed.interview.assistant_flow.reply_template, /start the dry run/);
+  assert.match(parsed.interview.assistant_flow.reply_template, /apply it here instead/);
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "established-project"));
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "root-test-is-lint"));
   assert.ok(parsed.interview.analysis_findings.some((item) => item.id === "gated-live-verification"));
   assert.match(parsed.interview.new_project_command, /temper init --cwd \./);
   assert.match(parsed.interview.apply_command, /temper onboard existing --write/);
   assert.match(parsed.interview.dry_run_command, /temper onboard existing --rehearse/);
-  assert.match(parsed.interview.next_step, /If the user says this is a new project/);
+  assert.match(parsed.interview.next_step, /Lead with the user_facing_next_move/);
 });
 
 test("onboard existing --write applies chat-collected onboarding overrides", async (t) => {
