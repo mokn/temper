@@ -14,20 +14,19 @@ Branch: feat/assistant-onboarding-flow (worktree: ~/temper-worktrees/ud-operator
 
 ## What Just Happened
 
-Full onboarding flow design + implementation session. Walked paths 1-3 live with Michael.
+Walked path 4 (UD) live with Michael. Full onboarding flow works end-to-end against a real project.
 
-Key changes shipped (all pushed to feat/assistant-onboarding-flow):
-- --experience flag through init path + coach brief tone hint
-- Stage collapse: zero concerns → inline recommendation, no permission gate
-- Unreliable analysis detection → 2-question flow (new/existing first)
-- Full project audit in opening (What I Found: family, lifecycle, git, CI, source-of-truth)
-- Persistent advisor voices in generated claude.md + coach brief synthesis instructions
-- Search-before-asking when user says existing but doesn't know path
-- UD package.json updated to point at feat/assistant-onboarding-flow
+Key changes shipped this session (fe7c37f):
+- Designer's read: `buildDesignerRead()` generates a short project-specific compliment surfaced as `## Designer's Read` in `assistant show` output and woven into the suggested opening message
+- designer_read field added to `buildAssistantAnalysisFindings` return value
+- Fires on family + lifecycle + commit depth + scaffolding signal combinations — silent when no good signal
+
+Design decision: MCP layer should keep staged tools (show → findings → recommend), not collapse to one call. The staged pacing is deliberate UX, not a CLI workaround. MCP difference is only who calls them (LLM vs user running commands).
 
 ## Pending
 
-- Run path 4 (UD): `pnpm exec temper assistant show --cwd ~/ultimate-dominion`
-- After path 4: decide if branch is ready to merge to temper#main
-- If merging: update UD package.json back to github:mokn/temper#main
-- Path 3 recommendation copy still generic — could be more project-specific
+- Fix CI rendering bug: `[object Object]` in human-readable output (JSON is correct; text formatter bug in workflow files section)
+- Pre-existing test failures: tests 4-20 (fixture lifecycle misdetection, write path, install path) — not caused this session, need separate investigation
+- MCP layer: design + implement staged tool wrappers around existing --json output
+- UD install: run `--rehearse` first, review AGENTS.md/CLAUDE.md injection, then `--write`
+- Branch merge decision: path 4 complete, designer's read shipped — branch is ready to merge after CI render fix
