@@ -12,11 +12,53 @@ import {
   buildOnboardingInstallPreview,
   materializeOnboardingInstall
 } from "../../cli/src/lib/onboarding.mjs";
+import { findConfig } from "../../cli/src/lib/project-config.mjs";
 
 const server = new Server(
   { name: "temper", version: "0.1.0" },
   { capabilities: { tools: {} } }
 );
+
+// ---------------------------------------------------------------------------
+// Onboarding stage gate — tracks which stages have been completed per cwd.
+// Stages must be completed in order: show → findings → recommend → preview → apply.
+// ---------------------------------------------------------------------------
+
+const ONBOARDING_STAGES = ["show", "findings", "recommend", "preview", "apply"];
+const STAGE_TOOL_MAP = {
+  temper_onboard_show: "show",
+  temper_onboard_findings: "findings",
+  temper_onboard_recommend: "recommend",
+  temper_onboard_preview: "preview",
+  temper_onboard_apply: "apply"
+};
+const completedStages = new Map(); // cwd → Set<stage>
+
+function requireStage(cwd, toolName) {
+  const stage = STAGE_TOOL_MAP[toolName];
+  if (!stage) return; // not an onboarding tool
+  const stageIndex = ONBOARDING_STAGES.indexOf(stage);
+  if (stageIndex === 0) return; // show is always allowed
+
+  const completed = completedStages.get(path.resolve(cwd)) ?? new Set();
+  const requiredStage = ONBOARDING_STAGES[stageIndex - 1];
+  if (!completed.has(requiredStage)) {
+    const requiredTool = Object.entries(STAGE_TOOL_MAP).find(([, s]) => s === requiredStage)?.[0];
+    throw new Error(
+      `Onboarding must proceed in order. Call ${requiredTool} first and deliver its output to the user before calling ${toolName}.`
+    );
+  }
+}
+
+function markStageComplete(cwd, toolName) {
+  const stage = STAGE_TOOL_MAP[toolName];
+  if (!stage) return;
+  const resolved = path.resolve(cwd);
+  if (!completedStages.has(resolved)) {
+    completedStages.set(resolved, new Set());
+  }
+  completedStages.get(resolved).add(stage);
+}
 
 // ---------------------------------------------------------------------------
 // Shell-out helper — operational tools run through the CLI binary to avoid
@@ -440,10 +482,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       throw new Error("cwd is required");
     }
 
+    // Enforce onboarding stage order
+    requireStage(args.cwd, name);
+
     // --- Onboarding tools (direct library import — pure/sync, no stdout risk) ---
 
     if (name === "temper_onboard_show") {
       const interview = buildOnboardingInterview({ cwd: args.cwd });
+      markStageComplete(args.cwd, name);
       return ok({
         project_root: interview.project_root,
         opening: interview.assistant_flow.reply_template,
@@ -469,6 +515,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               "Once you've had a chance to take that in, I'll share my recommendation for how to proceed."
             ].join("\n")
           : "Nothing significant to flag here — the repo is in clean enough shape to proceed.";
+      markStageComplete(args.cwd, name);
       return ok({
         concerns,
         strengths: findings.strengths ?? [],
@@ -496,6 +543,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ]
           : [])
       ].join("\n");
+      markStageComplete(args.cwd, name);
       return ok({
         recommendation_message: recommendationMessage,
         recommended_command: move.command,
@@ -513,6 +561,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === "temper_onboard_preview") {
       const result = buildExistingProjectOnboarding({ cwd: args.cwd });
       const preview = buildOnboardingInstallPreview({ result, assistants: ["claude", "codex"] });
+      markStageComplete(args.cwd, name);
       return ok({
         project_root: preview.project_root,
         file_changes: preview.file_changes,
@@ -536,6 +585,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         result,
         assistants: ["claude", "codex"]
       });
+      markStageComplete(args.cwd, name);
       return ok({
         project_root: result.analysis.root,
         config_path: generated.configPath,
@@ -549,6 +599,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
 
     // --- Operational tools (shell out to CLI binary) ---
+    // Require onboarding for all operational tools except inspect (read-only diagnostic)
+    const ONBOARDING_EXEMPT = new Set(["temper_inspect"]);
+    if (!STAGE_TOOL_MAP[name] && !ONBOARDING_EXEMPT.has(name) && !findConfig(args.cwd)) {
+      throw new Error(
+        "This repo hasn't been onboarded yet. Call temper_onboard_show to start the onboarding flow."
+      );
+    }
 
     if (name === "temper_coach") {
       const cliArgs = ["coach", "--json", "--cwd", args.cwd, "--intent", args.intent];

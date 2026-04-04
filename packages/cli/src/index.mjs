@@ -49,6 +49,16 @@ import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printCoachBrief, printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
 
+function requireOnboarded(cwd) {
+  const config = loadProjectConfig({ cwd, required: false });
+  if (!config) {
+    throw new Error(
+      "This repo hasn't been onboarded yet. Run `temper assistant show --cwd .` to start."
+    );
+  }
+  return config;
+}
+
 const capabilityCommands = new Set([
   "init",
   "adopt",
@@ -370,6 +380,7 @@ function runSession(rest) {
   }
 
   const args = parseSessionArgs(subRest);
+  requireOnboarded(args.cwd);
   const plan = buildSessionPlan({
     cwd: args.cwd,
     workstream: args.workstream,
@@ -740,7 +751,7 @@ function runOnboard(rest) {
     console.log("- **temper.config.json** — the operating contract. Every Temper command reads this to know what game this is and how to ship it.");
     console.log("- **.temper/assistants/claude.md** — what your AI reads at the start of every session. This is how it knows your project without you explaining.");
     console.log("- **SESSION.md** — the active work board. Tracks what's in progress across sessions.");
-    console.log("- **.claude/commands/temper-*.md** — slash commands: `/temper-ship`, `/temper-coach`, `/temper-balance`.");
+    console.log("- **MCP tools** — `temper_coach`, `temper_ship`, `temper_handoff` (via the Temper MCP server).");
     console.log("- **.temper/reports/onboarding.md** — the full analysis report.");
     console.log("");
     console.log(`You can inspect these at: ${rehearsal.rehearsalRoot}`);
@@ -882,12 +893,12 @@ function runOnboard(rest) {
     console.log("Your next session opens with full project context — no re-explaining.");
     console.log("");
     console.log("Here's how Temper works day-to-day:");
-    console.log(`- **Before designing something new** → \`/temper-coach\` — routes advice through ${familyLabel}-specific doctrine and game design advisors`);
-    console.log("- **After building a feature** → `/temper-ship` — runs your build + test pipeline with safety gating for live-service steps");
-    console.log("- **When touching economy or progression** → `/temper-balance` — checks changes against your game's balance model");
+    console.log(`- **Before designing something new** → \`temper coach\` — routes advice through ${familyLabel}-specific doctrine and game design advisors`);
+    console.log("- **After building a feature** → `temper ship` — runs your build + test pipeline with safety gating for live-service steps");
+    console.log("- **When touching economy or progression** → `temper balance` — checks changes against your game's balance model");
     console.log("- **When switching workstreams or ending a session** → `temper handoff` — writes a restart artifact so the next session picks up clean");
     console.log("");
-    console.log("First move: `/temper-coach --intent \"<what you're building next>\"`");
+    console.log("First move: `temper coach --intent \"<what you're building next>\"`");
     console.log("");
     console.log("To undo everything Temper just wrote: `temper uninstall --preview --cwd .`");
     return;
@@ -1010,6 +1021,7 @@ function runUninstall(rest) {
 
 function runHandoff(rest) {
   const args = parseHandoffArgs(rest);
+  requireOnboarded(args.cwd);
   const plan = buildHandoffPlan({
     cwd: args.cwd,
     slug: args.slug,
@@ -1160,9 +1172,7 @@ function runAssistant(rest) {
             shared_canon_json: ".temper/assistants/shared-canon.json",
             shared_canon_markdown: ".temper/assistants/shared-canon.md"
           },
-          commands: {
-            claude: ".claude/commands/temper-*.md"
-          }
+          mcp_server: "packages/mcp/bin/temper-mcp.mjs"
         },
         null,
         2
@@ -1176,7 +1186,7 @@ function runAssistant(rest) {
   console.log("Status: onboarded");
   console.log(`Claude guide: .temper/assistants/claude.md`);
   console.log(`Codex guide: .temper/assistants/codex.md`);
-  console.log(`Claude commands: .claude/commands/temper-*.md`);
+  console.log(`MCP server: packages/mcp/bin/temper-mcp.mjs`);
 }
 
 function isNewProject(cwd) {

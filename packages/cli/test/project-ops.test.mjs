@@ -169,7 +169,7 @@ test("assistant show returns machine-readable installed surfaces once onboarding
   assert.equal(payload.status, "onboarded");
   assert.equal(payload.guides.claude, ".temper/assistants/claude.md");
   assert.equal(payload.guides.codex, ".temper/assistants/codex.md");
-  assert.equal(payload.commands.claude, ".claude/commands/temper-*.md");
+  assert.equal(payload.mcp_server, "packages/mcp/bin/temper-mcp.mjs");
 });
 
 test("runShip executes configured steps from generated config", async (t) => {
@@ -352,6 +352,7 @@ test("temper inspect falls back to SESSION.md outside git repos", async (t) => {
 
 test("temper session set updates the managed board and records a run artifact", async (t) => {
   const repoDir = createFixtureRepo(t);
+  write(repoDir, "temper.config.json", JSON.stringify({ schema_version: 1, mode: "onboarded", name: "test" }, null, 2) + "\n");
 
   initGitRepo(repoDir, "feature/session-pass", "fixture");
 
@@ -400,6 +401,7 @@ test("temper session set updates the managed board and records a run artifact", 
 
 test("temper eval restart passes when session and handoff are both present and structured", async (t) => {
   const repoDir = createFixtureRepo(t);
+  write(repoDir, "temper.config.json", JSON.stringify({ schema_version: 1, mode: "onboarded", name: "test" }, null, 2) + "\n");
 
   initGitRepo(repoDir, "feature/restart-pass", "fixture");
 

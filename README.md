@@ -178,7 +178,7 @@ On a normal install, Temper writes:
 - `.temper/workflow/HANDOFF_TEMPLATE.md`
 - `.temper/runs/<run-id>.json`
 - a Temper-managed block inside `SESSION.md`
-- Claude command surfaces under `.claude/commands/temper-*.md`
+- MCP tools via `packages/mcp/bin/temper-mcp.mjs`
 
 ## Continuity Model
 

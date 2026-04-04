@@ -490,7 +490,7 @@ export function renderOnboardingOpening(interview) {
       "The user is deciding whether to proceed. Wait for their response.",
       "",
       "If they confirm (apply, go ahead, do it):",
-      "  First say: \"Writing the operating contract now — config, assistant guides, session board, and slash commands.\"",
+      "  First say: \"Writing the operating contract now — config, assistant guides, and session board.\"",
       `  Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`,
       "If they want a rehearsal first (dry run, try it, show me):",
       "  First say: \"Cloning your repo into a clean copy and installing there. You can inspect every file, run tests against it, and diff it before applying.\"",
@@ -622,7 +622,7 @@ export function renderOnboardingRecommendation(interview) {
     "  First say: \"Cloning your repo into a clean copy and installing there. You can inspect every file, run tests against it, and diff it before applying here.\"",
     `  Then run: pnpm exec temper onboard existing --rehearse --cwd .${experienceFlag}`,
     "When they say apply directly (apply it, just do it, write it):",
-    "  First say: \"Writing the operating contract now — config, assistant guides, session board, and slash commands.\"",
+    "  First say: \"Writing the operating contract now — config, assistant guides, and session board.\"",
     `  Then run: pnpm exec temper onboard existing --write --cwd .${experienceFlag}`,
     "After the command completes, deliver the **Suggested Message** from the output — it includes the capability preview."
   );
@@ -1938,7 +1938,7 @@ function buildUserFacingNextMove(result, environments, findings = { strengths: [
     id: "existing_project_apply_here",
     title: "Recommended next move",
     summary:
-      "Clean enough to apply directly. Temper writes the operating contract — config, assistant guides, session board, and slash commands. All reversible with `temper uninstall`.",
+      "Clean enough to apply directly. Temper writes the operating contract — config, assistant guides, and session board. All reversible with `temper uninstall`.",
     command: "temper onboard existing --write --cwd .",
     confirm_prompt: "Say `apply it` and I'll write the install.",
     why: [
