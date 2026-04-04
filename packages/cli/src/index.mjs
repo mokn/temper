@@ -44,7 +44,7 @@ import {
   writeProjectFile
 } from "./lib/project-config.mjs";
 import { listRunArtifacts, loadRunArtifact, recordRunArtifact } from "./lib/run-artifacts.mjs";
-import { materializeInitInstall, renderInitOpening, renderInitSuccess, resolveFamily } from "./lib/init.mjs";
+import { FAMILY_ADVISORS, materializeInitInstall, renderInitOpening, renderInitSuccess, resolveFamily } from "./lib/init.mjs";
 import { printShipReport, runShip } from "./lib/ship.mjs";
 import { printCoachBrief, printHeader, printList, printTemperBanner } from "./lib/output.mjs";
 import { evaluateRestartReadiness, renderRestartEval } from "./lib/restart-eval.mjs";
@@ -886,14 +886,16 @@ function runOnboard(rest) {
     console.log("");
     console.log(`Run Artifact: ${recorded.relativePath}`);
     console.log("");
+    const familyId = result.analysis?.family?.id;
     const familyLabel = result.analysis?.family?.label ?? "this game";
+    const advisors = FAMILY_ADVISORS[familyId] ?? null;
     console.log("## Suggested Message");
     console.log("## What's Different Now");
     console.log("");
     console.log("Your next session opens with full project context — no re-explaining.");
     console.log("");
     console.log("Here's how Temper works day-to-day:");
-    console.log(`- **Before designing something new** → \`temper coach\` — routes advice through ${familyLabel}-specific doctrine and game design advisors`);
+    console.log(`- **Before designing something new** → \`temper coach\` — ${advisors ?? "advisors"} weigh in through ${familyLabel} doctrine`);
     console.log("- **After building a feature** → `temper ship` — runs your build + test pipeline with safety gating for live-service steps");
     console.log("- **When touching economy or progression** → `temper balance` — checks changes against your game's balance model");
     console.log("- **When switching workstreams or ending a session** → `temper handoff` — writes a restart artifact so the next session picks up clean");

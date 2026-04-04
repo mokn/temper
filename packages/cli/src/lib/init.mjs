@@ -171,6 +171,17 @@ const FAMILY_DESIGNER_READ = {
   "social-persistent-ugc": "Social games depend on player investment, not designer investment. Build tools that let players make things they're proud of before you build content."
 };
 
+export const FAMILY_ADVISORS = {
+  "data-driven-progression-rpg": "🎯 Kaplan · ♟️ Meier · 🔧 Carmack",
+  "deterministic-turn-based": "♟️ Meier · 🎯 Kaplan · ✨ Miyamoto",
+  "real-time-action": "🔧 Carmack · ✨ Miyamoto · 🎯 Kaplan",
+  "real-time-wave-systemic": "🌱 Wright · ♟️ Meier · 🔧 Carmack",
+  "competitive-server-authoritative": "🔧 Carmack · 🎯 Kaplan · ♟️ Meier",
+  "simulation-management-sandbox": "🌱 Wright · ♟️ Meier · 🔧 Carmack",
+  "narrative-choice-driven-puzzle": "✨ Miyamoto · 🌱 Wright · 🎯 Kaplan",
+  "social-persistent-ugc": "🌱 Wright · 🎯 Kaplan · 🔧 Carmack"
+};
+
 const FAMILY_FIRST_STEPS = {
   "data-driven-progression-rpg": "character classes, stat systems, loot tables, or progression curves",
   "deterministic-turn-based": "game board, card definitions, turn structure, or win conditions",
@@ -186,6 +197,7 @@ export function renderInitSuccess({ name, family, experience }) {
   const resolvedFamily = resolveFamily(family);
   const firstSteps = FAMILY_FIRST_STEPS[resolvedFamily.id] ?? "core game loop";
   const designerRead = FAMILY_DESIGNER_READ[resolvedFamily.id] ?? null;
+  const advisors = FAMILY_ADVISORS[resolvedFamily.id] ?? null;
   const isFirstTimer = experience === "first" || experience === "first-time";
 
   const lines = [
@@ -199,7 +211,7 @@ export function renderInitSuccess({ name, family, experience }) {
     "- **MCP tools** — `temper_coach`, `temper_ship`, `temper_handoff` (via the Temper MCP server).",
     "",
     `Here's how Temper works day-to-day:`,
-    `- **Before designing something new** → \`temper coach\` — routes advice through ${resolvedFamily.label}-specific doctrine`,
+    `- **Before designing something new** → \`temper coach\` — ${advisors ?? "advisors"} weigh in through ${resolvedFamily.label} doctrine`,
     "- **After building a feature** → `temper ship` — runs your build + test pipeline",
     "- **When touching economy or progression** → `temper balance` — checks against your game's balance model",
     "- **Ending a session** → `temper handoff` — writes a restart artifact so the next session picks up clean",
