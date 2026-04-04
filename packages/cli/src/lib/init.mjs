@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { writeProjectConfig, writeProjectFile } from "./project-config.mjs";
 import { installAssistantAdapters } from "./assistant.mjs";
@@ -148,6 +149,13 @@ export function materializeInitInstall({ projectRoot, name, family, stack, packa
     onboarding: { recommendations: [] },
     assistants
   });
+
+  // Remove the postinstall trigger file — onboarding is complete
+  try {
+    fs.unlinkSync(path.join(root, ".claude/rules/temper-onboarding.md"));
+  } catch {
+    // File may not exist
+  }
 
   return { configPath, continuity, written, config, resolvedFamily: resolveFamily(family) };
 }

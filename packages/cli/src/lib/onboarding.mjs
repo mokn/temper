@@ -21,6 +21,17 @@ import {
 import { CONFIG_FILENAME, writeProjectConfig, writeProjectFile } from "./project-config.mjs";
 import { TEMPER_SWORD_ART } from "./output.mjs";
 
+const ONBOARDING_TRIGGER_PATH = ".claude/rules/temper-onboarding.md";
+
+function removeOnboardingTrigger(projectRoot) {
+  const triggerPath = path.join(projectRoot, ONBOARDING_TRIGGER_PATH);
+  try {
+    fs.unlinkSync(triggerPath);
+  } catch {
+    // File may not exist — that's fine
+  }
+}
+
 const SKIP_DIRS = new Set([
   ".git",
   ".next",
@@ -206,6 +217,9 @@ export function materializeOnboardingInstall(options) {
     onboarding: result.onboarding,
     assistants: options.assistants
   });
+
+  // Remove the postinstall trigger file — onboarding is complete
+  removeOnboardingTrigger(projectRoot);
 
   return {
     configPath,
