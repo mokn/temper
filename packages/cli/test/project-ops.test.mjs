@@ -96,29 +96,24 @@ test("assistant show falls back to onboarding interview when Temper is installed
   );
 
   assert.equal(payload.status, "needs_onboarding");
-  assert.equal(payload.next_action, "continue_in_chat");
-  assert.equal(payload.user_facing_next_move.id, "existing_project_dry_run_first");
-  assert.ok(payload.interview);
-  assert.equal(payload.interview.assistant_flow.mode, "continue_in_chat");
-  assert.match(payload.interview.assistant_flow.reply_template, /Say `start`/);
-  assert.equal(payload.interview.questions, undefined);
-  assert.ok(payload.interview.analysis_findings.concerns.some((item) => item.id === "established-project"));
-  assert.equal(payload.interview.new_project_command, undefined);
-  assert.match(payload.interview.apply_command, /temper onboard existing --write/);
+  assert.equal(payload.next_action, "interview_first");
+  assert.equal(payload.message, "Ask the three onboarding questions before analyzing the repo.");
 });
 
-test("assistant show delivers stage 1 only — strengths and hard stop", async (t) => {
+test("assistant show delivers interview questions first — no analysis until user answers", async (t) => {
   const repoDir = createFixtureRepo(t);
   const output = execFileSync("node", [CLI_PATH, "assistant", "show", "--cwd", repoDir], {
     encoding: "utf8"
   });
 
-  assert.match(output, /What's Already In Good Shape/);
-  assert.match(output, /STOP\. Deliver everything above/);
-  assert.match(output, /temper onboard existing --findings --cwd \./);
-  assert.match(output, /machine-readable version/);
-  assert.doesNotMatch(output, /## Recommended Next Move/);
-  assert.doesNotMatch(output, /What I'd Adjust For/);
+  assert.match(output, /Three things I need/);
+  assert.match(output, /What's the game called/);
+  assert.match(output, /What kind of game is it/);
+  assert.match(output, /How much game dev experience/);
+  assert.match(output, /STOP\. Deliver the message above/);
+  assert.match(output, /Do not analyze the repo yet/);
+  assert.doesNotMatch(output, /What's Already In Good Shape/);
+  assert.doesNotMatch(output, /What I Found/);
 });
 
 test("onboard existing --findings delivers stage 2 only — concerns and hard stop", async (t) => {

@@ -488,15 +488,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     // --- Onboarding tools (direct library import — pure/sync, no stdout risk) ---
 
     if (name === "temper_onboard_show") {
-      const interview = buildOnboardingInterview({ cwd: args.cwd });
       markStageComplete(args.cwd, name);
       return ok({
-        project_root: interview.project_root,
-        opening: interview.assistant_flow.reply_template,
-        style_rules: interview.assistant_flow.style_rules,
-        inferred: interview.inferred,
+        project_root: path.resolve(args.cwd),
+        opening: [
+          "Temper installs an operating contract I read every session — it's how I know what this project is, how to ship safely, and how to hand off work without losing context. Takes about 30 seconds.",
+          "",
+          "Three things I need:",
+          "",
+          "1. What's the game called?",
+          "2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.",
+          "",
+          "   Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim",
+          "",
+          "3. How much game dev experience do you have? (first time / some experience / shipped before)"
+        ].join("\n"),
         pacing_note:
-          "Deliver the opening above to the user in your own voice. Wait for their response before calling temper_onboard_findings.",
+          "Deliver the opening above in your own voice. Ask the three questions. Wait for the user's answers. Do not run any commands, guess answers, or analyze the repo yet. The interview comes first. Once you have all three answers, call temper_onboard_findings with name, family, and experience.",
         next_tool: "temper_onboard_findings"
       });
     }

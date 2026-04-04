@@ -760,6 +760,44 @@ function runOnboard(rest) {
     return;
   }
 
+  // No --name/--family provided → interview first, no analysis.
+  // Temper doesn't know who the user is yet. Always ask.
+  const hasIdentity = args.name && args.family;
+  const needsAnalysis = hasIdentity || args.interview || args.findings || args.recommend || args.preview || args.write;
+
+  if (!needsAnalysis) {
+    printTemperBanner("Temper onboarding");
+    console.log("");
+    console.log("# Temper — Start Onboarding");
+    console.log("");
+    console.log("## Suggested Opening Message");
+    console.log("Temper installs an operating contract I read every session — it's how I know what this project is, how to ship safely, and how to hand off work without losing context. Takes about 30 seconds.");
+    console.log("");
+    console.log("Three things I need:");
+    console.log("");
+    console.log("1. What's the game called?");
+    console.log("2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.");
+    console.log("");
+    console.log("   Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim");
+    console.log("");
+    console.log("3. How much game dev experience do you have? (first time / some experience / shipped before)");
+    console.log("");
+    console.log("---");
+    console.log("STOP. Deliver the message above in your own voice. Ask the three questions. Wait for the user's answers.");
+    console.log("Do not run any commands. Do not guess the answers. Do not offer to skip ahead.");
+    console.log("Do not analyze the repo yet. Do not show findings. The interview comes first.");
+    console.log("");
+    console.log("Once you have the answers:");
+    console.log("");
+    console.log("- If they have an existing game repo, run:");
+    console.log('  `pnpm exec temper onboard existing --cwd . --name "<name>" --family <type> --experience <first|experienced>`');
+    console.log("- If they're starting from scratch, run:");
+    console.log('  `pnpm exec temper init --name "<name>" --family <type> --experience <first|experienced> --cwd .`');
+    console.log("");
+    console.log("After the command completes, deliver the **Suggested Message** from its output in your own voice.");
+    return;
+  }
+
   const result = buildExistingProjectOnboarding({
     cwd: args.cwd,
     family: args.family,
@@ -906,6 +944,7 @@ function runOnboard(rest) {
     return;
   }
 
+  // Has identity but no action flag — show the analysis opening
   printTemperBanner("Existing project onboarding");
   console.log("");
   console.log(`Root: ${result.analysis.root}`);
@@ -1110,23 +1149,13 @@ function runAssistant(rest) {
       return;
     }
 
-    const interview = buildOnboardingInterview({
-      cwd: args.cwd,
-      family: args.family,
-      stack: args.stack,
-      name: args.name,
-      betaBranch: args.betaBranch,
-      prodBranch: args.prodBranch
-    });
-
     if (args.json) {
       console.log(
         JSON.stringify(
           {
             status: "needs_onboarding",
-            next_action: "continue_in_chat",
-            user_facing_next_move: interview.user_facing_next_move,
-            interview
+            next_action: "interview_first",
+            message: "Ask the three onboarding questions before analyzing the repo."
           },
           null,
           2
@@ -1135,13 +1164,32 @@ function runAssistant(rest) {
       return;
     }
 
+    // Interview first — always. Don't analyze the repo until we know who the user is.
     printHeader("Temper Assistant");
-    console.log(`Root: ${interview.project_root}`);
+    console.log(`Root: ${path.resolve(args.cwd)}`);
     console.log("Status: needs onboarding");
     console.log("");
-    process.stdout.write(renderOnboardingOpening(interview));
+    console.log("## Suggested Opening Message");
+    console.log("Temper installs an operating contract I read every session — it's how I know what this project is, how to ship safely, and how to hand off work without losing context. Takes about 30 seconds.");
     console.log("");
-    console.log("If you want the machine-readable version for an assistant integration, rerun with `--json`.");
+    console.log("Three things I need:");
+    console.log("");
+    console.log("1. What's the game called?");
+    console.log("2. What kind of game is it? The more detail the better — inspiration, mechanics, what makes it different.");
+    console.log("");
+    console.log("   Common types: RPG, card game, tower defense, platformer, roguelike, puzzle, strategy, sim");
+    console.log("");
+    console.log("3. How much game dev experience do you have? (first time / some experience / shipped before)");
+    console.log("");
+    console.log("---");
+    console.log("STOP. Deliver the message above in your own voice. Ask the three questions. Wait for the user's answers.");
+    console.log("Do not run any commands. Do not guess the answers. Do not offer to skip ahead.");
+    console.log("Do not analyze the repo yet. Do not show findings. The interview comes first.");
+    console.log("");
+    console.log("Once you have the answers, run:");
+    console.log('  `pnpm exec temper onboard existing --cwd . --name "<name>" --family <type> --experience <first|experienced>`');
+    console.log("");
+    console.log("After the command completes, deliver the **Suggested Message** from its output in your own voice.");
     return;
   }
 
